@@ -78,17 +78,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }}>
               Thali<span style={{ color: 'var(--color-primary)' }}>.com</span>
             </span>
-            <span style={{
-              fontSize: '11px',
-              fontWeight: 500,
-              color: 'var(--color-primary)',
-              backgroundColor: 'var(--color-primary-subdued)',
-              padding: '2px 8px',
-              borderRadius: '9999px',
-              border: '1px solid #dcd8fe'
-            }}>
-              Digital Pass
-            </span>
+           
           </div>
         </div>
 
