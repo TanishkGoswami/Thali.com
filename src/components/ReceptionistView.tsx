@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
-import { Search, CheckCircle, XCircle, Camera } from 'lucide-react';
+import { Search, CheckCircle, XCircle, Camera, QrCode } from 'lucide-react';
 import type { Profile, CheckInResult, MealTransaction } from '../types';
 import { api } from '../services/api';
 import { sound } from '../lib/audio';
 import { CameraScannerModal } from './CameraScannerModal';
+import { CounterQrModal } from './CounterQrModal';
 
 interface ReceptionistViewProps {
   members: (Profile & { remaining_meals?: number; subscription_status?: string })[];
@@ -24,6 +25,7 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
   const [lastResult, setLastResult] = useState<CheckInResult | null>(null);
   const [manualToken, setManualToken] = useState('');
   const [showCameraScanner, setShowCameraScanner] = useState(false);
+  const [showCounterStandee, setShowCounterStandee] = useState(false);
 
   // Handle Check-in logic
   const handleCheckIn = async (qrToken: string) => {
@@ -89,7 +91,15 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={() => setShowCounterStandee(true)}
+            className="btn btn-primary btn-pill"
+            style={{ gap: '6px' }}
+          >
+            <QrCode size={14} /> Desk QR Standee
+          </button>
           <span className="badge badge-active">
             ● Terminal Online
           </span>
@@ -382,6 +392,13 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
           setShowCameraScanner(false);
         }}
         mealPeriod={activeMealPeriod}
+      />
+
+      {/* Official Mess Counter Standee QR Modal (Model 2) */}
+      <CounterQrModal
+        isOpen={showCounterStandee}
+        onClose={() => setShowCounterStandee(false)}
+        activeMealPeriod={activeMealPeriod}
       />
 
     </div>

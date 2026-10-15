@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Users, CreditCard, Utensils, Plus, Check, Search, Edit3, FileSpreadsheet, X } from 'lucide-react';
+import { Users, CreditCard, Utensils, Plus, Check, Search, Edit3, FileSpreadsheet, X, QrCode } from 'lucide-react';
 import type { Profile, DailyMenu } from '../types';
 import { api } from '../services/api';
 import { CsvImporter } from './CsvImporter';
 import { MemberEditModal } from './MemberEditModal';
 import { MenuEditorModal } from './MenuEditorModal';
+import { CounterQrModal } from './CounterQrModal';
 
 interface AdminViewProps {
   members: (Profile & { remaining_meals?: number; subscription_status?: string })[];
@@ -26,6 +27,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
   const [selectedMemberForEdit, setSelectedMemberForEdit] = useState<(Profile & { remaining_meals?: number; subscription_status?: string }) | null>(null);
   const [showMenuEditor, setShowMenuEditor] = useState(false);
   const [menuEditorPeriod, setMenuEditorPeriod] = useState<'lunch' | 'dinner'>('lunch');
+  const [showCounterStandee, setShowCounterStandee] = useState(false);
 
   const [newFullName, setNewFullName] = useState('');
   const [newPhone, setNewPhone] = useState('');
@@ -94,13 +96,23 @@ export const AdminView: React.FC<AdminViewProps> = ({
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setShowAddMember(true)}
-          className="btn btn-primary btn-mobile-full"
-        >
-          <Plus size={15} /> Add New Member
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={() => setShowCounterStandee(true)}
+            className="btn btn-secondary btn-pill"
+            style={{ gap: '6px' }}
+          >
+            <QrCode size={14} /> Desk QR Standee
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowAddMember(true)}
+            className="btn btn-primary btn-pill"
+          >
+            <Plus size={15} /> Add Member
+          </button>
+        </div>
       </div>
 
       {/* Top Metric Cards (Mobile 2x2 grid) */}
@@ -595,6 +607,12 @@ export const AdminView: React.FC<AdminViewProps> = ({
           }}
         />
       )}
+
+      {/* Official Mess Counter Standee QR Modal (Model 2) */}
+      <CounterQrModal
+        isOpen={showCounterStandee}
+        onClose={() => setShowCounterStandee(false)}
+      />
 
     </div>
   );

@@ -1,6 +1,8 @@
 import { supabase } from '../lib/supabase';
 import type { Profile, DailyMenu, CheckInResult, MealTransaction } from '../types';
 
+export const COUNTER_STANDEE_QR = 'THALI_OFFICIAL_COUNTER_QR_2026';
+
 export const api = {
   // Fetch all members with their active subscription & remaining meals
   async getMembers(): Promise<(Profile & { remaining_meals?: number; subscription_status?: string; expires_at?: string })[]> {

@@ -1,9 +1,23 @@
 import React, { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
-import { Sparkles, RefreshCw, UtensilsCrossed, ShieldCheck, History, Clock, X, PhoneCall } from 'lucide-react';
-import type { Profile, DailyMenu, MealTransaction } from '../types';
-import { api } from '../services/api';
+import confetti from 'canvas-confetti';
+import {
+  Sparkles,
+  RefreshCw,
+  UtensilsCrossed,
+  History,
+  Clock,
+  X,
+  PhoneCall,
+  Camera,
+  CheckCircle2,
+  AlertCircle
+} from 'lucide-react';
+import type { Profile, DailyMenu, MealTransaction, CheckInResult } from '../types';
+import { api, COUNTER_STANDEE_QR } from '../services/api';
+import { sound } from '../lib/audio';
 import { PaymentActivationModal } from './PaymentActivationModal';
+import { CameraScannerModal } from './CameraScannerModal';
 
 interface MemberViewProps {
   member: Profile & { remaining_meals?: number; subscription_status?: string; expires_at?: string };
@@ -20,17 +34,22 @@ export const MemberView: React.FC<MemberViewProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [showPaymentActivationModal, setShowPaymentActivationModal] = useState(false);
-  const [showRenewModal, setShowRenewModal] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'upi_direct' | 'cash' | 'gateway'>('upi_direct');
-  const [renewing, setRenewing] = useState(false);
-  
+
+  // Card Flip / View Personal QR toggle
+  const [showPersonalQr, setShowPersonalQr] = useState(false);
+
+  // Self Check-in Camera Scanner
+  const [showCameraScanner, setShowCameraScanner] = useState(false);
+  const [selfCheckInLoading, setSelfCheckInLoading] = useState(false);
+  const [selfCheckInReceipt, setSelfCheckInReceipt] = useState<CheckInResult | null>(null);
+
   // Member meal passbook state
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyList, setHistoryList] = useState<MealTransaction[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
   useEffect(() => {
-    if (canvasRef.current && member?.qr_token) {
+    if (showPersonalQr && canvasRef.current && member?.qr_token) {
       QRCode.toCanvas(canvasRef.current, member.qr_token, {
         width: 170,
         margin: 1,
@@ -42,7 +61,56 @@ export const MemberView: React.FC<MemberViewProps> = ({
         if (error) console.error('QR Render error:', error);
       });
     }
-  }, [member?.qr_token]);
+  }, [showPersonalQr, member?.qr_token]);
+
+  // Handle Self Check-in when student scans Counter QR
+  const handleSelfCheckInScan = async (scannedText: string) => {
+    setShowCameraScanner(false);
+    setSelfCheckInLoading(true);
+
+    try {
+      // Check if scanned QR is the official counter QR or staff token
+      const isOfficialCounter = scannedText.includes('THALI_OFFICIAL_COUNTER_QR') || scannedText === COUNTER_STANDEE_QR;
+      
+      if (!isOfficialCounter) {
+        sound.playError();
+        setSelfCheckInReceipt({
+          success: false,
+          code: 'INVALID_QR',
+          message: 'Invalid Counter QR. Please point your camera at the official Thali.com Mess Desk Standee QR.'
+        });
+        return;
+      }
+
+      // Perform check in for the current member
+      const result = await api.checkInMeal(member.qr_token, activeMealPeriod);
+      setSelfCheckInReceipt(result);
+
+      if (result.success && result.code === 'ACCEPTED') {
+        sound.playSuccess();
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      } else if (result.code === 'DUPLICATE_CHECKIN') {
+        sound.playWarning();
+      } else {
+        sound.playError();
+      }
+
+      onRefresh();
+    } catch (err: any) {
+      sound.playError();
+      setSelfCheckInReceipt({
+        success: false,
+        code: 'ERROR',
+        message: err?.message || 'Check-in failed due to network error.'
+      });
+    } finally {
+      setSelfCheckInLoading(false);
+    }
+  };
 
   const loadMemberHistory = async () => {
     setShowHistoryModal(true);
@@ -62,6 +130,14 @@ export const MemberView: React.FC<MemberViewProps> = ({
   const consumedMeals = totalMeals - remainingMeals;
   const percentage = Math.round((remainingMeals / totalMeals) * 100);
 
+  const formattedExpiry = member.expires_at
+    ? new Date(member.expires_at).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      })
+    : '30 Days from activation';
+
   const todayMenu = menus.find(m => m.meal_period === activeMealPeriod) || menus[0];
 
   return (
@@ -78,12 +154,12 @@ export const MemberView: React.FC<MemberViewProps> = ({
         paddingBottom: '16px'
       }}>
         <div>
-          <span className="eyebrow">Member Portal</span>
+          <span className="eyebrow">Student & Member Portal</span>
           <h1 style={{ fontSize: '28px', marginTop: '2px' }}>
             Namaste, {member.full_name.split(' ')[0]}
           </h1>
           <p style={{ color: 'var(--color-ink-mute)', fontSize: '13px', marginTop: '2px' }}>
-            Pass ID: <strong className="tnum" style={{ color: 'var(--color-ink)' }}>{member.member_number}</strong>
+            Current Slot: <strong style={{ textTransform: 'capitalize', color: 'var(--color-ink)' }}>{activeMealPeriod} Service</strong>
           </p>
         </div>
 
@@ -105,7 +181,7 @@ export const MemberView: React.FC<MemberViewProps> = ({
             <RefreshCw size={13} /> Refresh
           </button>
           <span className={`badge badge-${member.subscription_status === 'active' ? 'active' : 'pending'}`}>
-            {member.subscription_status === 'active' ? '● Active' : 'Pending'}
+            {member.subscription_status === 'active' ? '● Active Plan' : 'Pending Verification'}
           </span>
         </div>
       </div>
@@ -128,7 +204,7 @@ export const MemberView: React.FC<MemberViewProps> = ({
               ⚡ Plan Activation Pending — ₹2,800 / 54 Meals
             </div>
             <p style={{ fontSize: '13px', color: 'var(--color-ink-secondary)', marginTop: '2px' }}>
-              Verify mobile number via SMS to activate digital pass & start dining.
+              Verify mobile number via SMS to activate your digital card & start dining.
             </p>
           </div>
           <button
@@ -141,67 +217,221 @@ export const MemberView: React.FC<MemberViewProps> = ({
         </div>
       )}
 
-      {/* Grid: QR Pass & Balance Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
-        
-        {/* Card 1: Digital QR Meal Pass */}
-        <div className="card" style={{
-          textAlign: 'center',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          position: 'relative'
-        }}>
-          <div className="tnum" style={{
-            position: 'absolute',
-            top: '14px',
-            right: '14px',
-            backgroundColor: 'var(--color-canvas-soft)',
-            border: '1px solid var(--color-hairline)',
-            padding: '2px 8px',
-            borderRadius: 'var(--radius-pill)',
-            fontSize: '11px',
-            fontWeight: 600,
-            color: 'var(--color-ink-mute)'
-          }}>
-            #{member.member_number}
-          </div>
-
-          <span className="eyebrow" style={{ marginTop: '2px' }}>
-            Venue QR Pass
-          </span>
-
+      {/* Self Check-In CTA Bar (Model 2: Student scans mess counter QR) */}
+      <div style={{
+        background: 'linear-gradient(135deg, #533afd 0%, #4434d4 100%)',
+        borderRadius: 'var(--radius-lg)',
+        padding: '18px 20px',
+        color: '#ffffff',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '14px',
+        boxShadow: '0 4px 18px rgba(83, 58, 253, 0.28)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div style={{
-            padding: '10px',
-            backgroundColor: '#ffffff',
-            borderRadius: 'var(--radius-md)',
-            boxShadow: 'var(--shadow-level-1)',
-            margin: '14px 0',
-            border: '1px solid var(--color-hairline)',
-            maxWidth: '100%'
+            width: '42px',
+            height: '42px',
+            borderRadius: '10px',
+            backgroundColor: 'rgba(255, 255, 255, 0.18)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
           }}>
-            <canvas ref={canvasRef} style={{ maxWidth: '100%', height: 'auto' }} />
+            <Camera size={22} color="#ffffff" />
           </div>
-
-          <h3 style={{ fontSize: '17px', fontWeight: 600, color: 'var(--color-ink)' }}>
-            {member.full_name}
-          </h3>
-          <p style={{ fontSize: '12px', color: 'var(--color-ink-mute)', marginTop: '2px', maxWidth: '240px' }}>
-            Show this QR at the reception scanner during meal service.
-          </p>
-
-          <div className="badge badge-indigo" style={{ marginTop: '14px', gap: '5px' }}>
-            <ShieldCheck size={12} /> Server Verified Token
+          <div>
+            <h3 style={{ color: '#ffffff', fontSize: '17px', fontWeight: 600 }}>
+              At the Mess Counter? Self Check-In Now
+            </h3>
+            <p style={{ color: 'rgba(255, 255, 255, 0.85)', fontSize: '12px', marginTop: '2px' }}>
+              Scan the counter standee QR to deduct 1 meal & get instant food plate approval
+            </p>
           </div>
         </div>
 
-        {/* Card 2: Meal Balance & Validity */}
+        <button
+          type="button"
+          disabled={selfCheckInLoading}
+          onClick={() => setShowCameraScanner(true)}
+          className="btn"
+          style={{
+            backgroundColor: '#ffffff',
+            color: 'var(--color-primary)',
+            fontWeight: 600,
+            padding: '10px 20px',
+            fontSize: '13px',
+            borderRadius: 'var(--radius-pill)',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12)'
+          }}
+        >
+          <Camera size={15} /> {selfCheckInLoading ? 'Checking...' : 'Scan Counter QR'}
+        </button>
+      </div>
+
+      {/* Grid: Digital Mess ID Card & Quota Balance */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+        
+        {/* Card 1: Official Digital Mess Membership ID Card */}
+        <div style={{
+          background: 'linear-gradient(145deg, #0d253d 0%, #163659 100%)',
+          borderRadius: '16px',
+          padding: '24px',
+          color: '#ffffff',
+          position: 'relative',
+          overflow: 'hidden',
+          boxShadow: '0 12px 32px rgba(13, 37, 61, 0.22)',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          minHeight: '230px'
+        }}>
+          {/* Card Atmospheric Background Accents */}
+          <div style={{
+            position: 'absolute',
+            top: '-40px',
+            right: '-40px',
+            width: '160px',
+            height: '160px',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(83, 58, 253, 0.35) 0%, transparent 70%)',
+            pointerEvents: 'none'
+          }} />
+
+          {/* Card Top: Brand Wordmark & Pass Chip */}
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                  width: '26px',
+                  height: '26px',
+                  borderRadius: '6px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <UtensilsCrossed size={14} color="#ffffff" />
+                </div>
+                <div>
+                  <div style={{ fontSize: '15px', fontWeight: 600, letterSpacing: '-0.2px' }}>
+                    Thali<span style={{ color: '#93c5fd' }}>.com</span>
+                  </div>
+                  <div style={{ fontSize: '9px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255, 255, 255, 0.65)' }}>
+                    Official Mess Pass
+                  </div>
+                </div>
+              </div>
+
+              <span className="tnum" style={{
+                fontSize: '11px',
+                fontWeight: 600,
+                backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                padding: '2px 8px',
+                borderRadius: '9999px',
+                color: '#93c5fd'
+              }}>
+                #{member.member_number}
+              </span>
+            </div>
+
+            {/* Member Card Number */}
+            <div className="tnum" style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '18px',
+              letterSpacing: '0.12em',
+              fontWeight: 500,
+              marginTop: '20px',
+              color: '#ffffff'
+            }}>
+              MESS — {member.member_number}
+            </div>
+          </div>
+
+          {/* Card Bottom: Name, Mobile, Validity, and Balance */}
+          <div style={{ marginTop: '20px', paddingTop: '12px', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '12px' }}>
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: 600, color: '#ffffff' }}>
+                  {member.full_name}
+                </div>
+                <div className="tnum" style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.7)', marginTop: '2px' }}>
+                  {member.phone ? `+91 ${member.phone}` : 'No phone linked'}
+                </div>
+              </div>
+
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '9px', textTransform: 'uppercase', color: 'rgba(255, 255, 255, 0.6)', letterSpacing: '0.05em' }}>
+                  Valid Till
+                </div>
+                <div className="tnum" style={{ fontSize: '11px', fontWeight: 500, color: '#fef08a' }}>
+                  {formattedExpiry}
+                </div>
+              </div>
+            </div>
+
+            {/* Card Action footer: Toggle Personal QR Code */}
+            <div style={{ marginTop: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span className="tnum" style={{
+                fontSize: '12px',
+                fontWeight: 600,
+                color: '#6ee7b7',
+                backgroundColor: 'rgba(110, 231, 183, 0.12)',
+                padding: '2px 8px',
+                borderRadius: '6px'
+              }}>
+                {remainingMeals} / {totalMeals} Meals Left
+              </span>
+
+              <button
+                type="button"
+                onClick={() => setShowPersonalQr(!showPersonalQr)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'rgba(255, 255, 255, 0.85)',
+                  fontSize: '11px',
+                  cursor: 'pointer',
+                  textDecoration: 'underline'
+                }}
+              >
+                {showPersonalQr ? 'Hide Personal QR' : 'Show Personal QR'}
+              </button>
+            </div>
+          </div>
+
+          {/* Expandable Personal QR Canvas (Fallback for counter staff scanner) */}
+          {showPersonalQr && (
+            <div style={{
+              marginTop: '16px',
+              padding: '12px',
+              backgroundColor: '#ffffff',
+              borderRadius: 'var(--radius-md)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              animation: 'fadeIn 0.2s ease-out'
+            }}>
+              <canvas ref={canvasRef} />
+              <span style={{ fontSize: '11px', color: 'var(--color-ink-mute)', marginTop: '4px' }}>
+                Show this if staff uses barcode scanner
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Card 2: Quota Breakdown & Validity */}
         <div className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <span className="eyebrow">Monthly Quota</span>
-                <h2 style={{ fontSize: '22px', marginTop: '2px' }}>Meal Balance</h2>
+                <span className="eyebrow">Quota Details</span>
+                <h2 style={{ fontSize: '20px', marginTop: '2px' }}>Meal Balance</h2>
               </div>
               <span className="badge badge-active tnum">₹2,800 Plan</span>
             </div>
@@ -211,16 +441,16 @@ export const MemberView: React.FC<MemberViewProps> = ({
               display: 'flex',
               alignItems: 'center',
               gap: '16px',
-              margin: '18px 0',
-              padding: '16px',
+              margin: '16px 0',
+              padding: '14px',
               backgroundColor: 'var(--color-canvas-soft)',
               borderRadius: 'var(--radius-lg)',
               border: '1px solid var(--color-hairline)',
               flexWrap: 'wrap'
             }}>
               <div style={{
-                width: '74px',
-                height: '74px',
+                width: '68px',
+                height: '68px',
                 borderRadius: '50%',
                 background: `conic-gradient(var(--color-primary) ${percentage * 3.6}deg, #e3e8ee 0deg)`,
                 display: 'flex',
@@ -229,22 +459,22 @@ export const MemberView: React.FC<MemberViewProps> = ({
                 flexShrink: 0
               }}>
                 <div style={{
-                  width: '60px',
-                  height: '60px',
+                  width: '56px',
+                  height: '56px',
                   borderRadius: '50%',
                   backgroundColor: '#ffffff',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}>
-                  <span className="tnum" style={{ fontSize: '16px', fontWeight: 600, color: 'var(--color-ink)' }}>{percentage}%</span>
+                  <span className="tnum" style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-ink)' }}>{percentage}%</span>
                 </div>
               </div>
 
               <div>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
                   <span className="tnum" style={{
-                    fontSize: '36px',
+                    fontSize: '32px',
                     fontWeight: 300,
                     lineHeight: 1,
                     letterSpacing: '-1px',
@@ -252,29 +482,29 @@ export const MemberView: React.FC<MemberViewProps> = ({
                   }}>
                     {remainingMeals}
                   </span>
-                  <span className="tnum" style={{ fontSize: '15px', color: 'var(--color-ink-mute)', fontWeight: 400 }}>
+                  <span className="tnum" style={{ fontSize: '14px', color: 'var(--color-ink-mute)', fontWeight: 400 }}>
                     / {totalMeals} Meals
                   </span>
                 </div>
                 <p style={{ fontSize: '12px', color: 'var(--color-ink-mute)', marginTop: '2px' }}>
-                  Shared across Lunch & Dinner
+                  1 Lunch + 1 Dinner allowed per day
                 </p>
               </div>
             </div>
 
-            {/* Expiry Details */}
+            {/* Validity Details */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', borderBottom: '1px solid var(--color-hairline)', paddingBottom: '6px' }}>
-                <span style={{ color: 'var(--color-ink-mute)' }}>Validity Window</span>
-                <span className="tnum" style={{ fontWeight: 500 }}>30 Days</span>
+                <span style={{ color: 'var(--color-ink-mute)' }}>Validity Period</span>
+                <span className="tnum" style={{ fontWeight: 500 }}>{formattedExpiry}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', borderBottom: '1px solid var(--color-hairline)', paddingBottom: '6px' }}>
-                <span style={{ color: 'var(--color-ink-mute)' }}>Meals Consumed</span>
+                <span style={{ color: 'var(--color-ink-mute)' }}>Consumed Quota</span>
                 <span className="tnum" style={{ fontWeight: 500 }}>{consumedMeals} meals</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                <span style={{ color: 'var(--color-ink-mute)' }}>Renewal Policy</span>
-                <span style={{ color: 'var(--color-ink-secondary)', fontWeight: 400 }}>30d auto rollover</span>
+                <span style={{ color: 'var(--color-ink-mute)' }}>Rollover Policy</span>
+                <span style={{ color: 'var(--color-ink-secondary)', fontWeight: 400 }}>Unused meals expire after 30d</span>
               </div>
             </div>
           </div>
@@ -301,7 +531,7 @@ export const MemberView: React.FC<MemberViewProps> = ({
             </h2>
           </div>
           <span style={{ fontSize: '11px', color: 'var(--color-ink-mute)', backgroundColor: 'var(--color-canvas-soft)', padding: '3px 10px', borderRadius: 'var(--radius-pill)', border: '1px solid var(--color-hairline)' }}>
-            Pure Desi Ghee
+            Fresh Desi Ghee
           </span>
         </div>
 
@@ -353,6 +583,106 @@ export const MemberView: React.FC<MemberViewProps> = ({
           <p style={{ color: 'var(--color-ink-mute)', fontSize: '13px' }}>Menu is being updated by the kitchen.</p>
         )}
       </div>
+
+      {/* Self Check-in Success / Result Receipt Modal */}
+      {selfCheckInReceipt && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(13, 37, 61, 0.55)',
+          backdropFilter: 'blur(6px)',
+          WebkitBackdropFilter: 'blur(6px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 160,
+          padding: '16px'
+        }}>
+          <div className="card animate-fade-in" style={{
+            maxWidth: '420px',
+            width: '100%',
+            padding: '24px',
+            boxShadow: 'var(--shadow-modal)',
+            textAlign: 'center'
+          }}>
+            <div style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '50%',
+              backgroundColor: selfCheckInReceipt.success ? 'var(--color-success-bg)' : 'var(--color-error-bg)',
+              color: selfCheckInReceipt.success ? 'var(--color-success)' : 'var(--color-error)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 16px'
+            }}>
+              {selfCheckInReceipt.success ? (
+                <CheckCircle2 size={36} />
+              ) : (
+                <AlertCircle size={36} />
+              )}
+            </div>
+
+            <h3 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--color-ink)' }}>
+              {selfCheckInReceipt.success ? 'Check-in Approved!' : 'Check-in Issue'}
+            </h3>
+            <p style={{ fontSize: '13px', color: 'var(--color-ink-mute)', marginTop: '4px' }}>
+              {selfCheckInReceipt.message}
+            </p>
+
+            {/* Approved Digital Receipt Box */}
+            {selfCheckInReceipt.success && (
+              <div style={{
+                backgroundColor: 'var(--color-canvas-soft)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '14px',
+                border: '1px solid var(--color-hairline)',
+                margin: '18px 0',
+                textAlign: 'left'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', borderBottom: '1px solid var(--color-hairline)', paddingBottom: '6px', marginBottom: '6px' }}>
+                  <span style={{ color: 'var(--color-ink-mute)' }}>Member:</span>
+                  <strong>{member.full_name} ({member.member_number})</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', borderBottom: '1px solid var(--color-hairline)', paddingBottom: '6px', marginBottom: '6px' }}>
+                  <span style={{ color: 'var(--color-ink-mute)' }}>Session:</span>
+                  <strong style={{ textTransform: 'capitalize' }}>{activeMealPeriod} Service</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', borderBottom: '1px solid var(--color-hairline)', paddingBottom: '6px', marginBottom: '6px' }}>
+                  <span style={{ color: 'var(--color-ink-mute)' }}>Deduction:</span>
+                  <span className="tnum" style={{ color: 'var(--color-error)', fontWeight: 600 }}>-1 Meal</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                  <span style={{ color: 'var(--color-ink-mute)' }}>Remaining Quota:</span>
+                  <span className="tnum" style={{ color: 'var(--color-success)', fontWeight: 600 }}>
+                    {selfCheckInReceipt.remaining_meals} Meals Left
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setSelfCheckInReceipt(null)}
+              className="btn btn-primary"
+              style={{ width: '100%', marginTop: '6px' }}
+            >
+              Done & Show to Mess Counter
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Optical Camera Scanner for Scanning Counter QR */}
+      <CameraScannerModal
+        isOpen={showCameraScanner}
+        onClose={() => setShowCameraScanner(false)}
+        onScanSuccess={handleSelfCheckInScan}
+        mealPeriod={activeMealPeriod}
+      />
 
       {/* Passbook Ledger Modal */}
       {showHistoryModal && (
