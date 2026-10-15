@@ -1,13 +1,13 @@
 import React from 'react';
 import { Utensils, QrCode, Shield, User, LogIn } from 'lucide-react';
-import type { Role, Profile } from '../types';
+import type { Role, Profile, MealPeriod } from '../types';
 
 interface NavbarProps {
   currentUser: Profile | null;
   currentRole: Role;
   onRoleChange: (role: Role) => void;
-  activeMealPeriod?: 'lunch' | 'dinner';
-  onMealPeriodChange?: (period: 'lunch' | 'dinner') => void;
+  activeMealPeriod?: MealPeriod;
+  onMealPeriodChange?: (period: MealPeriod) => void;
   onOpenLogin: () => void;
   onOpenProfile?: () => void;
   onLogout?: () => void;

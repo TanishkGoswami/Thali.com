@@ -6,6 +6,62 @@ export type Role = 'owner_admin' | 'receptionist' | 'member' | 'menu_manager';
 
 export type ProfileStatus = 'active' | 'inactive' | 'archived';
 
+export type MealPeriod = 'breakfast' | 'lunch' | 'dinner';
+
+export type MealPlanType = 'lunch_dinner' | 'breakfast_lunch' | 'breakfast_dinner' | 'any_two';
+
+export const MEAL_PLAN_CONFIG: Record<MealPlanType, {
+  name: string;
+  hindiName: string;
+  shortLabel: string;
+  allowedPeriods: MealPeriod[] | 'any_two';
+  badgeClass: string;
+  badgeStyle: { backgroundColor: string; color: string; border: string };
+  timeSlotsText: string;
+  description: string;
+}> = {
+  lunch_dinner: {
+    name: 'Lunch & Dinner',
+    hindiName: 'दोपहर + रात',
+    shortLabel: 'Lunch + Dinner',
+    allowedPeriods: ['lunch', 'dinner'],
+    badgeClass: 'badge-indigo',
+    badgeStyle: { backgroundColor: '#eef2ff', color: '#4338ca', border: '1px solid #c7d2fe' },
+    timeSlotsText: '12:00-15:30 & 19:30-22:30',
+    description: 'Covers afternoon Lunch and evening Dinner'
+  },
+  breakfast_lunch: {
+    name: 'Breakfast & Lunch',
+    hindiName: 'नाश्ता + दोपहर',
+    shortLabel: 'Breakfast + Lunch',
+    allowedPeriods: ['breakfast', 'lunch'],
+    badgeClass: 'badge-active',
+    badgeStyle: { backgroundColor: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0' },
+    timeSlotsText: '07:30-10:30 & 12:00-15:30',
+    description: 'Covers morning Breakfast and afternoon Lunch'
+  },
+  breakfast_dinner: {
+    name: 'Breakfast & Dinner',
+    hindiName: 'नाश्ता + रात',
+    shortLabel: 'Breakfast + Dinner',
+    allowedPeriods: ['breakfast', 'dinner'],
+    badgeClass: 'badge-purple',
+    badgeStyle: { backgroundColor: '#faf5ff', color: '#7e22ce', border: '1px solid #e9d5ff' },
+    timeSlotsText: '07:30-10:30 & 19:30-22:30',
+    description: 'Covers morning Breakfast and evening Dinner'
+  },
+  any_two: {
+    name: 'Flexible Any 2',
+    hindiName: 'कोई भी 2 समय (लचीला)',
+    shortLabel: 'Flexible Any 2',
+    allowedPeriods: 'any_two',
+    badgeClass: 'badge-warning',
+    badgeStyle: { backgroundColor: '#fffbeb', color: '#b45309', border: '1px solid #fde68a' },
+    timeSlotsText: 'Any 2 meals per day (Max 2/day)',
+    description: 'Choice of any 2 meals per day out of Breakfast, Lunch, or Dinner'
+  }
+};
+
 export interface Profile {
   id: string;
   member_number: string; // e.g. "TH-001", "101"
@@ -14,6 +70,7 @@ export interface Profile {
   email?: string;
   role: Role;
   status: ProfileStatus;
+  meal_plan_type?: MealPlanType;
   qr_token: string; // Opaque random token for scanning
   pin_code?: string;
   phone_verified?: boolean;
@@ -29,6 +86,7 @@ export interface SubscriptionPlan {
   price_paise: number; // 280000 = ₹2,800
   meal_allowance: number; // 54
   validity_days: number; // 30
+  meal_plan_type?: MealPlanType;
   is_active: boolean;
 }
 
@@ -39,6 +97,7 @@ export interface Subscription {
   member_id: string;
   plan_id: string;
   status: SubscriptionStatus;
+  meal_plan_type?: MealPlanType;
   starts_at: string;
   expires_at: string;
   meals_granted: number;
@@ -61,8 +120,6 @@ export interface Payment {
   verified_at?: string;
   created_at: string;
 }
-
-export type MealPeriod = 'lunch' | 'dinner';
 
 export interface MealSession {
   id: string;
@@ -109,11 +166,12 @@ export interface DailyMenu {
 
 export interface CheckInResult {
   success: boolean;
-  code: 'ACCEPTED' | 'DUPLICATE_CHECKIN' | 'ZERO_BALANCE' | 'SUBSCRIPTION_EXPIRED' | 'PAYMENT_PENDING' | 'PHONE_NOT_VERIFIED' | 'INVALID_QR' | 'MEMBER_INACTIVE' | 'ERROR';
+  code: 'ACCEPTED' | 'DUPLICATE_CHECKIN' | 'ZERO_BALANCE' | 'SUBSCRIPTION_EXPIRED' | 'PAYMENT_PENDING' | 'PHONE_NOT_VERIFIED' | 'INVALID_QR' | 'MEMBER_INACTIVE' | 'PLAN_NOT_PERMITTED' | 'DAILY_LIMIT_EXCEEDED' | 'ERROR';
   message: string;
   member_name?: string;
   member_number?: string;
   meal_period?: string;
+  meal_plan_type?: MealPlanType;
   remaining_meals?: number;
   transaction_id?: string;
   timestamp?: string;

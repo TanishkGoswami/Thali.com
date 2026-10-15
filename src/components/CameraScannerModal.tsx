@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { Camera, X, RefreshCw, AlertCircle } from 'lucide-react';
+import type { MealPeriod } from '../types';
 
 interface CameraScannerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onScanSuccess: (decodedText: string) => void;
-  mealPeriod: 'lunch' | 'dinner';
+  mealPeriod: MealPeriod;
 }
 
 export const CameraScannerModal: React.FC<CameraScannerModalProps> = ({

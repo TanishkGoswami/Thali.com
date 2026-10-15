@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { X, CheckCircle2, AlertCircle, Banknote, Smartphone, ShieldCheck, Loader2 } from 'lucide-react';
-import type { Profile } from '../types';
+import { X, CheckCircle2, AlertCircle, Banknote, Smartphone, ShieldCheck, Loader2, Utensils, Clock } from 'lucide-react';
+import type { Profile, MealPlanType } from '../types';
+import { MEAL_PLAN_CONFIG } from '../types';
 import { api } from '../services/api';
 
 interface AdminPaymentApprovalModalProps {
@@ -17,6 +18,7 @@ export const AdminPaymentApprovalModal: React.FC<AdminPaymentApprovalModalProps>
   onSuccess
 }) => {
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'upi_direct'>('cash');
+  const [mealPlanType, setMealPlanType] = useState<MealPlanType>(member?.meal_plan_type || 'lunch_dinner');
   const [referenceNotes, setReferenceNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -32,6 +34,7 @@ export const AdminPaymentApprovalModal: React.FC<AdminPaymentApprovalModalProps>
       const res = await api.approveMemberPayment({
         memberId: member.id,
         paymentMethod,
+        mealPlanType,
         amountPaise: 280000,
         referenceNotes: referenceNotes.trim() || undefined
       });
@@ -161,6 +164,62 @@ export const AdminPaymentApprovalModal: React.FC<AdminPaymentApprovalModalProps>
               <span className="tnum" style={{ fontSize: '11px', color: 'var(--color-ink-mute)' }}>
                 54 Meals / 30 Days
               </span>
+            </div>
+          </div>
+
+          {/* 2-Meal Plan Selection */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)' }}>
+                Select 2-Meal Slot / भोजन समय: <span style={{ color: 'var(--color-error)' }}>*</span>
+              </label>
+              <span style={{ fontSize: '11px', color: 'var(--color-primary)', fontWeight: 500 }}>
+                2 Meals per day plan
+              </span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              {(Object.keys(MEAL_PLAN_CONFIG) as MealPlanType[]).map((key) => {
+                const plan = MEAL_PLAN_CONFIG[key];
+                const isSelected = mealPlanType === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setMealPlanType(key)}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'flex-start',
+                      padding: '10px 12px',
+                      borderRadius: 'var(--radius-md)',
+                      border: `2px solid ${isSelected ? 'var(--color-primary)' : 'var(--color-hairline)'}`,
+                      backgroundColor: isSelected ? '#f5f3ff' : '#ffffff',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'all var(--transition-fast)'
+                    }}
+                  >
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      fontWeight: 600,
+                      fontSize: '12px',
+                      color: isSelected ? 'var(--color-primary)' : 'var(--color-ink)'
+                    }}>
+                      <Utensils size={13} /> {plan.hindiName}
+                    </div>
+                    <div style={{ fontSize: '11px', fontWeight: 500, color: isSelected ? 'var(--color-ink)' : 'var(--color-ink-secondary)', marginTop: '2px' }}>
+                      {plan.name}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '10px', color: 'var(--color-ink-mute)', marginTop: '4px' }}>
+                      <Clock size={10} />
+                      <span className="truncate-text" style={{ maxWidth: '160px' }}>{plan.timeSlotsText}</span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 

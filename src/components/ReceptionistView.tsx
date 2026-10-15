@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
 import { Search, CheckCircle, XCircle, Camera, QrCode } from 'lucide-react';
-import type { Profile, CheckInResult, MealTransaction } from '../types';
+import type { Profile, CheckInResult, MealTransaction, MealPeriod } from '../types';
 import { api } from '../services/api';
 import { sound } from '../lib/audio';
 import { CameraScannerModal } from './CameraScannerModal';
@@ -9,7 +9,8 @@ import { CounterQrModal } from './CounterQrModal';
 
 interface ReceptionistViewProps {
   members: (Profile & { remaining_meals?: number; subscription_status?: string })[];
-  activeMealPeriod: 'lunch' | 'dinner';
+  activeMealPeriod: MealPeriod;
+  onMealPeriodChange?: (period: MealPeriod) => void;
   recentTransactions: (MealTransaction & { member_name?: string; member_number?: string })[];
   onRefresh: () => void;
 }
@@ -17,6 +18,7 @@ interface ReceptionistViewProps {
 export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
   members,
   activeMealPeriod,
+  onMealPeriodChange,
   recentTransactions,
   onRefresh
 }) => {
@@ -86,9 +88,69 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
           <h1 style={{ fontSize: '28px', marginTop: '2px' }}>
             Meal Check-In Operator
           </h1>
-          <p style={{ color: 'var(--color-ink-mute)', fontSize: '13px', marginTop: '2px' }}>
-            Active Slot: <strong style={{ color: 'var(--color-ink)', textTransform: 'capitalize' }}>{activeMealPeriod} Service</strong> • Fast pass validation & deduplication
-          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '6px' }}>
+            <span style={{ color: 'var(--color-ink-mute)', fontSize: '13px' }}>Current Service Slot:</span>
+            {onMealPeriodChange ? (
+              <div style={{
+                display: 'inline-flex',
+                backgroundColor: 'var(--color-canvas-soft)',
+                padding: '2px',
+                borderRadius: 'var(--radius-pill)',
+                border: '1px solid var(--color-hairline)',
+                gap: '2px'
+              }}>
+                <button
+                  type="button"
+                  onClick={() => onMealPeriodChange('breakfast')}
+                  className="btn btn-pill"
+                  style={{
+                    backgroundColor: activeMealPeriod === 'breakfast' ? '#ffffff' : 'transparent',
+                    color: activeMealPeriod === 'breakfast' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+                    boxShadow: activeMealPeriod === 'breakfast' ? 'var(--shadow-level-1)' : 'none',
+                    fontSize: '11px',
+                    fontWeight: activeMealPeriod === 'breakfast' ? 600 : 400,
+                    padding: '3px 9px'
+                  }}
+                >
+                  Breakfast (नाश्ता)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onMealPeriodChange('lunch')}
+                  className="btn btn-pill"
+                  style={{
+                    backgroundColor: activeMealPeriod === 'lunch' ? '#ffffff' : 'transparent',
+                    color: activeMealPeriod === 'lunch' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+                    boxShadow: activeMealPeriod === 'lunch' ? 'var(--shadow-level-1)' : 'none',
+                    fontSize: '11px',
+                    fontWeight: activeMealPeriod === 'lunch' ? 600 : 400,
+                    padding: '3px 9px'
+                  }}
+                >
+                  Lunch (दोपहर)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onMealPeriodChange('dinner')}
+                  className="btn btn-pill"
+                  style={{
+                    backgroundColor: activeMealPeriod === 'dinner' ? '#ffffff' : 'transparent',
+                    color: activeMealPeriod === 'dinner' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+                    boxShadow: activeMealPeriod === 'dinner' ? 'var(--shadow-level-1)' : 'none',
+                    fontSize: '11px',
+                    fontWeight: activeMealPeriod === 'dinner' ? 600 : 400,
+                    padding: '3px 9px'
+                  }}
+                >
+                  Dinner (रात)
+                </button>
+              </div>
+            ) : (
+              <strong style={{ color: 'var(--color-ink)', textTransform: 'capitalize' }}>
+                {activeMealPeriod} Service
+              </strong>
+            )}
+          </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>

@@ -1,12 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
 import { X, Printer, Utensils, Download } from 'lucide-react';
+import type { MealPeriod } from '../types';
 import { COUNTER_STANDEE_QR } from '../services/api';
 
 interface CounterQrModalProps {
   isOpen: boolean;
   onClose: () => void;
-  activeMealPeriod?: 'lunch' | 'dinner';
+  activeMealPeriod?: MealPeriod;
 }
 
 export const CounterQrModal: React.FC<CounterQrModalProps> = ({

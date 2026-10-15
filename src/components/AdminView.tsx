@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Users, CreditCard, Utensils, Plus, Search, Edit3, FileSpreadsheet, X, QrCode, Trash2, Camera, Printer, CheckCircle2 } from 'lucide-react';
-import type { Profile, DailyMenu } from '../types';
+import type { Profile, DailyMenu, MealPeriod } from '../types';
+import { MEAL_PLAN_CONFIG } from '../types';
 import { api } from '../services/api';
 import { CsvImporter } from './CsvImporter';
 import { MemberEditModal } from './MemberEditModal';
@@ -13,7 +14,7 @@ interface AdminViewProps {
   members: (Profile & { remaining_meals?: number; subscription_status?: string; payment_method?: 'cash' | 'upi_direct' })[];
   menus: DailyMenu[];
   onRefresh: () => void;
-  activeMealPeriod?: 'lunch' | 'dinner';
+  activeMealPeriod?: MealPeriod;
 }
 
 export const AdminView: React.FC<AdminViewProps> = ({
@@ -31,7 +32,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
   const [selectedMemberForEdit, setSelectedMemberForEdit] = useState<(Profile & { remaining_meals?: number; subscription_status?: string }) | null>(null);
   const [selectedMemberForApproval, setSelectedMemberForApproval] = useState<(Profile & { remaining_meals?: number; subscription_status?: string; payment_method?: 'cash' | 'upi_direct' }) | null>(null);
   const [showMenuEditor, setShowMenuEditor] = useState(false);
-  const [menuEditorPeriod, setMenuEditorPeriod] = useState<'lunch' | 'dinner'>('lunch');
+  const [menuEditorPeriod, setMenuEditorPeriod] = useState<MealPeriod>('lunch');
   const [showCounterStandee, setShowCounterStandee] = useState(false);
   const [showCameraScanner, setShowCameraScanner] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -465,19 +466,35 @@ export const AdminView: React.FC<AdminViewProps> = ({
                       </strong> <span style={{ color: 'var(--color-ink-mute-2)', fontSize: '11px' }}>/ 54</span>
                     </td>
                     <td style={{ padding: '10px 12px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
-                      {m.subscription_status === 'pending' ? (
-                        <span className="badge badge-pending" style={{ fontSize: '10px', padding: '2px 8px' }}>
-                          Payment Pending
-                        </span>
-                      ) : !m.phone_verified ? (
-                        <span className="badge badge-indigo" style={{ fontSize: '10px', padding: '2px 8px' }}>
-                          {m.payment_method === 'cash' ? '💵 Cash' : '📱 Online'} • OTP Pending
-                        </span>
-                      ) : (
-                        <span className="badge badge-active" style={{ fontSize: '10px', padding: '2px 8px' }}>
-                          ● Active ({m.payment_method === 'cash' ? 'Cash' : 'Online'})
-                        </span>
-                      )}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', alignItems: 'flex-start' }}>
+                        {m.subscription_status === 'pending' ? (
+                          <span className="badge badge-pending" style={{ fontSize: '10px', padding: '2px 8px' }}>
+                            Payment Pending
+                          </span>
+                        ) : !m.phone_verified ? (
+                          <span className="badge badge-indigo" style={{ fontSize: '10px', padding: '2px 8px' }}>
+                            {m.payment_method === 'cash' ? '💵 Cash' : '📱 Online'} • OTP Pending
+                          </span>
+                        ) : (
+                          <span className="badge badge-active" style={{ fontSize: '10px', padding: '2px 8px' }}>
+                            ● Active ({m.payment_method === 'cash' ? 'Cash' : 'Online'})
+                          </span>
+                        )}
+                        {m.meal_plan_type && MEAL_PLAN_CONFIG[m.meal_plan_type] && (
+                          <span
+                            style={{
+                              fontSize: '10px',
+                              fontWeight: 500,
+                              padding: '1px 6px',
+                              borderRadius: 'var(--radius-pill)',
+                              ...MEAL_PLAN_CONFIG[m.meal_plan_type].badgeStyle
+                            }}
+                            title={MEAL_PLAN_CONFIG[m.meal_plan_type].name}
+                          >
+                            🍱 {MEAL_PLAN_CONFIG[m.meal_plan_type].shortLabel}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td style={{ padding: '10px 12px', textAlign: 'right', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
                       <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
@@ -620,6 +637,23 @@ export const AdminView: React.FC<AdminViewProps> = ({
                   </div>
                 </div>
 
+                {/* Mobile Card Row 2.5: 2-Meal Plan Badge */}
+                {m.meal_plan_type && MEAL_PLAN_CONFIG[m.meal_plan_type] && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span
+                      style={{
+                        fontSize: '10px',
+                        fontWeight: 500,
+                        padding: '2px 8px',
+                        borderRadius: 'var(--radius-pill)',
+                        ...MEAL_PLAN_CONFIG[m.meal_plan_type].badgeStyle
+                      }}
+                    >
+                      🍱 {MEAL_PLAN_CONFIG[m.meal_plan_type].hindiName} ({MEAL_PLAN_CONFIG[m.meal_plan_type].shortLabel})
+                    </span>
+                  </div>
+                )}
+
                 {/* Mobile Card Row 3: Action Buttons */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginTop: '2px' }}>
                   {m.subscription_status === 'pending' && (
@@ -756,6 +790,16 @@ export const AdminView: React.FC<AdminViewProps> = ({
               <button
                 type="button"
                 onClick={() => {
+                  setMenuEditorPeriod('breakfast');
+                  setShowMenuEditor(true);
+                }}
+                className="btn btn-secondary btn-pill"
+              >
+                <Plus size={12} /> Breakfast Menu
+              </button>
+              <button
+                type="button"
+                onClick={() => {
                   setMenuEditorPeriod('lunch');
                   setShowMenuEditor(true);
                 }}
@@ -781,7 +825,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
               <div key={menu.id} className="card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <h3 style={{ fontSize: '16px', fontWeight: 600, textTransform: 'capitalize' }}>
-                    {menu.meal_period === 'lunch' ? 'Lunch Menu' : 'Dinner Menu'}
+                    {menu.meal_period === 'breakfast' ? 'Breakfast Menu (नाश्ता)' : menu.meal_period === 'lunch' ? 'Lunch Menu (दोपहर)' : 'Dinner Menu (रात)'}
                   </h3>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span className="badge badge-active" style={{ fontSize: '9px', padding: '1px 5px' }}>{menu.status}</span>

@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { X, Plus, Trash2, Save } from 'lucide-react';
-import type { DailyMenu } from '../types';
+import type { DailyMenu, MealPeriod } from '../types';
 import { api } from '../services/api';
 
 interface MenuEditorModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  initialMealPeriod?: 'lunch' | 'dinner';
+  initialMealPeriod?: MealPeriod;
   existingMenu?: DailyMenu;
 }
 
@@ -27,9 +27,16 @@ export const MenuEditorModal: React.FC<MenuEditorModalProps> = ({
   initialMealPeriod = 'lunch',
   existingMenu
 }) => {
-  const [mealPeriod, setMealPeriod] = useState<'lunch' | 'dinner'>(existingMenu?.meal_period || initialMealPeriod);
-  const [title, setTitle] = useState(existingMenu?.title || (mealPeriod === 'lunch' ? 'Deluxe Afternoon Thali' : 'Evening Comfort Thali'));
-  const [notes, setNotes] = useState(existingMenu?.notes || 'Freshly cooked home-style meal. Unlimited rice & dal refills.');
+  const [mealPeriod, setMealPeriod] = useState<MealPeriod>(existingMenu?.meal_period || initialMealPeriod);
+  const [title, setTitle] = useState(
+    existingMenu?.title ||
+    (mealPeriod === 'breakfast'
+      ? 'Morning Fresh Breakfast / नाश्ता'
+      : mealPeriod === 'lunch'
+      ? 'Deluxe Afternoon Thali'
+      : 'Evening Comfort Thali')
+  );
+  const [notes, setNotes] = useState(existingMenu?.notes || 'Freshly cooked home-style meal. Unlimited refills.');
   
   const [items, setItems] = useState<MenuItemDraft[]>(
     existingMenu?.items && existingMenu.items.length > 0
@@ -129,14 +136,34 @@ export const MenuEditorModal: React.FC<MenuEditorModalProps> = ({
         </div>
 
         <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          {/* Meal Period Segmented Toggle */}
+          {/* Meal Period Segmented Toggle (Breakfast / Lunch / Dinner) */}
           <div style={{
             display: 'flex',
             backgroundColor: 'var(--color-canvas-soft)',
             padding: '3px',
             borderRadius: 'var(--radius-pill)',
-            border: '1px solid var(--color-hairline)'
+            border: '1px solid var(--color-hairline)',
+            gap: '2px'
           }}>
+            <button
+              type="button"
+              onClick={() => {
+                setMealPeriod('breakfast');
+                setTitle('Morning Fresh Breakfast / नाश्ता');
+              }}
+              className="btn btn-pill"
+              style={{
+                flex: 1,
+                backgroundColor: mealPeriod === 'breakfast' ? '#ffffff' : 'transparent',
+                color: mealPeriod === 'breakfast' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+                boxShadow: mealPeriod === 'breakfast' ? 'var(--shadow-level-1)' : 'none',
+                fontSize: '11px',
+                fontWeight: mealPeriod === 'breakfast' ? 600 : 400,
+                padding: '5px 8px'
+              }}
+            >
+              Breakfast (नाश्ता)
+            </button>
             <button
               type="button"
               onClick={() => {
@@ -149,11 +176,12 @@ export const MenuEditorModal: React.FC<MenuEditorModalProps> = ({
                 backgroundColor: mealPeriod === 'lunch' ? '#ffffff' : 'transparent',
                 color: mealPeriod === 'lunch' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
                 boxShadow: mealPeriod === 'lunch' ? 'var(--shadow-level-1)' : 'none',
-                fontSize: '12px',
-                fontWeight: mealPeriod === 'lunch' ? 500 : 400
+                fontSize: '11px',
+                fontWeight: mealPeriod === 'lunch' ? 600 : 400,
+                padding: '5px 8px'
               }}
             >
-              Lunch Service
+              Lunch (दोपहर)
             </button>
             <button
               type="button"
@@ -167,11 +195,12 @@ export const MenuEditorModal: React.FC<MenuEditorModalProps> = ({
                 backgroundColor: mealPeriod === 'dinner' ? '#ffffff' : 'transparent',
                 color: mealPeriod === 'dinner' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
                 boxShadow: mealPeriod === 'dinner' ? 'var(--shadow-level-1)' : 'none',
-                fontSize: '12px',
-                fontWeight: mealPeriod === 'dinner' ? 500 : 400
+                fontSize: '11px',
+                fontWeight: mealPeriod === 'dinner' ? 600 : 400,
+                padding: '5px 8px'
               }}
             >
-              Dinner Service
+              Dinner (रात)
             </button>
           </div>
 

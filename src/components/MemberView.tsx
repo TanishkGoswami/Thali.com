@@ -17,7 +17,8 @@ import {
   User,
   Lock
 } from 'lucide-react';
-import type { Profile, DailyMenu, MealTransaction, CheckInResult } from '../types';
+import type { Profile, DailyMenu, MealTransaction, CheckInResult, MealPeriod, MealPlanType } from '../types';
+import { MEAL_PLAN_CONFIG } from '../types';
 import { api, COUNTER_STANDEE_QR } from '../services/api';
 import { sound } from '../lib/audio';
 import { PaymentActivationModal } from './PaymentActivationModal';
@@ -27,7 +28,7 @@ import { CounterQrModal } from './CounterQrModal';
 interface MemberViewProps {
   member: Profile & { remaining_meals?: number; subscription_status?: string; expires_at?: string; payment_method?: 'cash' | 'upi_direct' };
   menus: DailyMenu[];
-  activeMealPeriod: 'lunch' | 'dinner';
+  activeMealPeriod: MealPeriod;
   onRefresh: () => void;
   onOpenProfile?: () => void;
   onSwitchToAdmin?: () => void;
@@ -52,6 +53,12 @@ export const MemberView: React.FC<MemberViewProps> = ({
   const [selfCheckInLoading, setSelfCheckInLoading] = useState(false);
   const [selfCheckInReceipt, setSelfCheckInReceipt] = useState<CheckInResult | null>(null);
   const [showAdminCounterStandee, setShowAdminCounterStandee] = useState(false);
+  const [selectedMenuTab, setSelectedMenuTab] = useState<MealPeriod>(activeMealPeriod);
+
+  // Derive member's 2-meal plan config & slot permission
+  const planType: MealPlanType = member.meal_plan_type || 'lunch_dinner';
+  const planConfig = MEAL_PLAN_CONFIG[planType];
+  const isSlotPermitted = planType === 'any_two' || (Array.isArray(planConfig.allowedPeriods) && planConfig.allowedPeriods.includes(activeMealPeriod));
 
   // Member meal passbook state
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -123,7 +130,7 @@ export const MemberView: React.FC<MemberViewProps> = ({
           spread: 70,
           origin: { y: 0.6 }
         });
-      } else if (result.code === 'DUPLICATE_CHECKIN') {
+      } else if (result.code === 'DUPLICATE_CHECKIN' || result.code === 'PLAN_NOT_PERMITTED' || result.code === 'DAILY_LIMIT_EXCEEDED') {
         sound.playWarning();
       } else {
         sound.playError();
@@ -168,7 +175,7 @@ export const MemberView: React.FC<MemberViewProps> = ({
       })
     : '30 Days from activation';
 
-  const todayMenu = menus.find(m => m.meal_period === activeMealPeriod) || menus[0];
+  const todayMenu = menus.find(m => m.meal_period === selectedMenuTab) || menus.find(m => m.meal_period === activeMealPeriod) || menus[0];
 
   return (
     <div style={{ maxWidth: '1060px', margin: '0 auto', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -261,6 +268,11 @@ export const MemberView: React.FC<MemberViewProps> = ({
           </h1>
           <p style={{ color: 'var(--color-ink-mute)', fontSize: '13px', marginTop: '2px' }}>
             Current Slot: <strong style={{ textTransform: 'capitalize', color: 'var(--color-ink)' }}>{activeMealPeriod} Service</strong>
+            {!isSlotPermitted && (
+              <span style={{ color: '#b45309', fontWeight: 600, marginLeft: '8px', fontSize: '12px' }}>
+                (⚠️ Outside your {planConfig.hindiName} pass)
+              </span>
+            )}
           </p>
         </div>
 
@@ -528,10 +540,31 @@ export const MemberView: React.FC<MemberViewProps> = ({
               fontSize: '18px',
               letterSpacing: '0.12em',
               fontWeight: 500,
-              marginTop: '20px',
+              marginTop: '16px',
               color: '#ffffff'
             }}>
               MESS — {member.member_number}
+            </div>
+
+            {/* Member 2-Meal Plan Badge on Card */}
+            <div style={{
+              marginTop: '10px',
+              padding: '6px 10px',
+              borderRadius: '8px',
+              backgroundColor: 'rgba(255, 255, 255, 0.12)',
+              border: '1px solid rgba(255, 255, 255, 0.18)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '8px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#fef08a', fontWeight: 600 }}>
+                <UtensilsCrossed size={12} />
+                <span>2-Meal Plan: {planConfig.hindiName}</span>
+              </div>
+              <span className="tnum" style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.75)' }}>
+                {planConfig.shortLabel}
+              </span>
             </div>
           </div>
 
@@ -709,12 +742,65 @@ export const MemberView: React.FC<MemberViewProps> = ({
           <div>
             <span className="eyebrow">Dining Menu</span>
             <h2 style={{ fontSize: '20px', marginTop: '2px' }}>
-              Today's {activeMealPeriod === 'lunch' ? 'Lunch Specials' : 'Dinner Specials'}
+              Today's {selectedMenuTab === 'breakfast' ? 'Breakfast Specials (नाश्ता)' : selectedMenuTab === 'lunch' ? 'Lunch Specials (दोपहर)' : 'Dinner Specials (रात)'}
             </h2>
           </div>
-          <span style={{ fontSize: '11px', color: 'var(--color-ink-mute)', backgroundColor: 'var(--color-canvas-soft)', padding: '3px 10px', borderRadius: 'var(--radius-pill)', border: '1px solid var(--color-hairline)' }}>
-            Fresh Desi Ghee
-          </span>
+
+          {/* Meal Period View Switcher for Menu */}
+          <div style={{
+            display: 'inline-flex',
+            backgroundColor: 'var(--color-canvas-soft)',
+            padding: '2px',
+            borderRadius: 'var(--radius-pill)',
+            border: '1px solid var(--color-hairline)',
+            gap: '2px'
+          }}>
+            <button
+              type="button"
+              onClick={() => setSelectedMenuTab('breakfast')}
+              className="btn btn-pill"
+              style={{
+                backgroundColor: selectedMenuTab === 'breakfast' ? '#ffffff' : 'transparent',
+                color: selectedMenuTab === 'breakfast' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+                boxShadow: selectedMenuTab === 'breakfast' ? 'var(--shadow-level-1)' : 'none',
+                fontSize: '11px',
+                fontWeight: selectedMenuTab === 'breakfast' ? 600 : 400,
+                padding: '3px 8px'
+              }}
+            >
+              Breakfast
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedMenuTab('lunch')}
+              className="btn btn-pill"
+              style={{
+                backgroundColor: selectedMenuTab === 'lunch' ? '#ffffff' : 'transparent',
+                color: selectedMenuTab === 'lunch' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+                boxShadow: selectedMenuTab === 'lunch' ? 'var(--shadow-level-1)' : 'none',
+                fontSize: '11px',
+                fontWeight: selectedMenuTab === 'lunch' ? 600 : 400,
+                padding: '3px 8px'
+              }}
+            >
+              Lunch
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedMenuTab('dinner')}
+              className="btn btn-pill"
+              style={{
+                backgroundColor: selectedMenuTab === 'dinner' ? '#ffffff' : 'transparent',
+                color: selectedMenuTab === 'dinner' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+                boxShadow: selectedMenuTab === 'dinner' ? 'var(--shadow-level-1)' : 'none',
+                fontSize: '11px',
+                fontWeight: selectedMenuTab === 'dinner' ? 600 : 400,
+                padding: '3px 8px'
+              }}
+            >
+              Dinner
+            </button>
+          </div>
         </div>
 
         {todayMenu?.items && todayMenu.items.length > 0 ? (
@@ -920,7 +1006,7 @@ export const MemberView: React.FC<MemberViewProps> = ({
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <span style={{ fontSize: '12px', fontWeight: 500, textTransform: 'capitalize' }}>
-                          {tx.meal_period === 'lunch' ? 'Lunch' : tx.meal_period === 'dinner' ? 'Dinner' : 'Adjustment'}
+                          {tx.meal_period === 'breakfast' ? 'Breakfast (नाश्ता)' : tx.meal_period === 'lunch' ? 'Lunch (दोपहर)' : tx.meal_period === 'dinner' ? 'Dinner (रात)' : 'Adjustment'}
                         </span>
                         <span className="badge badge-active" style={{ fontSize: '9px', padding: '1px 5px' }}>
                           {tx.status}

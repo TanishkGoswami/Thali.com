@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Save, Plus, Minus, Trash2 } from 'lucide-react';
-import type { Profile } from '../types';
+import type { Profile, MealPlanType } from '../types';
+import { MEAL_PLAN_CONFIG } from '../types';
 import { api } from '../services/api';
 import { supabase } from '../lib/supabase';
 
@@ -20,6 +21,7 @@ export const MemberEditModal: React.FC<MemberEditModalProps> = ({
   const [fullName, setFullName] = useState(member.full_name);
   const [phone, setPhone] = useState(member.phone || '');
   const [status, setStatus] = useState(member.status);
+  const [mealPlanType, setMealPlanType] = useState<MealPlanType>(member.meal_plan_type || 'lunch_dinner');
   
   // Balance adjustment state
   const [adjustDelta, setAdjustDelta] = useState<number>(0);
@@ -41,11 +43,17 @@ export const MemberEditModal: React.FC<MemberEditModalProps> = ({
 
     try {
       // 1. Update Profile fields if changed
-      if (fullName !== member.full_name || phone !== (member.phone || '') || status !== member.status) {
+      if (
+        fullName !== member.full_name ||
+        phone !== (member.phone || '') ||
+        status !== member.status ||
+        mealPlanType !== member.meal_plan_type
+      ) {
         const ok = await api.updateMemberProfile(member.id, {
           full_name: fullName,
           phone,
-          status
+          status,
+          meal_plan_type: mealPlanType
         });
         if (!ok) throw new Error('Could not update profile details');
       }
@@ -224,6 +232,46 @@ export const MemberEditModal: React.FC<MemberEditModalProps> = ({
                 <option value="inactive">Inactive</option>
                 <option value="archived">Archived / Left</option>
               </select>
+            </div>
+          </div>
+
+          {/* 2-Meal Subscription Plan Selector */}
+          <div>
+            <label style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', display: 'block', marginBottom: '6px' }}>
+              Subscribed 2-Meal Slot / भोजन समय:
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
+              {(Object.keys(MEAL_PLAN_CONFIG) as MealPlanType[]).map((key) => {
+                const plan = MEAL_PLAN_CONFIG[key];
+                const isSelected = mealPlanType === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setMealPlanType(key)}
+                    style={{
+                      padding: '8px 10px',
+                      borderRadius: 'var(--radius-sm)',
+                      border: `1.5px solid ${isSelected ? 'var(--color-primary)' : 'var(--color-hairline)'}`,
+                      backgroundColor: isSelected ? '#f5f3ff' : 'var(--color-canvas-soft)',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'all var(--transition-fast)'
+                    }}
+                  >
+                    <div style={{
+                      fontWeight: 600,
+                      fontSize: '11px',
+                      color: isSelected ? 'var(--color-primary)' : 'var(--color-ink)'
+                    }}>
+                      {plan.hindiName}
+                    </div>
+                    <div style={{ fontSize: '10px', color: 'var(--color-ink-mute)', marginTop: '2px' }}>
+                      {plan.shortLabel}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 

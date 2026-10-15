@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import type { Profile, DailyMenu, CheckInResult, MealTransaction } from '../types';
+import type { Profile, DailyMenu, CheckInResult, MealTransaction, MealPeriod, MealPlanType } from '../types';
 
 export const COUNTER_STANDEE_QR = 'THALI_OFFICIAL_COUNTER_QR_2026';
 
@@ -49,6 +49,7 @@ export const api = {
 
       return {
         ...profile,
+        meal_plan_type: (activeSub?.meal_plan_type || profile.meal_plan_type || 'lunch_dinner') as MealPlanType,
         remaining_meals: activeSub ? remaining : 0,
         subscription_status: activeSub ? activeSub.status : 'none',
         expires_at: activeSub?.expires_at,
@@ -61,7 +62,7 @@ export const api = {
   },
 
   // Perform atomic meal check-in
-  async checkInMeal(qrToken: string, mealPeriod: 'lunch' | 'dinner'): Promise<CheckInResult> {
+  async checkInMeal(qrToken: string, mealPeriod: MealPeriod): Promise<CheckInResult> {
     const { data, error } = await supabase.rpc('check_in_member_meal', {
       p_qr_token: qrToken,
       p_meal_period: mealPeriod
@@ -136,16 +137,18 @@ export const api = {
     return true;
   },
 
-  // Admin approves payment and activates member pass with Cash or Online mode
+  // Admin approves payment and activates member pass with Cash or Online mode and 2-meal plan assignment
   async approveMemberPayment({
     memberId,
     paymentMethod,
+    mealPlanType = 'lunch_dinner',
     amountPaise = 280000,
     referenceNotes,
     verifierId
   }: {
     memberId: string;
     paymentMethod: 'cash' | 'upi_direct';
+    mealPlanType?: MealPlanType;
     amountPaise?: number;
     referenceNotes?: string;
     verifierId?: string;
@@ -153,6 +156,14 @@ export const api = {
     try {
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 30);
+
+      const planIdMap: Record<MealPlanType, string> = {
+        lunch_dinner: '00000000-0000-0000-0000-000000000001',
+        breakfast_lunch: '00000000-0000-0000-0000-000000000002',
+        breakfast_dinner: '00000000-0000-0000-0000-000000000003',
+        any_two: '00000000-0000-0000-0000-000000000004'
+      };
+      const planId = planIdMap[mealPlanType] || '00000000-0000-0000-0000-000000000001';
 
       // 1. Fetch existing subscription for this member
       const { data: existingSub } = await supabase
@@ -170,6 +181,8 @@ export const api = {
           .from('subscriptions')
           .update({
             status: 'active',
+            plan_id: planId,
+            meal_plan_type: mealPlanType,
             meals_granted: 54,
             starts_at: new Date().toISOString(),
             expires_at: expiresAt.toISOString(),
@@ -184,7 +197,8 @@ export const api = {
           .insert([
             {
               member_id: memberId,
-              plan_id: '00000000-0000-0000-0000-000000000001',
+              plan_id: planId,
+              meal_plan_type: mealPlanType,
               status: 'active',
               meals_granted: 54,
               starts_at: new Date().toISOString(),
@@ -198,6 +212,15 @@ export const api = {
         if (newSubErr) throw newSubErr;
         subId = newSub.id;
       }
+
+      // Also update member's profile meal_plan_type
+      await supabase
+        .from('profiles')
+        .update({
+          meal_plan_type: mealPlanType,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', memberId);
 
       // 2. Record payment in payments table
       if (subId) {
@@ -326,10 +349,17 @@ export const api = {
     return true;
   },
 
-  // Update member profile
+  // Update member profile & optionally meal_plan_type
   async updateMemberProfile(
     memberId: string,
-    updates: { full_name?: string; phone?: string; email?: string; pin_code?: string; status?: 'active' | 'inactive' | 'archived' }
+    updates: {
+      full_name?: string;
+      phone?: string;
+      email?: string;
+      pin_code?: string;
+      meal_plan_type?: MealPlanType;
+      status?: 'active' | 'inactive' | 'archived';
+    }
   ): Promise<boolean> {
     const { error } = await supabase
       .from('profiles')
@@ -343,6 +373,25 @@ export const api = {
       console.error('Error updating member profile:', error);
       return false;
     }
+
+    // If meal_plan_type was updated, sync it with the active subscription
+    if (updates.meal_plan_type) {
+      const planIdMap: Record<MealPlanType, string> = {
+        lunch_dinner: '00000000-0000-0000-0000-000000000001',
+        breakfast_lunch: '00000000-0000-0000-0000-000000000002',
+        breakfast_dinner: '00000000-0000-0000-0000-000000000003',
+        any_two: '00000000-0000-0000-0000-000000000004'
+      };
+      await supabase
+        .from('subscriptions')
+        .update({
+          meal_plan_type: updates.meal_plan_type,
+          plan_id: planIdMap[updates.meal_plan_type]
+        })
+        .eq('member_id', memberId)
+        .eq('status', 'active');
+    }
+
     return true;
   },
 
@@ -418,7 +467,7 @@ export const api = {
   // Save or update daily menu and its items
   async saveDailyMenu(
     serviceDate: string,
-    mealPeriod: 'lunch' | 'dinner',
+    mealPeriod: MealPeriod,
     title: string,
     notes: string,
     items: { name: string; category: 'Dal' | 'Sabzi' | 'Roti' | 'Rice' | 'Special' | 'Sweet' | 'Side' }[]

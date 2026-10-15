@@ -8,7 +8,7 @@ import { ProfileModal } from './components/ProfileModal';
 import { api } from './services/api';
 import { signOutUser, getLocalSessionId } from './lib/auth';
 import { supabase } from './lib/supabase';
-import type { Role, Profile, DailyMenu, MealTransaction } from './types';
+import type { Role, Profile, DailyMenu, MealTransaction, MealPeriod } from './types';
 import { Loader2 } from 'lucide-react';
 
 export function App() {
@@ -16,7 +16,7 @@ export function App() {
   const [currentRole, setCurrentRole] = useState<Role>('member');
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-  const [activeMealPeriod, setActiveMealPeriod] = useState<'lunch' | 'dinner'>('lunch');
+  const [activeMealPeriod, setActiveMealPeriod] = useState<MealPeriod>('lunch');
   const [members, setMembers] = useState<(Profile & { remaining_meals?: number; subscription_status?: string; expires_at?: string; payment_method?: 'cash' | 'upi_direct' })[]>([]);
   const [menus, setMenus] = useState<DailyMenu[]>([]);
   const [recentTransactions, setRecentTransactions] = useState<(MealTransaction & { member_name?: string; member_number?: string })[]>([]);
@@ -58,12 +58,21 @@ export function App() {
   useEffect(() => {
     loadData();
 
-    // Auto-detect current meal session by local time
-    const currentHour = new Date().getHours();
-    if (currentHour >= 16 || currentHour < 5) {
-      setActiveMealPeriod('dinner');
-    } else {
+    // Auto-detect current meal session by local time:
+    // 05:00 - 11:30: Breakfast
+    // 11:30 - 16:30: Lunch
+    // 16:30 - 05:00: Dinner
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMin = now.getMinutes();
+    const timeVal = currentHour + currentMin / 60;
+
+    if (timeVal >= 5 && timeVal < 11.5) {
+      setActiveMealPeriod('breakfast');
+    } else if (timeVal >= 11.5 && timeVal < 16.5) {
       setActiveMealPeriod('lunch');
+    } else {
+      setActiveMealPeriod('dinner');
     }
 
     // Listen to Supabase Auth state changes
@@ -144,6 +153,7 @@ export function App() {
         <ReceptionistView
           members={members}
           activeMealPeriod={activeMealPeriod}
+          onMealPeriodChange={setActiveMealPeriod}
           recentTransactions={recentTransactions}
           onRefresh={loadData}
         />
@@ -157,6 +167,7 @@ export function App() {
           <ReceptionistView
             members={members}
             activeMealPeriod={activeMealPeriod}
+            onMealPeriodChange={setActiveMealPeriod}
             recentTransactions={recentTransactions}
             onRefresh={loadData}
           />
@@ -213,6 +224,8 @@ export function App() {
         currentUser={currentUser}
         currentRole={currentRole}
         onRoleChange={setCurrentRole}
+        activeMealPeriod={activeMealPeriod}
+        onMealPeriodChange={setActiveMealPeriod}
         onOpenLogin={() => setIsLoginModalOpen(true)}
         onOpenProfile={() => setIsProfileModalOpen(true)}
         onLogout={handleLogout}
@@ -286,7 +299,7 @@ export function App() {
           <div className="tnum" style={{ display: 'flex', gap: '20px', fontSize: '12px', color: 'var(--color-ink-mute-2)', flexWrap: 'wrap' }}>
             <span>Timezone: Asia/Kolkata</span>
             <span>Plan: ₹2,800 / 54 Meals</span>
-            <span>Anti-Duplicate: 1 Lunch + 1 Dinner / day</span>
+            <span>Plans: 2 Meals / day (Breakfast, Lunch, Dinner options)</span>
           </div>
         </div>
       </footer>
