@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, CreditCard, Utensils, Plus, Check, Search, Edit3, FileSpreadsheet, X, QrCode, Trash2, Camera } from 'lucide-react';
+import { Users, CreditCard, Utensils, Plus, Check, Search, Edit3, FileSpreadsheet, X, QrCode, Trash2, Camera, Printer } from 'lucide-react';
 import type { Profile, DailyMenu } from '../types';
 import { api } from '../services/api';
 import { CsvImporter } from './CsvImporter';
@@ -162,6 +162,62 @@ export const AdminView: React.FC<AdminViewProps> = ({
             <Plus size={15} /> Add Member
           </button>
         </div>
+      </div>
+
+      {/* Prominent Mess Counter Standee Banner Card */}
+      <div style={{
+        background: 'linear-gradient(135deg, #0d253d 0%, #163659 100%)',
+        borderRadius: 'var(--radius-lg)',
+        padding: '18px 20px',
+        color: '#ffffff',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '14px',
+        boxShadow: 'var(--shadow-level-2)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{
+            width: '44px',
+            height: '44px',
+            borderRadius: '10px',
+            backgroundColor: 'rgba(255, 255, 255, 0.12)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#93c5fd',
+            flexShrink: 0
+          }}>
+            <QrCode size={24} />
+          </div>
+          <div>
+            <h3 style={{ color: '#ffffff', fontSize: '17px', fontWeight: 600 }}>
+              Official Mess Counter Standee QR
+            </h3>
+            <p style={{ color: 'rgba(255, 255, 255, 0.8)', fontSize: '12px', marginTop: '2px' }}>
+              Print this QR code to stick at your mess dining counter so students can scan and deduct their meal.
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setShowCounterStandee(true)}
+          className="btn"
+          style={{
+            backgroundColor: 'var(--color-primary)',
+            color: '#ffffff',
+            fontWeight: 600,
+            padding: '10px 18px',
+            fontSize: '13px',
+            borderRadius: 'var(--radius-pill)',
+            gap: '8px',
+            boxShadow: '0 2px 8px rgba(83, 58, 253, 0.35)'
+          }}
+        >
+          <Printer size={15} /> Open & Print Standee QR
+        </button>
       </div>
 
       {/* Top Metric Cards (Mobile 2x2 grid) */}

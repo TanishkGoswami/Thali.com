@@ -11,26 +11,31 @@ import {
   PhoneCall,
   Camera,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Printer,
+  QrCode
 } from 'lucide-react';
 import type { Profile, DailyMenu, MealTransaction, CheckInResult } from '../types';
 import { api, COUNTER_STANDEE_QR } from '../services/api';
 import { sound } from '../lib/audio';
 import { PaymentActivationModal } from './PaymentActivationModal';
 import { CameraScannerModal } from './CameraScannerModal';
+import { CounterQrModal } from './CounterQrModal';
 
 interface MemberViewProps {
   member: Profile & { remaining_meals?: number; subscription_status?: string; expires_at?: string };
   menus: DailyMenu[];
   activeMealPeriod: 'lunch' | 'dinner';
   onRefresh: () => void;
+  onSwitchToAdmin?: () => void;
 }
 
 export const MemberView: React.FC<MemberViewProps> = ({
   member,
   menus,
   activeMealPeriod,
-  onRefresh
+  onRefresh,
+  onSwitchToAdmin
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [showPaymentActivationModal, setShowPaymentActivationModal] = useState(false);
@@ -42,6 +47,7 @@ export const MemberView: React.FC<MemberViewProps> = ({
   const [showCameraScanner, setShowCameraScanner] = useState(false);
   const [selfCheckInLoading, setSelfCheckInLoading] = useState(false);
   const [selfCheckInReceipt, setSelfCheckInReceipt] = useState<CheckInResult | null>(null);
+  const [showAdminCounterStandee, setShowAdminCounterStandee] = useState(false);
 
   // Member meal passbook state
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -143,6 +149,77 @@ export const MemberView: React.FC<MemberViewProps> = ({
   return (
     <div style={{ maxWidth: '1060px', margin: '0 auto', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
       
+      {/* If logged in user is Owner Admin, show Admin Banner with Print QR Standee action */}
+      {member.role === 'owner_admin' && (
+        <div style={{
+          backgroundColor: '#0d253d',
+          borderRadius: 'var(--radius-lg)',
+          padding: '16px 20px',
+          color: '#ffffff',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '12px',
+          boxShadow: 'var(--shadow-level-2)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '38px',
+              height: '38px',
+              borderRadius: '8px',
+              backgroundColor: 'rgba(255, 255, 255, 0.12)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#93c5fd',
+              flexShrink: 0
+            }}>
+              <QrCode size={20} />
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 600, color: '#ffffff' }}>
+                Owner Admin Mode Active
+              </div>
+              <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.75)', marginTop: '2px' }}>
+                You are viewing student pass preview. Need the counter QR standee to print?
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => setShowAdminCounterStandee(true)}
+              className="btn btn-pill"
+              style={{
+                backgroundColor: 'var(--color-primary)',
+                color: '#ffffff',
+                fontSize: '12px',
+                gap: '6px'
+              }}
+            >
+              <Printer size={13} /> Print Counter Standee QR
+            </button>
+            {onSwitchToAdmin && (
+              <button
+                type="button"
+                onClick={onSwitchToAdmin}
+                className="btn btn-pill"
+                style={{
+                  backgroundColor: '#ffffff',
+                  color: 'var(--color-ink)',
+                  fontSize: '12px',
+                  fontWeight: 600
+                }}
+              >
+                Go to Admin Dashboard →
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Top Banner / Welcome */}
       <div style={{
         display: 'flex',
@@ -789,6 +866,13 @@ export const MemberView: React.FC<MemberViewProps> = ({
         onClose={() => setShowPaymentActivationModal(false)}
         member={member}
         onSuccess={onRefresh}
+      />
+
+      {/* Official Mess Counter Standee QR Modal for Admin */}
+      <CounterQrModal
+        isOpen={showAdminCounterStandee}
+        onClose={() => setShowAdminCounterStandee(false)}
+        activeMealPeriod={activeMealPeriod}
       />
     </div>
   );

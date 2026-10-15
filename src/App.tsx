@@ -166,6 +166,7 @@ export function App() {
             menus={menus}
             activeMealPeriod={activeMealPeriod}
             onRefresh={loadData}
+            onSwitchToAdmin={() => setCurrentRole('owner_admin')}
           />
         );
       }

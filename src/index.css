@@ -445,3 +445,36 @@ h4 {
     width: 100% !important;
   }
 }
+
+/* -------------------------------------------------------------
+   Print Media Styling (Isolates Official Counter Standee)
+   ------------------------------------------------------------- */
+@media print {
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  #printable-standee,
+  #printable-standee * {
+    visibility: visible;
+  }
+
+  #printable-standee {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 380px !important;
+    max-width: 90% !important;
+    border: 2px solid #0d253d !important;
+    box-shadow: none !important;
+    padding: 32px 24px !important;
+    background: #ffffff !important;
+    margin: 0 !important;
+  }
+}

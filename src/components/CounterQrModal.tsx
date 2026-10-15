@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
-import { X, Printer, Utensils } from 'lucide-react';
+import { X, Printer, Utensils, Download } from 'lucide-react';
 import { COUNTER_STANDEE_QR } from '../services/api';
 
 interface CounterQrModalProps {
@@ -35,6 +35,14 @@ export const CounterQrModal: React.FC<CounterQrModalProps> = ({
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDownloadImage = () => {
+    if (!canvasRef.current) return;
+    const link = document.createElement('a');
+    link.download = `Thali_Counter_Standee_QR_${activeMealPeriod}.png`;
+    link.href = canvasRef.current.toDataURL('image/png');
+    link.click();
   };
 
   return (
@@ -150,20 +158,30 @@ export const CounterQrModal: React.FC<CounterQrModalProps> = ({
         </div>
 
         {/* Action Buttons */}
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button
-            type="button"
-            onClick={handlePrint}
-            className="btn btn-secondary btn-pill"
-            style={{ flex: 1, gap: '6px' }}
-          >
-            <Printer size={14} /> Print Standee
-          </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              type="button"
+              onClick={handlePrint}
+              className="btn btn-primary btn-pill"
+              style={{ flex: 1, gap: '6px' }}
+            >
+              <Printer size={15} /> Print Standee
+            </button>
+            <button
+              type="button"
+              onClick={handleDownloadImage}
+              className="btn btn-secondary btn-pill"
+              style={{ flex: 1, gap: '6px' }}
+            >
+              <Download size={15} /> Save QR Image
+            </button>
+          </div>
           <button
             type="button"
             onClick={onClose}
-            className="btn btn-primary btn-pill"
-            style={{ flex: 1 }}
+            className="btn btn-outline btn-pill"
+            style={{ width: '100%' }}
           >
             Close
           </button>
