@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
-import { X, Printer, Utensils, Download } from 'lucide-react';
+import { X, Printer, Download } from 'lucide-react';
 import type { MealPeriod } from '../types';
 import { COUNTER_STANDEE_QR } from '../services/api';
 
@@ -99,18 +99,17 @@ export const CounterQrModal: React.FC<CounterQrModalProps> = ({
         }}>
           {/* Standee Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px' }}>
-            <div style={{
-              width: '28px',
-              height: '28px',
-              borderRadius: '7px',
-              backgroundColor: 'var(--color-primary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#ffffff'
-            }}>
-              <Utensils size={15} />
-            </div>
+            <img
+              src="/logo.png"
+              alt="Thali.com"
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                objectFit: 'contain',
+                boxShadow: '0 2px 6px rgba(247, 76, 32, 0.25)'
+              }}
+            />
             <span style={{ fontSize: '18px', fontWeight: 600, letterSpacing: '-0.3px', color: 'var(--color-ink)' }}>
               Thali<span style={{ color: 'var(--color-primary)' }}>.com</span>
             </span>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Utensils, QrCode, Shield, User, LogIn } from 'lucide-react';
+import { QrCode, Shield, User, LogIn } from 'lucide-react';
 import type { Role, Profile, MealPeriod } from '../types';
 
 interface NavbarProps {
@@ -56,20 +56,18 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="navbar-top-row">
           {/* Brand Logo & Identity */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-            <div style={{
-              width: '30px',
-              height: '30px',
-              borderRadius: '8px',
-              background: 'linear-gradient(135deg, #533afd 0%, #4434d4 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#ffffff',
-              boxShadow: '0 2px 6px rgba(83, 58, 253, 0.25)',
-              flexShrink: 0
-            }}>
-              <Utensils size={15} strokeWidth={2.2} />
-            </div>
+            <img
+              src="/logo.png"
+              alt="Thali.com"
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                objectFit: 'contain',
+                flexShrink: 0,
+                boxShadow: '0 2px 8px rgba(247, 76, 32, 0.25)'
+              }}
+            />
             <span style={{
               fontSize: '18px',
               fontWeight: 600,

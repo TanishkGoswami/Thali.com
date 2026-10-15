@@ -519,17 +519,17 @@ export const MemberView: React.FC<MemberViewProps> = ({
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{
-                  width: '26px',
-                  height: '26px',
-                  borderRadius: '6px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <UtensilsCrossed size={14} color="#ffffff" />
-                </div>
+                <img
+                  src="/logo.png"
+                  alt="Thali.com"
+                  style={{
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '7px',
+                    objectFit: 'contain',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
+                  }}
+                />
                 <div>
                   <div style={{ fontSize: '15px', fontWeight: 600, letterSpacing: '-0.2px' }}>
                     Thali<span style={{ color: '#93c5fd' }}>.com</span>
