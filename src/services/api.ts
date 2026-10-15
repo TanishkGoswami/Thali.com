@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
-import type { Profile, DailyMenu, CheckInResult, MealTransaction, MealPeriod, MealPlanType } from '../types';
+import type { Profile, DailyMenu, CheckInResult, MealTransaction, MealPeriod, MealPlanType, MealSkip, DailyHeadcount } from '../types';
+import { isMealCutoffPassed, MEAL_CUTOFF_CONFIG } from '../types';
 
 export const COUNTER_STANDEE_QR = 'THALI_OFFICIAL_COUNTER_QR_2026';
 
@@ -589,6 +590,111 @@ export const api = {
     }
 
     return { success, failed, errors };
+  },
+
+  // Fetch meal skips for a specific member
+  async getMemberMealSkips(memberId: string, startDate?: string, endDate?: string): Promise<MealSkip[]> {
+    try {
+      let query = supabase
+        .from('meal_skips')
+        .select('*')
+        .eq('member_id', memberId)
+        .order('service_date', { ascending: true });
+
+      if (startDate) {
+        query = query.gte('service_date', startDate);
+      }
+      if (endDate) {
+        query = query.lte('service_date', endDate);
+      }
+
+      const { data, error } = await query;
+      if (error) {
+        console.error('Error fetching member meal skips:', error);
+        return [];
+      }
+      return (data || []) as MealSkip[];
+    } catch (err) {
+      console.error('Unexpected error fetching meal skips:', err);
+      return [];
+    }
+  },
+
+  // Toggle meal skip (Mark Not Coming / Cancel Skip) with strict cutoff time check
+  async toggleMealSkip({
+    memberId,
+    serviceDate,
+    mealPeriod,
+    skip,
+    reason
+  }: {
+    memberId: string;
+    serviceDate: string; // YYYY-MM-DD
+    mealPeriod: MealPeriod;
+    skip: boolean;
+    reason?: string;
+  }): Promise<{ success: boolean; message?: string }> {
+    try {
+      // 1. Enforce Cutoff time rule
+      if (isMealCutoffPassed(serviceDate, mealPeriod)) {
+        const cutoff = MEAL_CUTOFF_CONFIG[mealPeriod];
+        return {
+          success: false,
+          message: `Cut-off time (${cutoff.timeStr} ${cutoff.hindiLabel}) has passed for ${mealPeriod}. Changes are locked.`
+        };
+      }
+
+      if (skip) {
+        // Upsert skip record
+        const { error } = await supabase
+          .from('meal_skips')
+          .upsert(
+            {
+              member_id: memberId,
+              service_date: serviceDate,
+              meal_period: mealPeriod,
+              reason: reason || 'Not coming / Skipping meal'
+            },
+            { onConflict: 'member_id,service_date,meal_period' }
+          );
+
+        if (error) throw error;
+        return { success: true, message: `Marked Not Coming for ${mealPeriod} on ${serviceDate}.` };
+      } else {
+        // Delete skip record (member is coming)
+        const { error } = await supabase
+          .from('meal_skips')
+          .delete()
+          .eq('member_id', memberId)
+          .eq('service_date', serviceDate)
+          .eq('meal_period', mealPeriod);
+
+        if (error) throw error;
+        return { success: true, message: `Skip cancelled. You are marked as coming for ${mealPeriod}.` };
+      }
+    } catch (err: any) {
+      console.error('Error toggling meal skip:', err);
+      return { success: false, message: err.message || 'Failed to update meal skip.' };
+    }
+  },
+
+  // Get live kitchen headcount for a given service date (default today)
+  async getDailyHeadcount(serviceDate?: string): Promise<DailyHeadcount | null> {
+    try {
+      const targetDate = serviceDate || new Date().toISOString().split('T')[0];
+      const { data, error } = await supabase.rpc('get_meal_headcount', {
+        p_service_date: targetDate
+      });
+
+      if (error) {
+        console.error('Error fetching headcount RPC:', error);
+        return null;
+      }
+      return data as DailyHeadcount;
+    } catch (err) {
+      console.error('Unexpected error fetching headcount:', err);
+      return null;
+    }
   }
 };
 

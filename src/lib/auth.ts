@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 import { sendFast2SmsOtp } from './sms';
-import type { Profile } from '../types';
+import type { Profile, MealPlanType } from '../types';
 
 /**
  * In-memory map for OTP verification during Payment / Phone Activation
@@ -238,12 +238,13 @@ export async function sendPaymentVerificationOtp(rawPhone: string, memberId?: st
 }
 
 /**
- * Verifies Phone OTP during Payment and Activates the ₹2,800 54-meal subscription
+ * Verifies Phone OTP during Payment and Activates the ₹2,800 54-meal subscription with chosen 2-meal plan
  */
 export async function verifyPaymentPhoneAndActivate(
   memberId: string,
   rawPhone: string,
   token: string,
+  mealPlanType: MealPlanType = 'lunch_dinner',
   paymentMethod: 'cash' | 'upi_direct' = 'upi_direct'
 ): Promise<{ profile: Profile; subscription: any }> {
   const phone = formatIndianPhoneNumber(rawPhone);
@@ -260,12 +261,13 @@ export async function verifyPaymentPhoneAndActivate(
 
   pendingOtpMap.delete(phone);
 
-  // 1. Update Profile: link verified phone
+  // 1. Update Profile: link verified phone and selected 2-meal plan
   const { data: updatedProfile, error: profErr } = await supabase
     .from('profiles')
     .update({
       phone: clean10,
       phone_verified: true,
+      meal_plan_type: mealPlanType,
       updated_at: new Date().toISOString()
     })
     .eq('id', memberId)
@@ -276,9 +278,17 @@ export async function verifyPaymentPhoneAndActivate(
     throw new Error(profErr?.message || 'Failed to update verified phone in profile.');
   }
 
-  // 2. Activate or Create 54-Meal Subscription
+  // 2. Activate or Create 54-Meal Subscription with chosen 2-meal plan
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 30);
+
+  const planIdMap: Record<MealPlanType, string> = {
+    lunch_dinner: '00000000-0000-0000-0000-000000000001',
+    breakfast_lunch: '00000000-0000-0000-0000-000000000002',
+    breakfast_dinner: '00000000-0000-0000-0000-000000000003',
+    any_two: '00000000-0000-0000-0000-000000000004'
+  };
+  const planId = planIdMap[mealPlanType] || '00000000-0000-0000-0000-000000000001';
 
   // Check existing pending subscription
   const { data: existingSub } = await supabase
@@ -295,6 +305,8 @@ export async function verifyPaymentPhoneAndActivate(
       .from('subscriptions')
       .update({
         status: 'active',
+        plan_id: planId,
+        meal_plan_type: mealPlanType,
         starts_at: new Date().toISOString(),
         expires_at: expiresAt.toISOString(),
         meals_granted: 54,
@@ -310,7 +322,8 @@ export async function verifyPaymentPhoneAndActivate(
       .insert([
         {
           member_id: memberId,
-          plan_id: '00000000-0000-0000-0000-000000000001',
+          plan_id: planId,
+          meal_plan_type: mealPlanType,
           status: 'active',
           starts_at: new Date().toISOString(),
           expires_at: expiresAt.toISOString(),

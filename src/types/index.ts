@@ -166,7 +166,7 @@ export interface DailyMenu {
 
 export interface CheckInResult {
   success: boolean;
-  code: 'ACCEPTED' | 'DUPLICATE_CHECKIN' | 'ZERO_BALANCE' | 'SUBSCRIPTION_EXPIRED' | 'PAYMENT_PENDING' | 'PHONE_NOT_VERIFIED' | 'INVALID_QR' | 'MEMBER_INACTIVE' | 'PLAN_NOT_PERMITTED' | 'DAILY_LIMIT_EXCEEDED' | 'ERROR';
+  code: 'ACCEPTED' | 'DUPLICATE_CHECKIN' | 'ZERO_BALANCE' | 'SUBSCRIPTION_EXPIRED' | 'PAYMENT_PENDING' | 'PHONE_NOT_VERIFIED' | 'INVALID_QR' | 'MEMBER_INACTIVE' | 'PLAN_NOT_PERMITTED' | 'DAILY_LIMIT_EXCEEDED' | 'MEAL_SKIPPED' | 'ERROR';
   message: string;
   member_name?: string;
   member_number?: string;
@@ -175,4 +175,39 @@ export interface CheckInResult {
   remaining_meals?: number;
   transaction_id?: string;
   timestamp?: string;
+}
+
+export interface MealSkip {
+  id: string;
+  member_id: string;
+  service_date: string; // YYYY-MM-DD
+  meal_period: MealPeriod;
+  reason?: string;
+  created_at: string;
+}
+
+export interface PeriodHeadcount {
+  enrolled: number;
+  skipped: number;
+  consumed: number;
+}
+
+export interface DailyHeadcount {
+  service_date: string;
+  breakfast: PeriodHeadcount;
+  lunch: PeriodHeadcount;
+  dinner: PeriodHeadcount;
+}
+
+export const MEAL_CUTOFF_CONFIG: Record<MealPeriod, { hour: number; minute: number; timeStr: string; hindiLabel: string; label: string }> = {
+  breakfast: { hour: 6, minute: 30, timeStr: '06:30 AM', hindiLabel: 'सुबह 06:30 बजे तक', label: 'Previous night up to 06:30 AM' },
+  lunch: { hour: 12, minute: 30, timeStr: '12:30 PM', hindiLabel: 'दोपहर 12:30 बजे तक', label: 'Before 12:30 PM' },
+  dinner: { hour: 18, minute: 30, timeStr: '06:30 PM', hindiLabel: 'शाम 06:30 बजे तक', label: 'Before 06:30 PM' }
+};
+
+export function isMealCutoffPassed(serviceDateStr: string, period: MealPeriod): boolean {
+  const now = new Date();
+  const [y, m, d] = serviceDateStr.split('-').map(Number);
+  const cutoffDate = new Date(y, m - 1, d, MEAL_CUTOFF_CONFIG[period].hour, MEAL_CUTOFF_CONFIG[period].minute, 0, 0);
+  return now.getTime() > cutoffDate.getTime();
 }

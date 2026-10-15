@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, CreditCard, Utensils, Plus, Search, Edit3, FileSpreadsheet, X, QrCode, Trash2, Camera, Printer, CheckCircle2 } from 'lucide-react';
+import { Users, CreditCard, Utensils, Plus, Search, Edit3, FileSpreadsheet, X, QrCode, Trash2, Camera, Printer, CheckCircle2, ChefHat } from 'lucide-react';
 import type { Profile, DailyMenu, MealPeriod } from '../types';
 import { MEAL_PLAN_CONFIG } from '../types';
 import { api } from '../services/api';
@@ -9,6 +9,7 @@ import { MenuEditorModal } from './MenuEditorModal';
 import { CounterQrModal } from './CounterQrModal';
 import { CameraScannerModal } from './CameraScannerModal';
 import { AdminPaymentApprovalModal } from './AdminPaymentApprovalModal';
+import { KitchenHeadcountCard } from './KitchenHeadcountCard';
 
 interface AdminViewProps {
   members: (Profile & { remaining_meals?: number; subscription_status?: string; payment_method?: 'cash' | 'upi_direct' })[];
@@ -23,7 +24,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
   onRefresh,
   activeMealPeriod = 'lunch'
 }) => {
-  const [activeTab, setActiveTab] = useState<'members' | 'payments' | 'menu' | 'import'>('members');
+  const [activeTab, setActiveTab] = useState<'members' | 'headcount' | 'payments' | 'menu' | 'import'>('members');
   const [searchMember, setSearchMember] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending' | 'low'>('all');
   
@@ -285,6 +286,20 @@ export const AdminView: React.FC<AdminViewProps> = ({
         </button>
         <button
           type="button"
+          onClick={() => setActiveTab('headcount')}
+          className="btn btn-pill"
+          style={{
+            backgroundColor: activeTab === 'headcount' ? '#ffffff' : 'transparent',
+            color: activeTab === 'headcount' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+            boxShadow: activeTab === 'headcount' ? 'var(--shadow-level-1)' : 'none',
+            fontSize: '12px',
+            fontWeight: activeTab === 'headcount' ? 500 : 400
+          }}
+        >
+          <ChefHat size={13} /> Kitchen Headcount
+        </button>
+        <button
+          type="button"
           onClick={() => setActiveTab('payments')}
           className="btn btn-pill"
           style={{
@@ -326,6 +341,50 @@ export const AdminView: React.FC<AdminViewProps> = ({
           <FileSpreadsheet size={13} /> CSV Import
         </button>
       </div>
+
+      {/* Tab: Kitchen Headcount */}
+      {activeTab === 'headcount' && (
+        <KitchenHeadcountCard />
+      )}
+
+      {/* Tab 1: Members Directory Quick Headcount Notice */}
+      {activeTab === 'members' && (
+        <div style={{
+          backgroundColor: '#eff6ff',
+          border: '1px solid #bfdbfe',
+          borderRadius: 'var(--radius-lg)',
+          padding: '12px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '10px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <ChefHat size={18} color="#2563eb" />
+            <div>
+              <strong style={{ fontSize: '13px', color: '#1e40af' }}>Kitchen Headcount & Leave Tracker:</strong>
+              <span style={{ fontSize: '12px', color: '#3b82f6', marginLeft: '6px' }}>
+                Check how many students will eat Breakfast, Lunch, or Dinner today & tomorrow.
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab('headcount')}
+            className="btn btn-pill"
+            style={{
+              backgroundColor: '#2563eb',
+              color: '#ffffff',
+              fontSize: '11px',
+              fontWeight: 600,
+              padding: '4px 12px'
+            }}
+          >
+            Open Kitchen Counts →
+          </button>
+        </div>
+      )}
 
       {/* Tab 1: Members Directory */}
       {activeTab === 'members' && (

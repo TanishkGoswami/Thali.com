@@ -17,13 +17,14 @@ import {
   User,
   Lock
 } from 'lucide-react';
-import type { Profile, DailyMenu, MealTransaction, CheckInResult, MealPeriod, MealPlanType } from '../types';
+import type { Profile, DailyMenu, MealTransaction, CheckInResult, MealPeriod, MealPlanType, MealSkip } from '../types';
 import { MEAL_PLAN_CONFIG } from '../types';
 import { api, COUNTER_STANDEE_QR } from '../services/api';
 import { sound } from '../lib/audio';
 import { PaymentActivationModal } from './PaymentActivationModal';
 import { CameraScannerModal } from './CameraScannerModal';
 import { CounterQrModal } from './CounterQrModal';
+import { MealSkipCard } from './MealSkipCard';
 
 interface MemberViewProps {
   member: Profile & { remaining_meals?: number; subscription_status?: string; expires_at?: string; payment_method?: 'cash' | 'upi_direct' };
@@ -64,6 +65,23 @@ export const MemberView: React.FC<MemberViewProps> = ({
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyList, setHistoryList] = useState<MealTransaction[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+
+  // Member Meal Skip ('Not Coming') state
+  const [memberSkips, setMemberSkips] = useState<MealSkip[]>([]);
+
+  const loadMemberSkips = async () => {
+    if (!member?.id) return;
+    try {
+      const data = await api.getMemberMealSkips(member.id);
+      setMemberSkips(data);
+    } catch (err) {
+      console.error('Error fetching member skips:', err);
+    }
+  };
+
+  useEffect(() => {
+    loadMemberSkips();
+  }, [member?.id]);
 
   useEffect(() => {
     if (showPersonalQr && canvasRef.current && member?.qr_token) {
@@ -130,13 +148,14 @@ export const MemberView: React.FC<MemberViewProps> = ({
           spread: 70,
           origin: { y: 0.6 }
         });
-      } else if (result.code === 'DUPLICATE_CHECKIN' || result.code === 'PLAN_NOT_PERMITTED' || result.code === 'DAILY_LIMIT_EXCEEDED') {
+      } else if (result.code === 'DUPLICATE_CHECKIN' || result.code === 'PLAN_NOT_PERMITTED' || result.code === 'DAILY_LIMIT_EXCEEDED' || result.code === 'MEAL_SKIPPED') {
         sound.playWarning();
       } else {
         sound.playError();
       }
 
       onRefresh();
+      loadMemberSkips();
     } catch (err: any) {
       sound.playError();
       setSelfCheckInReceipt({
@@ -735,6 +754,14 @@ export const MemberView: React.FC<MemberViewProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Meal Skip / Not Coming Feature Card */}
+      <MealSkipCard
+        memberId={member.id}
+        mealPlanType={planType}
+        skips={memberSkips}
+        onRefreshSkips={loadMemberSkips}
+      />
 
       {/* Today's Menu Section */}
       <div className="card">

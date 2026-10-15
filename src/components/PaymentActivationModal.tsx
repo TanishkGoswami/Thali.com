@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Phone, CheckCircle2, AlertCircle, X, RefreshCw, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Phone, CheckCircle2, AlertCircle, X, RefreshCw, ArrowRight, ShieldCheck, Utensils, Clock } from 'lucide-react';
 import { sendPaymentVerificationOtp, verifyPaymentPhoneAndActivate } from '../lib/auth';
-import type { Profile } from '../types';
+import type { Profile, MealPlanType } from '../types';
+import { MEAL_PLAN_CONFIG } from '../types';
 import confetti from 'canvas-confetti';
 
 interface PaymentActivationModalProps {
@@ -18,6 +19,7 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
   onSuccess
 }) => {
   const [step, setStep] = useState<'phone' | 'otp' | 'success'>('phone');
+  const [selectedMealPlan, setSelectedMealPlan] = useState<MealPlanType>(member.meal_plan_type || 'lunch_dinner');
   const [phone, setPhone] = useState(member.phone || '');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
@@ -71,7 +73,7 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
 
     setLoading(true);
     try {
-      await verifyPaymentPhoneAndActivate(member.id, phone, otp);
+      await verifyPaymentPhoneAndActivate(member.id, phone, otp, selectedMealPlan);
       setStep('success');
       confetti({
         particleCount: 80,
@@ -215,14 +217,82 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
                 }}>
                   <ShieldCheck size={18} style={{ flexShrink: 0 }} />
                   <div>
-                    <strong>Payment Confirmed ({member.payment_method === 'cash' ? '💵 Cash' : '📱 Online / UPI'}):</strong> Enter your mobile number to receive the 1-time OTP.
+                    <strong>Payment Confirmed ({member.payment_method === 'cash' ? '💵 Cash' : '📱 Online / UPI'}):</strong> Select your 2-meal daily timing & verify phone via OTP.
                   </div>
                 </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '6px' }}>
-                  Mobile Phone Number
-                </label>
+                {/* Step 1: 2-Meal Timing Selection */}
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)' }}>
+                      1. Choose 2-Meal Timings / भोजन समय चुनें: <span style={{ color: 'var(--color-error)' }}>*</span>
+                    </label>
+                    <span style={{ fontSize: '11px', color: 'var(--color-primary)', fontWeight: 500 }}>
+                      2 Meals / Day
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                    {(Object.keys(MEAL_PLAN_CONFIG) as MealPlanType[]).map((key) => {
+                      const plan = MEAL_PLAN_CONFIG[key];
+                      const isSelected = selectedMealPlan === key;
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => setSelectedMealPlan(key)}
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'flex-start',
+                            padding: '10px',
+                            borderRadius: 'var(--radius-md)',
+                            border: `2px solid ${isSelected ? 'var(--color-primary)' : 'var(--color-hairline)'}`,
+                            backgroundColor: isSelected ? '#f5f3ff' : '#ffffff',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            transition: 'all var(--transition-fast)'
+                          }}
+                        >
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            fontWeight: 600,
+                            fontSize: '12px',
+                            color: isSelected ? 'var(--color-primary)' : 'var(--color-ink)'
+                          }}>
+                            <Utensils size={12} /> {plan.hindiName}
+                          </div>
+                          <div style={{ fontSize: '11px', fontWeight: 500, color: isSelected ? 'var(--color-ink)' : 'var(--color-ink-secondary)', marginTop: '2px' }}>
+                            {plan.name}
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '10px', color: 'var(--color-ink-mute)', marginTop: '4px' }}>
+                            <Clock size={10} />
+                            <span className="truncate-text" style={{ maxWidth: '140px' }}>{plan.timeSlotsText}</span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div style={{
+                    marginTop: '8px',
+                    fontSize: '11px',
+                    color: 'var(--color-ink-mute)',
+                    backgroundColor: 'var(--color-canvas-soft)',
+                    padding: '6px 10px',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--color-hairline)'
+                  }}>
+                    ℹ️ <strong>Rule:</strong> Aapka subscription strictly chune gaye 2 sessions me hi chalega. Dusre slot me QR scan nahi hoga.
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)', marginBottom: '6px' }}>
+                    2. Mobile Phone Number for OTP: <span style={{ color: 'var(--color-error)' }}>*</span>
+                  </label>
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
