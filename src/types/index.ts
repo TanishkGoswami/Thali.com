@@ -205,9 +205,17 @@ export const MEAL_CUTOFF_CONFIG: Record<MealPeriod, { hour: number; minute: numb
   dinner: { hour: 18, minute: 30, timeStr: '06:30 PM', hindiLabel: 'Until 06:30 PM', label: 'Before 06:30 PM' }
 };
 
+export function getLocalDateString(date: Date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export function isMealCutoffPassed(serviceDateStr: string, period: MealPeriod): boolean {
   const now = new Date();
   const [y, m, d] = serviceDateStr.split('-').map(Number);
   const cutoffDate = new Date(y, m - 1, d, MEAL_CUTOFF_CONFIG[period].hour, MEAL_CUTOFF_CONFIG[period].minute, 0, 0);
   return now.getTime() > cutoffDate.getTime();
 }
+

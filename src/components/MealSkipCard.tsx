@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Clock, CheckCircle, XCircle, AlertCircle, Lock, Undo2 } from 'lucide-react';
 import type { MealPeriod, MealSkip, MealPlanType } from '../types';
-import { MEAL_CUTOFF_CONFIG, isMealCutoffPassed, MEAL_PLAN_CONFIG } from '../types';
+import { MEAL_CUTOFF_CONFIG, isMealCutoffPassed, MEAL_PLAN_CONFIG, getLocalDateString } from '../types';
 import { api } from '../services/api';
 
 interface MealSkipCardProps {
@@ -21,17 +21,23 @@ export const MealSkipCard: React.FC<MealSkipCardProps> = ({
   const [loadingPeriod, setLoadingPeriod] = useState<MealPeriod | null>(null);
   const [feedbackMsg, setFeedbackMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
-  // Compute Target Dates (YYYY-MM-DD in local time)
+  // Compute Target Dates (YYYY-MM-DD in local time) reliably without UTC offset shifts
   const today = new Date();
   const targetDateObj = new Date(today);
   targetDateObj.setDate(today.getDate() + selectedDateOffset);
-  const targetDateStr = targetDateObj.toISOString().split('T')[0];
+  const targetDateStr = getLocalDateString(targetDateObj);
+
+  const tomorrowObj = new Date(today);
+  tomorrowObj.setDate(today.getDate() + 1);
+  const tomorrowStr = getLocalDateString(tomorrowObj);
+  const tomorrowSkipsForMember = skips.filter(s => s.service_date === tomorrowStr);
 
   const formattedDateTitle = selectedDateOffset === 0
     ? `Today (${today.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })})`
     : `Tomorrow (${targetDateObj.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })})`;
 
   const planConfig = MEAL_PLAN_CONFIG[mealPlanType];
+
 
   const isPeriodInPlan = (period: MealPeriod): boolean => {
     if (mealPlanType === 'any_two') return true;
@@ -133,11 +139,28 @@ export const MealSkipCard: React.FC<MealSkipCardProps> = ({
               boxShadow: selectedDateOffset === 1 ? 'var(--shadow-level-1)' : 'none',
               fontSize: '11px',
               fontWeight: selectedDateOffset === 1 ? 600 : 400,
-              padding: '4px 12px'
+              padding: '4px 12px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
             }}
           >
-            Tomorrow
+            <span>Tomorrow</span>
+            {tomorrowSkipsForMember.length > 0 && (
+              <span style={{
+                backgroundColor: '#fef3c7',
+                color: '#b45309',
+                border: '1px solid #fde68a',
+                borderRadius: 'var(--radius-pill)',
+                padding: '1px 5px',
+                fontSize: '10px',
+                fontWeight: 700
+              }}>
+                🚫 {tomorrowSkipsForMember.length} Skipped
+              </span>
+            )}
           </button>
+
         </div>
       </div>
 

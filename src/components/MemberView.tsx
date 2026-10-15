@@ -68,6 +68,8 @@ export const MemberView: React.FC<MemberViewProps> = ({
 
   // Member Meal Skip ('Not Coming') state
   const [memberSkips, setMemberSkips] = useState<MealSkip[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshToast, setRefreshToast] = useState(false);
 
   const loadMemberSkips = async () => {
     if (!member?.id) return;
@@ -79,9 +81,26 @@ export const MemberView: React.FC<MemberViewProps> = ({
     }
   };
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        onRefresh(),
+        loadMemberSkips()
+      ]);
+      setRefreshToast(true);
+      setTimeout(() => setRefreshToast(false), 2500);
+    } catch (e) {
+      console.error('Refresh error:', e);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   useEffect(() => {
     loadMemberSkips();
   }, [member?.id]);
+
 
   useEffect(() => {
     if (showPersonalQr && canvasRef.current && member?.qr_token) {
@@ -316,12 +335,16 @@ export const MemberView: React.FC<MemberViewProps> = ({
           </button>
           <button
             type="button"
-            onClick={onRefresh}
+            disabled={isRefreshing}
+            onClick={handleRefresh}
             className="btn btn-secondary btn-pill"
-            title="Refresh Data"
+            style={{ fontSize: '12px', padding: '5px 12px', gap: '5px' }}
+            title="Refresh Member Data & Skips"
           >
-            <RefreshCw size={13} /> Refresh
+            <RefreshCw size={13} className={isRefreshing ? 'animate-spin' : ''} />
+            {isRefreshing ? 'Refreshing...' : refreshToast ? '✓ Updated!' : 'Refresh'}
           </button>
+
           <span className={`badge badge-${member.subscription_status === 'active' ? 'active' : 'pending'}`}>
             {member.subscription_status === 'active' ? '● Active Plan' : 'Pending Verification'}
           </span>

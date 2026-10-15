@@ -6,7 +6,7 @@ import { AdminView } from './components/AdminView';
 import { LoginModal } from './components/LoginModal';
 import { ProfileModal } from './components/ProfileModal';
 import { api } from './services/api';
-import { signOutUser, getLocalSessionId } from './lib/auth';
+import { signOutUser, getLocalSessionId, saveLocalSession, clearLocalSession } from './lib/auth';
 import { supabase } from './lib/supabase';
 import type { Role, Profile, DailyMenu, MealTransaction, MealPeriod } from './types';
 import { Loader2 } from 'lucide-react';
@@ -102,6 +102,7 @@ export function App() {
 
   // Handle successful login from LoginModal
   const handleLoginSuccess = (profile: Profile) => {
+    saveLocalSession(profile.id);
     const enriched = members.find(m => m.id === profile.id || m.member_number === profile.member_number) || profile;
     setCurrentUser(enriched);
     setCurrentRole(profile.role);
@@ -116,9 +117,11 @@ export function App() {
     } catch (err) {
       console.warn('Sign out note:', err);
     }
+    clearLocalSession();
     setCurrentUser(null);
     setIsLoginModalOpen(false);
   };
+
 
   // Strict Role-Based View Guard
   const renderRoleGuardedContent = () => {

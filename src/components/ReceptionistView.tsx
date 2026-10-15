@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
-import { Search, CheckCircle, XCircle, Camera, QrCode } from 'lucide-react';
+import { Search, CheckCircle, XCircle, Camera, QrCode, RefreshCw } from 'lucide-react';
 import type { Profile, CheckInResult, MealTransaction, MealPeriod } from '../types';
 import { api } from '../services/api';
 import { sound } from '../lib/audio';
@@ -28,6 +28,22 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
   const [manualToken, setManualToken] = useState('');
   const [showCameraScanner, setShowCameraScanner] = useState(false);
   const [showCounterStandee, setShowCounterStandee] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshToast, setRefreshToast] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await onRefresh();
+      setRefreshToast(true);
+      setTimeout(() => setRefreshToast(false), 2500);
+    } catch (e) {
+      console.error('Refresh error:', e);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
 
   // Handle Check-in logic
   const handleCheckIn = async (qrToken: string) => {
@@ -156,6 +172,18 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <button
             type="button"
+            disabled={isRefreshing}
+            onClick={handleRefresh}
+            className="btn btn-secondary btn-pill"
+            style={{ fontSize: '12px', padding: '6px 12px', gap: '5px' }}
+            title="Refresh member balances and check-in logs"
+          >
+            <RefreshCw size={13} className={isRefreshing ? 'animate-spin' : ''} />
+            {isRefreshing ? 'Refreshing...' : refreshToast ? '✓ Synced!' : 'Refresh'}
+          </button>
+
+          <button
+            type="button"
             onClick={() => setShowCounterStandee(true)}
             className="btn btn-primary btn-pill"
             style={{ gap: '6px' }}
@@ -167,6 +195,7 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
           </span>
         </div>
       </div>
+
 
       {/* Result Alert Feedback Banner */}
       {lastResult && (

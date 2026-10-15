@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import type { Profile, DailyMenu, CheckInResult, MealTransaction, MealPeriod, MealPlanType, MealSkip, DailyHeadcount } from '../types';
-import { isMealCutoffPassed, MEAL_CUTOFF_CONFIG } from '../types';
+import { isMealCutoffPassed, MEAL_CUTOFF_CONFIG, getLocalDateString } from '../types';
+
 
 export const COUNTER_STANDEE_QR = 'THALI_OFFICIAL_COUNTER_QR_2026';
 
@@ -681,7 +682,7 @@ export const api = {
   // Get live kitchen headcount for a given service date (default today)
   async getDailyHeadcount(serviceDate?: string): Promise<DailyHeadcount | null> {
     try {
-      const targetDate = serviceDate || new Date().toISOString().split('T')[0];
+      const targetDate = serviceDate || getLocalDateString();
       const { data, error } = await supabase.rpc('get_meal_headcount', {
         p_service_date: targetDate
       });
@@ -694,6 +695,48 @@ export const api = {
     } catch (err) {
       console.error('Unexpected error fetching headcount:', err);
       return null;
+    }
+  },
+
+  // Fetch detailed list of members who skipped meals for a given date
+  async getDailySkippedMembers(serviceDate?: string): Promise<(MealSkip & { member_name?: string; member_number?: string })[]> {
+    try {
+      const targetDate = serviceDate || getLocalDateString();
+      const { data, error } = await supabase
+        .from('meal_skips')
+        .select(`
+          id,
+          member_id,
+          service_date,
+          meal_period,
+          reason,
+          created_at,
+          profiles:member_id (
+            full_name,
+            member_number
+          )
+        `)
+        .eq('service_date', targetDate)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching daily skipped members:', error);
+        return [];
+      }
+
+      return (data || []).map((row: any) => ({
+        id: row.id,
+        member_id: row.member_id,
+        service_date: row.service_date,
+        meal_period: row.meal_period,
+        reason: row.reason,
+        created_at: row.created_at,
+        member_name: row.profiles?.full_name || 'Member',
+        member_number: row.profiles?.member_number || ''
+      }));
+    } catch (err) {
+      console.error('Unexpected error fetching daily skipped members:', err);
+      return [];
     }
   }
 };

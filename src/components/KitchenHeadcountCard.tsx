@@ -1,24 +1,43 @@
 import React, { useEffect, useState } from 'react';
-import { ChefHat, RefreshCw, Users, UserX, CheckCircle2, Clock } from 'lucide-react';
-import type { DailyHeadcount, MealPeriod } from '../types';
-import { MEAL_CUTOFF_CONFIG, isMealCutoffPassed } from '../types';
+import { ChefHat, RefreshCw, Users, UserX, CheckCircle2, Clock, Check } from 'lucide-react';
+
+import type { DailyHeadcount, MealPeriod, MealSkip } from '../types';
+import { MEAL_CUTOFF_CONFIG, isMealCutoffPassed, getLocalDateString } from '../types';
 import { api } from '../services/api';
 
 export const KitchenHeadcountCard: React.FC = () => {
   const [dateOffset, setDateOffset] = useState<0 | 1>(0); // 0 = Today, 1 = Tomorrow
   const [headcount, setHeadcount] = useState<DailyHeadcount | null>(null);
+  const [skippedMembers, setSkippedMembers] = useState<(MealSkip & { member_name?: string; member_number?: string })[]>([]);
+  const [tomorrowSkipsCount, setTomorrowSkipsCount] = useState<number>(0);
   const [loading, setLoading] = useState(false);
+  const [refreshSuccess, setRefreshSuccess] = useState(false);
 
-  const today = new Date();
-  const targetDateObj = new Date(today);
-  targetDateObj.setDate(today.getDate() + dateOffset);
-  const targetDateStr = targetDateObj.toISOString().split('T')[0];
+  // Compute local dates reliably without UTC offset shifts
+  const todayObj = new Date();
+  const tomorrowObj = new Date(todayObj);
+  tomorrowObj.setDate(todayObj.getDate() + 1);
+
+  const todayStr = getLocalDateString(todayObj);
+  const tomorrowStr = getLocalDateString(tomorrowObj);
+  const targetDateStr = dateOffset === 0 ? todayStr : tomorrowStr;
+
+  const todayFormatted = todayObj.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+  const tomorrowFormatted = tomorrowObj.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
 
   const loadHeadcount = async () => {
     setLoading(true);
     try {
-      const data = await api.getDailyHeadcount(targetDateStr);
+      const [data, skips, tmrwSkips] = await Promise.all([
+        api.getDailyHeadcount(targetDateStr),
+        api.getDailySkippedMembers(targetDateStr),
+        api.getDailySkippedMembers(tomorrowStr)
+      ]);
       setHeadcount(data);
+      setSkippedMembers(skips);
+      setTomorrowSkipsCount(tmrwSkips.length);
+      setRefreshSuccess(true);
+      setTimeout(() => setRefreshSuccess(false), 2500);
     } catch (e) {
       console.error('Error loading kitchen headcount:', e);
     } finally {
@@ -28,7 +47,7 @@ export const KitchenHeadcountCard: React.FC = () => {
 
   useEffect(() => {
     loadHeadcount();
-  }, [targetDateStr]);
+  }, [dateOffset]);
 
   const periods: { period: MealPeriod; title: string; icon: string; accentColor: string }[] = [
     { period: 'breakfast', title: 'Breakfast', icon: '🌅', accentColor: '#059669' },
@@ -47,13 +66,13 @@ export const KitchenHeadcountCard: React.FC = () => {
         gap: '12px',
         marginBottom: '16px',
         borderBottom: '1px solid var(--color-hairline)',
-        paddingBottom: '12px'
+        paddingBottom: '14px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '10px',
+            width: '40px',
+            height: '40px',
+            borderRadius: '12px',
             backgroundColor: 'var(--color-primary-bg)',
             color: 'var(--color-primary)',
             display: 'flex',
@@ -61,17 +80,22 @@ export const KitchenHeadcountCard: React.FC = () => {
             justifyContent: 'center',
             flexShrink: 0
           }}>
-            <ChefHat size={20} />
+            <ChefHat size={22} />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span className="eyebrow" style={{ color: 'var(--color-primary)' }}>Kitchen Intelligence</span>
+              {refreshSuccess && (
+                <span className="badge badge-active" style={{ fontSize: '10px', padding: '1px 6px' }}>
+                  <Check size={10} /> Live Data Synced
+                </span>
+              )}
             </div>
             <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--color-ink)', marginTop: '2px' }}>
               Kitchen Headcount & Food Planning
             </h3>
             <p style={{ fontSize: '12px', color: 'var(--color-ink-mute)', marginTop: '2px' }}>
-              Live plates calculation based on enrolled members minus skipped members.
+              Showing preparation for: <strong style={{ color: 'var(--color-ink)' }}>{dateOffset === 0 ? `Today (${todayFormatted})` : `Tomorrow (${tomorrowFormatted})`}</strong>
             </p>
           </div>
         </div>
@@ -84,7 +108,7 @@ export const KitchenHeadcountCard: React.FC = () => {
             padding: '3px',
             borderRadius: 'var(--radius-pill)',
             border: '1px solid var(--color-hairline)',
-            gap: '2px'
+            gap: '3px'
           }}>
             <button
               type="button"
@@ -94,12 +118,12 @@ export const KitchenHeadcountCard: React.FC = () => {
                 backgroundColor: dateOffset === 0 ? '#ffffff' : 'transparent',
                 color: dateOffset === 0 ? 'var(--color-ink)' : 'var(--color-ink-mute)',
                 boxShadow: dateOffset === 0 ? 'var(--shadow-level-1)' : 'none',
-                fontSize: '11px',
+                fontSize: '12px',
                 fontWeight: dateOffset === 0 ? 600 : 400,
-                padding: '4px 12px'
+                padding: '5px 14px'
               }}
             >
-              Today
+              📅 Today ({todayFormatted})
             </button>
             <button
               type="button"
@@ -109,12 +133,28 @@ export const KitchenHeadcountCard: React.FC = () => {
                 backgroundColor: dateOffset === 1 ? '#ffffff' : 'transparent',
                 color: dateOffset === 1 ? 'var(--color-ink)' : 'var(--color-ink-mute)',
                 boxShadow: dateOffset === 1 ? 'var(--shadow-level-1)' : 'none',
-                fontSize: '11px',
+                fontSize: '12px',
                 fontWeight: dateOffset === 1 ? 600 : 400,
-                padding: '4px 12px'
+                padding: '5px 14px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
               }}
             >
-              Tomorrow
+              <span>📅 Tomorrow ({tomorrowFormatted})</span>
+              {tomorrowSkipsCount > 0 && (
+                <span style={{
+                  backgroundColor: '#fef3c7',
+                  color: '#b45309',
+                  border: '1px solid #fde68a',
+                  borderRadius: 'var(--radius-pill)',
+                  padding: '1px 6px',
+                  fontSize: '10px',
+                  fontWeight: 700
+                }}>
+                  {tomorrowSkipsCount} Skips
+                </span>
+              )}
             </button>
           </div>
 
@@ -123,11 +163,11 @@ export const KitchenHeadcountCard: React.FC = () => {
             disabled={loading}
             onClick={loadHeadcount}
             className="btn btn-secondary btn-pill"
-            style={{ fontSize: '11px', padding: '5px 10px', gap: '4px' }}
-            title="Refresh headcount"
+            style={{ fontSize: '12px', padding: '6px 12px', gap: '5px' }}
+            title="Refresh headcount data"
           >
-            <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
-            Refresh
+            <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+            {loading ? 'Refreshing...' : 'Refresh'}
           </button>
         </div>
       </div>
@@ -289,6 +329,96 @@ export const KitchenHeadcountCard: React.FC = () => {
             </div>
           );
         })}
+      </div>
+
+      {/* Detailed Member Skips Audit Table / List */}
+      <div style={{
+        marginTop: '20px',
+        padding: '16px',
+        backgroundColor: 'var(--color-canvas-soft)',
+        borderRadius: 'var(--radius-md)',
+        border: '1px solid var(--color-hairline)'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <UserX size={16} color="#b45309" />
+            <h4 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-ink)' }}>
+              Skipped Members List for {dateOffset === 0 ? `Today (${todayFormatted})` : `Tomorrow (${tomorrowFormatted})`}
+            </h4>
+            <span className="badge" style={{ backgroundColor: skippedMembers.length > 0 ? '#fef3c7' : '#e5e7eb', color: skippedMembers.length > 0 ? '#b45309' : '#6b7280', fontSize: '11px', fontWeight: 600 }}>
+              {skippedMembers.length} {skippedMembers.length === 1 ? 'member' : 'members'}
+            </span>
+          </div>
+
+          <span style={{ fontSize: '11px', color: 'var(--color-ink-mute)' }}>
+            These members marked "Not Coming" before deadline
+          </span>
+        </div>
+
+        {skippedMembers.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {skippedMembers.map((s) => {
+              const isBreakfast = s.meal_period === 'breakfast';
+              const isLunch = s.meal_period === 'lunch';
+              const periodIcon = isBreakfast ? '🌅' : isLunch ? '☀️' : '🌙';
+              const periodBadgeClass = isBreakfast ? 'badge-active' : isLunch ? 'badge-indigo' : 'badge-primary';
+
+              return (
+                <div
+                  key={s.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '10px 14px',
+                    backgroundColor: '#ffffff',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid #fed7aa',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+                    flexWrap: 'wrap',
+                    gap: '8px'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span
+                      className="tnum badge badge-indigo"
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontWeight: 600,
+                        fontSize: '11px',
+                        padding: '2px 8px'
+                      }}
+                    >
+                      #{s.member_number || 'N/A'}
+                    </span>
+                    <strong style={{ fontSize: '14px', color: 'var(--color-ink)' }}>
+                      {s.member_name}
+                    </strong>
+                    <span className={`badge ${periodBadgeClass}`} style={{ fontSize: '11px', textTransform: 'capitalize' }}>
+                      {periodIcon} {s.meal_period} Skipped
+                    </span>
+                  </div>
+
+                  <div style={{ fontSize: '11px', color: 'var(--color-ink-mute)', fontStyle: 'italic' }}>
+                    {s.reason || 'Marked Not Coming via Mobile App'}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div style={{
+            textAlign: 'center',
+            padding: '18px 12px',
+            backgroundColor: '#ffffff',
+            borderRadius: 'var(--radius-sm)',
+            border: '1px dashed var(--color-hairline)',
+            color: 'var(--color-ink-mute)',
+            fontSize: '12px'
+          }}>
+            No members have marked leave for {dateOffset === 0 ? 'today' : 'tomorrow'}. Expected 100% attendance from enrolled plans.
+          </div>
+        )}
       </div>
     </div>
   );

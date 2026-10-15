@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Users, CreditCard, Utensils, Plus, Search, Edit3, FileSpreadsheet, X, QrCode, Trash2, Camera, Printer, CheckCircle2, ChefHat } from 'lucide-react';
+import { Users, CreditCard, Utensils, Plus, Search, Edit3, FileSpreadsheet, X, QrCode, Trash2, Camera, Printer, CheckCircle2, ChefHat, RefreshCw } from 'lucide-react';
+
 import type { Profile, DailyMenu, MealPeriod } from '../types';
 import { MEAL_PLAN_CONFIG } from '../types';
 import { api } from '../services/api';
@@ -37,11 +38,27 @@ export const AdminView: React.FC<AdminViewProps> = ({
   const [showCounterStandee, setShowCounterStandee] = useState(false);
   const [showCameraScanner, setShowCameraScanner] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshToast, setRefreshToast] = useState(false);
+
+  const handleAdminRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await onRefresh();
+      setRefreshToast(true);
+      setTimeout(() => setRefreshToast(false), 2500);
+    } catch (e) {
+      console.error('Admin refresh error:', e);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const [newFullName, setNewFullName] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [newMemberNumber, setNewMemberNumber] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
 
   // Filter members
   const filtered = members.filter(m => {
@@ -205,24 +222,48 @@ export const AdminView: React.FC<AdminViewProps> = ({
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setShowCounterStandee(true)}
-          className="btn"
-          style={{
-            backgroundColor: 'var(--color-primary)',
-            color: '#ffffff',
-            fontWeight: 600,
-            padding: '10px 18px',
-            fontSize: '13px',
-            borderRadius: 'var(--radius-pill)',
-            gap: '8px',
-            boxShadow: '0 2px 8px rgba(83, 58, 253, 0.35)'
-          }}
-        >
-          <Printer size={15} /> Open & Print Standee QR
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            disabled={isRefreshing}
+            onClick={handleAdminRefresh}
+            className="btn btn-pill"
+            style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.16)',
+              color: '#ffffff',
+              fontWeight: 500,
+              padding: '10px 16px',
+              fontSize: '13px',
+              gap: '6px',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              cursor: 'pointer'
+            }}
+            title="Refresh all member records, live headcounts and pending queues"
+          >
+            <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
+            {isRefreshing ? 'Refreshing...' : refreshToast ? '✓ Synced!' : 'Refresh Data'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowCounterStandee(true)}
+            className="btn"
+            style={{
+              backgroundColor: 'var(--color-primary)',
+              color: '#ffffff',
+              fontWeight: 600,
+              padding: '10px 18px',
+              fontSize: '13px',
+              borderRadius: 'var(--radius-pill)',
+              gap: '8px',
+              boxShadow: '0 2px 8px rgba(83, 58, 253, 0.35)'
+            }}
+          >
+            <Printer size={15} /> Open & Print Standee QR
+          </button>
+        </div>
       </div>
+
 
       {/* Top Metric Cards (Mobile 2x2 grid) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px' }}>
@@ -621,31 +662,29 @@ export const AdminView: React.FC<AdminViewProps> = ({
               >
                 {/* Mobile Card Row 1: Member #, Truncated Name, and Status Badge */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1, flexWrap: 'wrap' }}>
                     <span
-                      className="tnum badge badge-indigo truncate-text"
+                      className="tnum badge badge-indigo"
                       style={{
                         fontFamily: 'var(--font-mono)',
                         fontSize: '11px',
-                        padding: '2px 6px',
-                        flexShrink: 0,
-                        maxWidth: '90px',
-                        display: 'block'
+                        padding: '2px 8px',
+                        fontWeight: 600,
+                        flexShrink: 0
                       }}
                       title={m.member_number}
                     >
-                      {m.member_number}
+                      #{m.member_number}
                     </span>
 
                     <span
-                      className="truncate-text"
                       style={{
                         fontSize: '14px',
                         fontWeight: 600,
                         color: 'var(--color-ink)',
-                        lineHeight: 1.2,
-                        display: 'block',
-                        maxWidth: '150px'
+                        lineHeight: 1.3,
+                        wordBreak: 'break-word',
+                        whiteSpace: 'normal'
                       }}
                       title={m.full_name}
                     >
@@ -708,7 +747,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
                         ...MEAL_PLAN_CONFIG[m.meal_plan_type].badgeStyle
                       }}
                     >
-                      🍱 {MEAL_PLAN_CONFIG[m.meal_plan_type].hindiName} ({MEAL_PLAN_CONFIG[m.meal_plan_type].shortLabel})
+                      🍱 {MEAL_PLAN_CONFIG[m.meal_plan_type].name} ({MEAL_PLAN_CONFIG[m.meal_plan_type].shortLabel})
                     </span>
                   </div>
                 )}
@@ -854,7 +893,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
                           ...MEAL_PLAN_CONFIG[m.meal_plan_type].badgeStyle
                         }}
                       >
-                        🍱 Plan: {MEAL_PLAN_CONFIG[m.meal_plan_type].hindiName} ({MEAL_PLAN_CONFIG[m.meal_plan_type].shortLabel})
+                        🍱 Plan: {MEAL_PLAN_CONFIG[m.meal_plan_type].name} ({MEAL_PLAN_CONFIG[m.meal_plan_type].shortLabel})
                       </span>
                     </div>
                   )}
