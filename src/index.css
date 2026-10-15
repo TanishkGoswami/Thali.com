@@ -1,0 +1,234 @@
+/* Thali.com — Design System Tokens & Base Styles inspired by Oura (DESIGN.md) */
+:root {
+  /* Brand & Core */
+  --color-primary: #2a72de;       /* Decisive Action Blue - strictly for main CTAs */
+  --color-primary-hover: #1e5cb8;
+  --color-on-primary: #ffffff;
+  --color-stone: #4a4741;         /* Warm taupe-brown brand neutral */
+  --color-stone-hover: #3a3833;
+  --color-on-stone: #ffffff;
+  
+  /* Indian Earth Tones & Culinary Accents */
+  --color-clay: #6b443d;          /* Earthen clay handi */
+  --color-espresso: #39221e;      /* Deep roasted spices */
+  --color-gold: #af751b;          /* Mustard / Turmeric gold */
+  --color-ochre: #bc924c;         /* Haldi ochre */
+  --color-gold-soft: #ddaa61;
+  --color-gold-pale: #ddbe78;
+  --color-gold-deep: #684d07;
+  
+  --color-forest: #224228;        /* Fresh mint & coriander */
+  --color-olive: #5c6f5d;         /* Curry leaves & herbs */
+  --color-sage: #849671;          /* Fresh greens */
+  --color-sage-mute: #7b886d;
+  --color-sage-pale: #ced4b8;
+
+  /* Surfaces (Warm Paper World) */
+  --color-canvas: #f7f1e8;        /* Signature warm-paper cream resting background */
+  --color-surface: #ffffff;       /* Pure white elevated cards & dialogs */
+  --color-surface-grey: #ececec;  /* Machined light neutral */
+  --color-silver: #cccac7;        /* Cool silver dividers */
+  --color-ink-band: #000000;      /* Contrast stage dark */
+  --color-ink-band-soft: #19191c; /* Soft near-black */
+  --color-hairline: #e1dcd3;      /* Warm 1px border */
+  
+  /* Typography Colors */
+  --color-ink: #1c1b1a;           /* Deep ink text */
+  --color-ash: #838280;           /* Muted text */
+  --color-mute: #a8a5a0;          /* Subtle warm grey */
+  --color-on-dark: #ffffff;
+  --color-error: #e33a22;         /* Alert / error */
+  --color-success: #228b22;       /* Check-in accepted */
+
+  /* Fonts */
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Radii */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 24px;
+  --radius-xl: 40px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-subtle: 0 2px 8px rgba(74, 71, 65, 0.04);
+  --shadow-card: 0 4px 20px rgba(74, 71, 65, 0.06);
+  --shadow-elevated: 0 12px 36px rgba(74, 71, 65, 0.1);
+  --shadow-floating: 0 20px 48px rgba(28, 27, 26, 0.14);
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+/* Headings with Editorial Serif */
+h1, h2, h3, .font-serif {
+  font-family: var(--font-display);
+  font-weight: 300;
+  color: var(--color-ink);
+  letter-spacing: -0.02em;
+}
+
+/* Button & Pill Utilities */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all var(--transition-normal);
+  text-decoration: none;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(42, 114, 222, 0.25);
+}
+
+.btn-secondary {
+  background-color: var(--color-stone);
+  color: var(--color-on-stone);
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-stone-hover);
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--color-stone);
+  border-color: var(--color-hairline);
+}
+
+.btn-outline:hover {
+  background-color: var(--color-surface);
+  border-color: var(--color-stone);
+}
+
+.btn-pill {
+  padding: 8px 16px;
+  font-size: 13px;
+  border-radius: var(--radius-full);
+}
+
+/* Badges & Status Pills */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.badge-active {
+  background-color: #e9f5ec;
+  color: var(--color-forest);
+  border: 1px solid #c2e2c8;
+}
+
+.badge-pending {
+  background-color: #fdf5e6;
+  color: var(--color-gold-deep);
+  border: 1px solid var(--color-gold-pale);
+}
+
+.badge-expired {
+  background-color: #fbeee8;
+  color: var(--color-clay);
+  border: 1px solid #f1cfc4;
+}
+
+.badge-queued {
+  background-color: #eef4fc;
+  color: var(--color-primary);
+  border: 1px solid #bfd9f8;
+}
+
+/* Warm Paper Card */
+.card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-card);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-elevated);
+}
+
+/* Form Controls */
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-hairline);
+  background-color: var(--color-surface);
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--color-ink);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  outline: none;
+}
+
+.form-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(42, 114, 222, 0.15);
+}
+
+/* Micro-animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Eyebrow overline */
+.eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-stone);
+}

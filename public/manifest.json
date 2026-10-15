@@ -1,0 +1,17 @@
+{
+  "name": "Thali.com — Mess Operating System",
+  "short_name": "Thali.com",
+  "description": "Daily meal subscription, QR check-in & member management system",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f1e8",
+  "theme_color": "#2a72de",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
