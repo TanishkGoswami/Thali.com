@@ -103,7 +103,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     }}>
       {/* Brand Header */}
       <div style={{
-        padding: '28px 24px 20px',
+        padding: '24px 20px 16px',
         borderBottom: '1px solid var(--color-hairline)',
         display: 'flex',
         justifyContent: 'space-between',
@@ -131,8 +131,15 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             }}>
               Thali<span style={{ color: 'var(--color-primary)' }}>.com</span>
             </span>
-            </div>
-        
+            <span className="badge badge-indigo" style={{ fontSize: '10px' }}>
+              Portal
+            </span>
+          </div>
+          <p style={{ fontSize: '12px', color: 'var(--color-ink-mute)', marginTop: '4px' }}>
+            {tab === 'signin'
+              ? 'Sign in to access your digital meal pass & balance'
+              : 'Sign up for a monthly meal pass with 54 meals'}
+          </p>
         </div>
 
         {allowClose && onClose && !embedded && (
@@ -154,7 +161,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
       {/* Segmented Pill Tabs */}
       <div style={{
-        padding: '12px 24px 0',
+        padding: '10px 20px 0',
         backgroundColor: '#ffffff'
       }}>
         <div style={{
@@ -173,8 +180,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               backgroundColor: tab === 'signin' ? '#ffffff' : 'transparent',
               color: tab === 'signin' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
               boxShadow: tab === 'signin' ? 'var(--shadow-level-1)' : 'none',
-              fontSize: '13px',
-              fontWeight: tab === 'signin' ? 500 : 400
+              fontSize: '12px',
+              fontWeight: tab === 'signin' ? 500 : 400,
+              padding: '6px'
             }}
           >
             Sign In
@@ -188,8 +196,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               backgroundColor: tab === 'register' ? '#ffffff' : 'transparent',
               color: tab === 'register' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
               boxShadow: tab === 'register' ? 'var(--shadow-level-1)' : 'none',
-              fontSize: '13px',
-              fontWeight: tab === 'register' ? 500 : 400
+              fontSize: '12px',
+              fontWeight: tab === 'register' ? 500 : 400,
+              padding: '6px'
             }}
           >
             New Member
@@ -198,7 +207,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       </div>
 
       {/* Content Form Body */}
-      <div style={{ padding: '20px 24px 28px' }}>
+      <div style={{ padding: '16px 20px 24px' }}>
         {errorMsg && (
           <div style={{
             display: 'flex',
@@ -208,7 +217,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             backgroundColor: 'var(--color-error-bg)',
             border: '1px solid var(--color-error-border)',
             borderRadius: 'var(--radius-sm)',
-            marginBottom: '16px',
+            marginBottom: '14px',
             fontSize: '13px',
             color: 'var(--color-error)'
           }}>
@@ -218,10 +227,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         )}
 
         {tab === 'signin' ? (
-          <form onSubmit={handleSignIn} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <form onSubmit={handleSignIn} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {/* Email or Member ID */}
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '4px' }}>
                 Email Address or Member ID
               </label>
               <div style={{
@@ -244,7 +253,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     border: 'none',
                     outline: 'none',
                     padding: '8px 2px',
-                    fontSize: '14px',
                     color: 'var(--color-ink)',
                     backgroundColor: 'transparent'
                   }}
@@ -255,7 +263,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
             {/* Secret PIN / Access Code */}
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                 <label style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)' }}>
                   Secret PIN / Access Code
                 </label>
@@ -281,7 +289,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     border: 'none',
                     outline: 'none',
                     padding: '8px 2px',
-                    fontSize: '15px',
                     fontFamily: 'var(--font-mono)',
                     letterSpacing: '0.15em',
                     color: 'var(--color-ink)',
@@ -300,7 +307,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 width: '100%',
                 padding: '10px',
                 fontSize: '14px',
-                marginTop: '6px',
+                marginTop: '4px',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
@@ -319,10 +326,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             </button>
           </form>
         ) : (
-          <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {/* Full Name */}
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '4px' }}>
                 Full Name
               </label>
               <div style={{
@@ -345,7 +352,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     border: 'none',
                     outline: 'none',
                     padding: '8px 2px',
-                    fontSize: '14px',
                     color: 'var(--color-ink)',
                     backgroundColor: 'transparent'
                   }}
@@ -356,7 +362,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
             {/* Email Address */}
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '4px' }}>
                 Email Address
               </label>
               <div style={{
@@ -378,7 +384,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     border: 'none',
                     outline: 'none',
                     padding: '8px 2px',
-                    fontSize: '14px',
                     color: 'var(--color-ink)',
                     backgroundColor: 'transparent'
                   }}
@@ -389,7 +394,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
             {/* Create PIN */}
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '4px' }}>
                 Create 4-Digit Secret PIN
               </label>
               <div style={{
@@ -412,7 +417,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     border: 'none',
                     outline: 'none',
                     padding: '8px 2px',
-                    fontSize: '15px',
                     fontFamily: 'var(--font-mono)',
                     letterSpacing: '0.15em',
                     color: 'var(--color-ink)',
@@ -421,7 +425,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 />
                 <KeyRound size={16} color="var(--color-ink-mute)" />
               </div>
-              <p style={{ fontSize: '11px', color: 'var(--color-ink-mute)', marginTop: '4px' }}>
+              <p style={{ fontSize: '11px', color: 'var(--color-ink-mute)', marginTop: '3px' }}>
                 Use this PIN to login without SMS.
               </p>
             </div>
@@ -434,7 +438,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 width: '100%',
                 padding: '10px',
                 fontSize: '14px',
-                marginTop: '6px',
+                marginTop: '4px',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
@@ -456,22 +460,22 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
         {/* Staff & Pre-Seeded Accounts */}
         <div style={{
-          marginTop: '20px',
-          paddingTop: '16px',
+          marginTop: '16px',
+          paddingTop: '12px',
           borderTop: '1px solid var(--color-hairline)'
         }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            marginBottom: '10px'
+            marginBottom: '8px'
           }}>
             <span className="eyebrow" style={{ fontSize: '10px' }}>
               Quick Evaluation Access
             </span>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '6px' }}>
             <button
               type="button"
               onClick={() => handleQuickTestLogin('REC-01')}
@@ -485,7 +489,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               }}
             >
               <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-ink)' }}>Ramesh Patel</div>
-              <div className="tnum" style={{ fontSize: '11px', color: 'var(--color-ink-mute)' }}>Reception Staff • 1234</div>
+              <div className="tnum" style={{ fontSize: '10px', color: 'var(--color-ink-mute)' }}>Reception • 1234</div>
             </button>
 
             <button
@@ -501,7 +505,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               }}
             >
               <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-ink)' }}>Mess Owner</div>
-              <div className="tnum" style={{ fontSize: '11px', color: 'var(--color-primary)' }}>Admin Console • 1234</div>
+              <div className="tnum" style={{ fontSize: '10px', color: 'var(--color-primary)' }}>Admin • 1234</div>
             </button>
           </div>
         </div>
@@ -516,7 +520,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         alignItems: 'center',
         justifyContent: 'center',
         minHeight: '75vh',
-        padding: '32px 16px'
+        padding: '24px 16px'
       }}>
         {cardContent}
       </div>

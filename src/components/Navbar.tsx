@@ -35,7 +35,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header style={{
-      backgroundColor: 'rgba(255, 255, 255, 0.92)',
+      backgroundColor: 'rgba(255, 255, 255, 0.94)',
       backdropFilter: 'blur(12px)',
       WebkitBackdropFilter: 'blur(12px)',
       borderBottom: '1px solid var(--color-hairline)',
@@ -47,14 +47,15 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div style={{
         maxWidth: '1240px',
         margin: '0 auto',
-        padding: '12px 24px',
+        padding: '10px 16px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        gap: '16px'
+        flexWrap: 'wrap',
+        gap: '10px'
       }}>
         {/* Brand Logo & Identity */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
           <div style={{
             width: '32px',
             height: '32px',
@@ -69,29 +70,27 @@ export const Navbar: React.FC<NavbarProps> = ({
           }}>
             <Utensils size={16} strokeWidth={2.2} />
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{
-              fontSize: '18px',
-              fontWeight: 600,
-              letterSpacing: '-0.3px',
-              color: 'var(--color-ink)'
-            }}>
-              Thali<span style={{ color: 'var(--color-primary)' }}>.com</span>
-            </span>
-           
-          </div>
+          <span style={{
+            fontSize: '18px',
+            fontWeight: 600,
+            letterSpacing: '-0.3px',
+            color: 'var(--color-ink)'
+          }}>
+            Thali<span style={{ color: 'var(--color-primary)' }}>.com</span>
+          </span>
         </div>
 
         {/* Center: Supervisor RBAC Switcher (Only visible for Owner Admin) */}
         {currentUser && currentUser.role === 'owner_admin' && (
-          <div style={{
-            display: 'flex',
+          <div className="scroll-pills-x" style={{
             alignItems: 'center',
             gap: '2px',
             backgroundColor: 'var(--color-canvas-soft)',
             padding: '3px',
             borderRadius: 'var(--radius-pill)',
-            border: '1px solid var(--color-hairline)'
+            border: '1px solid var(--color-hairline)',
+            order: 2,
+            margin: '0 auto'
           }}>
             <button
               type="button"
@@ -102,7 +101,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 color: currentRole === 'owner_admin' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
                 boxShadow: currentRole === 'owner_admin' ? 'var(--shadow-level-1)' : 'none',
                 gap: '5px',
-                padding: '4px 12px',
+                padding: '4px 10px',
                 fontSize: '12px',
                 fontWeight: currentRole === 'owner_admin' ? 500 : 400
               }}
@@ -119,7 +118,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 color: currentRole === 'receptionist' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
                 boxShadow: currentRole === 'receptionist' ? 'var(--shadow-level-1)' : 'none',
                 gap: '5px',
-                padding: '4px 12px',
+                padding: '4px 10px',
                 fontSize: '12px',
                 fontWeight: currentRole === 'receptionist' ? 500 : 400
               }}
@@ -136,7 +135,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 color: currentRole === 'member' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
                 boxShadow: currentRole === 'member' ? 'var(--shadow-level-1)' : 'none',
                 gap: '5px',
-                padding: '4px 12px',
+                padding: '4px 10px',
                 fontSize: '12px',
                 fontWeight: currentRole === 'member' ? 500 : 400
               }}
@@ -148,29 +147,30 @@ export const Navbar: React.FC<NavbarProps> = ({
         )}
 
         {/* Right Section: Clean User Profile Capsule & Logout */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, order: 3 }}>
           {currentUser ? (
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '10px',
-              padding: '4px 6px 4px 10px',
+              gap: '8px',
+              padding: '3px 4px 3px 8px',
               borderRadius: 'var(--radius-pill)',
               backgroundColor: '#ffffff',
               border: '1px solid var(--color-hairline)',
-              boxShadow: 'var(--shadow-level-1)'
+              boxShadow: 'var(--shadow-level-1)',
+              maxWidth: '100%'
             }}>
               {/* User Avatar Initials */}
               <div style={{
-                width: '30px',
-                height: '30px',
+                width: '28px',
+                height: '28px',
                 borderRadius: '50%',
                 background: 'linear-gradient(135deg, #f0effe 0%, #e0e7ff 100%)',
                 color: 'var(--color-primary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '12px',
+                fontSize: '11px',
                 fontWeight: 600,
                 border: '1px solid #dcd8fe',
                 flexShrink: 0
@@ -178,59 +178,66 @@ export const Navbar: React.FC<NavbarProps> = ({
                 {initials}
               </div>
 
-              {/* User Information */}
-              <div style={{ textAlign: 'left', minWidth: '80px' }}>
+              {/* User Information with overflow protection */}
+              <div style={{
+                textAlign: 'left',
+                maxWidth: '110px',
+                overflow: 'hidden'
+              }}>
                 <div style={{
-                  fontSize: '13px',
+                  fontSize: '12px',
                   fontWeight: 600,
                   color: 'var(--color-ink)',
-                  lineHeight: 1.2
+                  lineHeight: 1.2,
+                  whiteSpace: 'nowrap',
+                  textOverflow: 'ellipsis',
+                  overflow: 'hidden'
                 }}>
                   {currentUser.full_name}
                 </div>
-                <div style={{ marginTop: '1px' }}>
+                <div style={{
+                  fontSize: '10px',
+                  color: 'var(--color-ink-mute)',
+                  whiteSpace: 'nowrap',
+                  textOverflow: 'ellipsis',
+                  overflow: 'hidden'
+                }}>
                   {currentUser.role === 'owner_admin' ? (
-                    <span style={{ fontSize: '11px', color: '#9b6829', fontWeight: 500 }}>
-                      👑 Owner Admin
-                    </span>
+                    <span style={{ color: '#9b6829', fontWeight: 500 }}>Admin</span>
                   ) : currentUser.role === 'receptionist' ? (
-                    <span style={{ fontSize: '11px', color: 'var(--color-primary)', fontWeight: 500 }}>
-                      Reception Staff
-                    </span>
+                    <span style={{ color: 'var(--color-primary)', fontWeight: 500 }}>Staff</span>
                   ) : (
-                    <span className="tnum" style={{ fontSize: '11px', color: 'var(--color-ink-mute)', fontWeight: 500 }}>
-                      Member • {currentUser.member_number}
-                    </span>
+                    <span className="tnum">{currentUser.member_number}</span>
                   )}
                 </div>
               </div>
 
               {/* Hairline Divider */}
-              <div style={{ width: '1px', height: '20px', backgroundColor: 'var(--color-hairline)', margin: '0 2px' }} />
+              <div style={{ width: '1px', height: '18px', backgroundColor: 'var(--color-hairline)' }} />
 
               {/* Sleek Logout Button */}
               <button
                 type="button"
                 onClick={onLogout}
-                title="Sign out of account"
+                title="Sign out"
                 onMouseEnter={() => setLogoutHovered(true)}
                 onMouseLeave={() => setLogoutHovered(false)}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '5px',
-                  padding: '5px 10px',
+                  gap: '4px',
+                  padding: '4px 8px',
                   borderRadius: 'var(--radius-pill)',
                   backgroundColor: logoutHovered ? 'var(--color-error-bg)' : 'transparent',
                   color: logoutHovered ? 'var(--color-error)' : 'var(--color-ink-mute)',
                   border: logoutHovered ? '1px solid var(--color-error-border)' : '1px solid transparent',
                   cursor: 'pointer',
-                  fontSize: '12px',
+                  fontSize: '11px',
                   fontWeight: 500,
                   transition: 'all var(--transition-fast)'
                 }}
               >
-                <LogOut size={13} />
+                <LogOut size={12} />
                 <span>Logout</span>
               </button>
             </div>
@@ -241,11 +248,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="btn btn-primary"
               style={{
                 gap: '6px',
-                padding: '7px 18px',
+                padding: '6px 14px',
                 fontSize: '13px'
               }}
             >
-              <LogIn size={14} /> Sign In
+              <LogIn size={13} /> Sign In
             </button>
           )}
         </div>

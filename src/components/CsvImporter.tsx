@@ -173,8 +173,8 @@ export const CsvImporter: React.FC<CsvImporterProps> = ({ onSuccess, existingMem
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '4px' }}>
-            <label className="btn btn-primary btn-pill" style={{ cursor: 'pointer' }}>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', width: '100%', marginTop: '4px' }}>
+            <label className="btn btn-primary btn-pill" style={{ cursor: 'pointer', flex: '1 1 180px', textAlign: 'center' }}>
               <Upload size={14} /> Select CSV File
               <input
                 type="file"
@@ -188,6 +188,7 @@ export const CsvImporter: React.FC<CsvImporterProps> = ({ onSuccess, existingMem
               type="button"
               onClick={loadSampleData}
               className="btn btn-secondary btn-pill"
+              style={{ flex: '1 1 180px' }}
             >
               Load 5 Sample Members
             </button>
@@ -263,7 +264,7 @@ export const CsvImporter: React.FC<CsvImporterProps> = ({ onSuccess, existingMem
               type="button"
               disabled={isImporting || validCount === 0}
               onClick={handleExecuteImport}
-              className="btn btn-primary"
+              className="btn btn-primary btn-mobile-full"
               style={{ gap: '6px' }}
             >
               {isImporting ? (
@@ -278,8 +279,8 @@ export const CsvImporter: React.FC<CsvImporterProps> = ({ onSuccess, existingMem
             </button>
           </div>
 
-          <div style={{ overflowX: 'auto', maxHeight: '340px' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+          <div className="table-responsive" style={{ maxHeight: '340px' }}>
+            <table style={{ width: '100%', minWidth: '460px', borderCollapse: 'collapse', fontSize: '12px' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--color-hairline)', textAlign: 'left', color: 'var(--color-ink-mute)' }}>
                   <th style={{ padding: '8px 10px', fontWeight: 500 }}>Status</th>

@@ -67,24 +67,24 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
   );
 
   return (
-    <div style={{ maxWidth: '1160px', margin: '0 auto', padding: '36px 20px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
+    <div style={{ maxWidth: '1160px', margin: '0 auto', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
       
       {/* Top Banner */}
       <div style={{
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
-        gap: '16px',
+        gap: '12px',
         borderBottom: '1px solid var(--color-hairline)',
-        paddingBottom: '20px'
+        paddingBottom: '16px'
       }}>
         <div>
           <span className="eyebrow">Frontdesk Operations</span>
-          <h1 style={{ fontSize: '32px', marginTop: '4px' }}>
+          <h1 style={{ fontSize: '28px', marginTop: '2px' }}>
             Meal Check-In Operator
           </h1>
-          <p style={{ color: 'var(--color-ink-mute)', fontSize: '14px', marginTop: '2px' }}>
+          <p style={{ color: 'var(--color-ink-mute)', fontSize: '13px', marginTop: '2px' }}>
             Active Slot: <strong style={{ color: 'var(--color-ink)', textTransform: 'capitalize' }}>{activeMealPeriod} Service</strong> • Fast pass validation & deduplication
           </p>
         </div>
@@ -99,26 +99,27 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
       {/* Result Alert Feedback Banner */}
       {lastResult && (
         <div className="animate-fade-in" style={{
-          padding: '18px 22px',
+          padding: '16px',
           borderRadius: 'var(--radius-lg)',
           border: `1px solid ${lastResult.success ? 'var(--color-success-border)' : 'var(--color-error-border)'}`,
           backgroundColor: lastResult.success ? 'var(--color-success-bg)' : 'var(--color-error-bg)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '16px',
+          flexWrap: 'wrap',
+          gap: '12px',
           boxShadow: 'var(--shadow-level-1)'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
             {lastResult.success ? (
-              <CheckCircle size={28} color="var(--color-success)" />
+              <CheckCircle size={24} color="var(--color-success)" style={{ flexShrink: 0 }} />
             ) : (
-              <XCircle size={28} color="var(--color-error)" />
+              <XCircle size={24} color="var(--color-error)" style={{ flexShrink: 0 }} />
             )}
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                 <h3 style={{
-                  fontSize: '16px',
+                  fontSize: '15px',
                   fontWeight: 600,
                   color: lastResult.success ? 'var(--color-success)' : 'var(--color-error)'
                 }}>
@@ -128,13 +129,14 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
                   backgroundColor: '#ffffff',
                   border: '1px solid currentColor',
                   color: lastResult.success ? 'var(--color-success)' : 'var(--color-error)',
-                  fontSize: '10px'
+                  fontSize: '9px',
+                  padding: '1px 6px'
                 }}>
                   {lastResult.code}
                 </span>
               </div>
               {lastResult.member_name && (
-                <p className="tnum" style={{ fontSize: '13px', color: 'var(--color-ink)', marginTop: '2px' }}>
+                <p className="tnum" style={{ fontSize: '12px', color: 'var(--color-ink)', marginTop: '2px' }}>
                   Member: <strong>{lastResult.member_name}</strong> ({lastResult.member_number}) • Balance Remaining: <strong>{lastResult.remaining_meals} meals</strong>
                 </p>
               )}
@@ -145,7 +147,7 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
             type="button"
             onClick={() => setLastResult(null)}
             className="btn btn-secondary btn-pill"
-            style={{ fontSize: '12px', padding: '4px 12px' }}
+            style={{ fontSize: '11px', padding: '3px 10px', marginLeft: 'auto' }}
           >
             Dismiss
           </button>
@@ -153,20 +155,20 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
       )}
 
       {/* Two Column Layout: Scanner / Fast Search & Recent Checkins */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
         
         {/* Left Column: Fast Scanner & Search */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           
           {/* Card: Instant QR Scanner Input */}
           <div className="card">
             <span className="eyebrow">Instant Scan</span>
-            <h2 style={{ fontSize: '20px', marginTop: '2px' }}>Scan Member Pass</h2>
-            <p style={{ color: 'var(--color-ink-mute)', fontSize: '13px', marginTop: '2px', marginBottom: '14px' }}>
+            <h2 style={{ fontSize: '18px', marginTop: '2px' }}>Scan Member Pass</h2>
+            <p style={{ color: 'var(--color-ink-mute)', fontSize: '12px', marginTop: '2px', marginBottom: '12px' }}>
               Aim handheld USB scanner or enter token to deduct 1 meal.
             </p>
 
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
               <input
                 type="text"
                 placeholder="Scan or paste QR token..."
@@ -179,6 +181,7 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
                   }
                 }}
                 className="form-input"
+                style={{ flex: 1, minWidth: '180px' }}
               />
               <button
                 type="button"
@@ -188,6 +191,7 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
                   setManualToken('');
                 }}
                 className="btn btn-primary"
+                style={{ flexShrink: 0 }}
               >
                 {checkingIn ? 'Checking...' : 'Check-in'}
               </button>
@@ -196,10 +200,10 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              margin: '14px 0 10px',
-              gap: '12px',
+              margin: '12px 0 8px',
+              gap: '10px',
               color: 'var(--color-ink-mute)',
-              fontSize: '11px',
+              fontSize: '10px',
               textTransform: 'uppercase',
               letterSpacing: '0.06em'
             }}>
@@ -212,18 +216,18 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
               type="button"
               onClick={() => setShowCameraScanner(true)}
               className="btn btn-secondary btn-pill"
-              style={{ width: '100%', gap: '8px' }}
+              style={{ width: '100%', gap: '6px' }}
             >
-              <Camera size={15} /> Open Device Camera Scanner
+              <Camera size={14} /> Open Device Camera Scanner
             </button>
           </div>
 
           {/* Card: Member Lookup & Instant Fallback Check-in */}
           <div className="card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <div>
                 <span className="eyebrow">Directory Register</span>
-                <h2 style={{ fontSize: '20px', marginTop: '2px' }}>Member Search</h2>
+                <h2 style={{ fontSize: '18px', marginTop: '2px' }}>Member Search</h2>
               </div>
               <span className="badge tnum" style={{ backgroundColor: 'var(--color-canvas-soft)', color: 'var(--color-ink-mute)', border: '1px solid var(--color-hairline)' }}>
                 {filteredMembers.length} Members
@@ -231,20 +235,20 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
             </div>
 
             {/* Search Input */}
-            <div style={{ position: 'relative', marginBottom: '14px' }}>
-              <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-ink-mute)' }} />
+            <div style={{ position: 'relative', marginBottom: '12px' }}>
+              <Search size={15} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-ink-mute)' }} />
               <input
                 type="text"
-                placeholder="Search member # (e.g. M-101), name or phone..."
+                placeholder="Search member #, name or phone..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="form-input"
-                style={{ paddingLeft: '34px' }}
+                style={{ paddingLeft: '32px' }}
               />
             </div>
 
             {/* Members List */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '380px', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '340px', overflowY: 'auto' }}>
               {filteredMembers.map((m) => (
                 <div
                   key={m.id}
@@ -252,30 +256,30 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    padding: '10px 14px',
+                    padding: '8px 12px',
                     borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--color-hairline)',
                     backgroundColor: 'var(--color-canvas-soft)'
                   }}
                 >
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ minWidth: 0, paddingRight: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span className="tnum" style={{
                         fontSize: '11px',
                         fontWeight: 600,
                         backgroundColor: '#ffffff',
-                        padding: '1px 6px',
+                        padding: '1px 5px',
                         borderRadius: '4px',
                         border: '1px solid var(--color-hairline)',
                         color: 'var(--color-ink)'
                       }}>
                         {m.member_number}
                       </span>
-                      <strong style={{ fontSize: '14px', color: 'var(--color-ink)', fontWeight: 500 }}>{m.full_name}</strong>
+                      <strong style={{ fontSize: '13px', color: 'var(--color-ink)', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.full_name}</strong>
                     </div>
-                    <div className="tnum" style={{ display: 'flex', gap: '12px', fontSize: '12px', color: 'var(--color-ink-mute)', marginTop: '2px' }}>
-                      <span>Remaining: <strong style={{ color: (m.remaining_meals ?? 0) <= 5 ? 'var(--color-error)' : 'var(--color-ink)' }}>{m.remaining_meals ?? 0}</strong> meals</span>
-                      <span>Status: <span style={{ textTransform: 'capitalize' }}>{m.subscription_status}</span></span>
+                    <div className="tnum" style={{ display: 'flex', gap: '8px', fontSize: '11px', color: 'var(--color-ink-mute)', marginTop: '2px' }}>
+                      <span>Bal: <strong style={{ color: (m.remaining_meals ?? 0) <= 5 ? 'var(--color-error)' : 'var(--color-ink)' }}>{m.remaining_meals ?? 0}</strong></span>
+                      <span>• <span style={{ textTransform: 'capitalize' }}>{m.subscription_status}</span></span>
                     </div>
                   </div>
 
@@ -285,8 +289,9 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
                     onClick={() => handleCheckIn(m.qr_token)}
                     className="btn btn-secondary btn-pill"
                     style={{
-                      fontSize: '12px',
-                      padding: '5px 12px'
+                      fontSize: '11px',
+                      padding: '4px 10px',
+                      flexShrink: 0
                     }}
                   >
                     Check-in
@@ -299,17 +304,17 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
 
         {/* Right Column: Live Meal Check-in Feed */}
         <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <div>
               <span className="eyebrow">Real-Time Audit</span>
-              <h2 style={{ fontSize: '20px', marginTop: '2px' }}>Today's Check-ins</h2>
+              <h2 style={{ fontSize: '18px', marginTop: '2px' }}>Today's Check-ins</h2>
             </div>
             <span className="badge badge-active tnum">
               {recentTransactions.length} Logged
             </span>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', maxHeight: '520px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', overflowY: 'auto', maxHeight: '480px' }}>
             {recentTransactions.length > 0 ? (
               recentTransactions.map((tx) => (
                 <div
@@ -318,47 +323,48 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    padding: '10px 14px',
+                    padding: '8px 12px',
                     borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--color-hairline)',
                     backgroundColor: '#ffffff'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
                     <div style={{
-                      width: '28px',
-                      height: '28px',
+                      width: '26px',
+                      height: '26px',
                       borderRadius: '50%',
                       backgroundColor: 'var(--color-success-bg)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: 'var(--color-success)'
+                      color: 'var(--color-success)',
+                      flexShrink: 0
                     }}>
-                      <CheckCircle size={15} />
+                      <CheckCircle size={14} />
                     </div>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontWeight: 500, fontSize: '13px', color: 'var(--color-ink)' }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ fontWeight: 500, fontSize: '12px', color: 'var(--color-ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {tx.member_name || 'Member'}
                         </span>
-                        <span className="tnum" style={{ fontSize: '11px', color: 'var(--color-ink-mute)' }}>
+                        <span className="tnum" style={{ fontSize: '10px', color: 'var(--color-ink-mute)' }}>
                           ({tx.member_number})
                         </span>
                       </div>
-                      <span className="tnum" style={{ fontSize: '11px', color: 'var(--color-ink-mute)' }}>
+                      <span className="tnum" style={{ fontSize: '10px', color: 'var(--color-ink-mute)' }}>
                         {new Date(tx.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {tx.meal_period}
                       </span>
                     </div>
                   </div>
 
-                  <span className="badge badge-error tnum" style={{ fontSize: '11px' }}>
+                  <span className="badge badge-error tnum" style={{ fontSize: '10px', padding: '1px 6px', flexShrink: 0 }}>
                     -1 Meal
                   </span>
                 </div>
               ))
             ) : (
-              <p style={{ color: 'var(--color-ink-mute)', fontSize: '13px', textAlign: 'center', padding: '36px 0' }}>
+              <p style={{ color: 'var(--color-ink-mute)', fontSize: '12px', textAlign: 'center', padding: '28px 0' }}>
                 No check-ins recorded yet for today's session.
               </p>
             )}

@@ -355,3 +355,93 @@ h4 {
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* -------------------------------------------------------------
+   Mobile & Responsive Enhancements (Phones, Tablets & Small Screens)
+   ------------------------------------------------------------- */
+
+/* Responsive table wrapper with smooth touch scrolling */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--radius-sm);
+}
+
+.table-responsive::-webkit-scrollbar {
+  height: 4px;
+}
+
+/* Horizontal pill scrollbar for mobile tabs & filters */
+.scroll-pills-x {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  white-space: nowrap;
+  padding-bottom: 2px;
+}
+.scroll-pills-x::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Prevent iOS Safari auto-zoom on input focus by setting 16px font-size */
+  .form-input, input, select, textarea {
+    font-size: 16px !important;
+    min-height: 42px;
+  }
+
+  /* Touch-friendly buttons (WCAG AAA minimum touch targets) */
+  .btn {
+    min-height: 40px;
+    touch-action: manipulation;
+  }
+
+  .btn-pill {
+    min-height: 36px;
+    padding: 6px 14px;
+  }
+
+  /* Compact card padding on mobile */
+  .card, .card-cream, .card-dark {
+    padding: 18px 16px !important;
+    border-radius: 12px;
+  }
+
+  /* Responsive typography scaling */
+  h1 {
+    font-size: 26px !important;
+    letter-spacing: -0.6px !important;
+    line-height: 1.15 !important;
+  }
+
+  h2 {
+    font-size: 20px !important;
+    letter-spacing: -0.4px !important;
+    line-height: 1.2 !important;
+  }
+
+  h3 {
+    font-size: 17px !important;
+    letter-spacing: -0.2px !important;
+  }
+
+  /* Atmosphere mesh height adjusts for small screens */
+  .gradient-mesh-hero {
+    height: 240px;
+    filter: blur(18px);
+  }
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 16px 14px !important;
+  }
+
+  /* Full-width action buttons inside cards if needed */
+  .btn-mobile-full {
+    width: 100% !important;
+  }
+}

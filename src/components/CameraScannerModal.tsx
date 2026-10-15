@@ -134,16 +134,18 @@ export const CameraScannerModal: React.FC<CameraScannerModalProps> = ({
       alignItems: 'center',
       justifyContent: 'center',
       zIndex: 150,
-      padding: '20px'
+      padding: '16px'
     }}>
       <div className="card" style={{
         maxWidth: '440px',
         width: '100%',
-        padding: '24px',
+        padding: '20px 16px',
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
-        gap: '16px',
+        gap: '14px',
+        maxHeight: '92vh',
+        overflowY: 'auto',
         boxShadow: 'var(--shadow-modal)'
       }}>
         {/* Header */}
