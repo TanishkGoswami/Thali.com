@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Phone, ArrowRight, RefreshCw, AlertCircle, X, User, Mail, CheckCircle2 } from 'lucide-react';
-import { sendPhoneOtp, verifyPhoneOtp, getTestProfileByNumber, saveLocalSession } from '../lib/auth';
+import { useState } from 'react';
+import { Lock, Mail, User, ArrowRight, RefreshCw, AlertCircle, X, KeyRound } from 'lucide-react';
+import { loginWithEmailOrIdAndPin, registerNewMember, getTestProfileByNumber, saveLocalSession } from '../lib/auth';
 import type { Profile } from '../types';
 
 interface LoginModalProps {
@@ -18,74 +18,53 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   allowClose = true,
   embedded = false
 }) => {
-  const [step, setStep] = useState<'phone' | 'otp'>('phone');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
+  const [tab, setTab] = useState<'signin' | 'register'>('signin');
+  
+  // Sign In fields
+  const [identifier, setIdentifier] = useState('');
+  const [pin, setPin] = useState('');
+
+  // Register fields
+  const [regFullName, setRegFullName] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regPin, setRegPin] = useState('');
+
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [resendCooldown, setResendCooldown] = useState(0);
-
-  const [simulatedCode, setSimulatedCode] = useState<string | null>(null);
-
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (resendCooldown > 0) {
-      timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
-    }
-    return () => clearTimeout(timer);
-  }, [resendCooldown]);
 
   if (!isOpen) return null;
 
-  // Handle Send OTP
-  const handleSendOtp = async (e: React.FormEvent) => {
+  // Handle Sign In (Email or Member Number + PIN)
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
-
-    const clean = phoneNumber.replace(/\D/g, '');
-    if (clean.length < 10) {
-      setErrorMsg('Please enter a valid 10-digit mobile number.');
-      return;
-    }
-
     setLoading(true);
+
     try {
-      const res = await sendPhoneOtp(clean, fullName, email);
-      if (res.isSimulated && res.devCode) {
-        setSimulatedCode(res.devCode);
-      } else {
-        setSimulatedCode(null);
-      }
-      setStep('otp');
-      setResendCooldown(30);
+      const profile = await loginWithEmailOrIdAndPin(identifier, pin);
+      onLoginSuccess(profile);
+      if (onClose) onClose();
     } catch (err: any) {
-      console.error('Send OTP error:', err);
-      setErrorMsg(err.message || 'Failed to send OTP. Please check the number.');
+      console.error('Sign-in error:', err);
+      setErrorMsg(err.message || 'Invalid Email or PIN.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle Verify OTP
-  const handleVerifyOtp = async (e: React.FormEvent) => {
+  // Handle New Member Registration
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
-
-    if (otp.trim().length < 6) {
-      setErrorMsg('Please enter the 6-digit OTP code received on your phone.');
-      return;
-    }
-
     setLoading(true);
+
     try {
-      const { profile } = await verifyPhoneOtp(phoneNumber, otp, fullName, email);
+      const profile = await registerNewMember(regFullName, regEmail, regPin);
       onLoginSuccess(profile);
       if (onClose) onClose();
     } catch (err: any) {
-      console.error('Verify OTP error:', err);
-      setErrorMsg(err.message || 'Invalid or expired OTP. Please check and try again.');
+      console.error('Registration error:', err);
+      setErrorMsg(err.message || 'Failed to create account.');
     } finally {
       setLoading(false);
     }
@@ -102,7 +81,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         onLoginSuccess(profile);
         if (onClose) onClose();
       } else {
-        setErrorMsg(`Test account ${memberNumber} not found in database.`);
+        setErrorMsg(`Test account ${memberNumber} not found.`);
       }
     } catch (err: any) {
       setErrorMsg(err.message || 'Error loading test account.');
@@ -116,15 +95,15 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       backgroundColor: '#FFFFFF',
       borderRadius: 'var(--radius-xl)',
       width: '100%',
-      maxWidth: '460px',
-      boxShadow: embedded ? 'var(--shadow-elevation)' : 'var(--shadow-elevation)',
+      maxWidth: '440px',
+      boxShadow: 'var(--shadow-elevation)',
       border: '1px solid var(--color-hairline)',
       overflow: 'hidden',
       animation: 'fadeIn 0.2s ease-out'
     }}>
-      {/* Header */}
+      {/* Brand Header */}
       <div style={{
-        padding: '28px 24px 20px',
+        padding: '24px 24px 16px',
         borderBottom: '1px solid var(--color-hairline)',
         display: 'flex',
         justifyContent: 'space-between',
@@ -134,20 +113,20 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{
               fontFamily: 'var(--font-display)',
-              fontSize: '24px',
+              fontSize: '26px',
               fontWeight: 500,
               color: 'var(--color-ink)'
             }}>
               Thali<span style={{ color: 'var(--color-gold)' }}>.com</span>
             </span>
             <span className="badge" style={{ backgroundColor: 'var(--color-surface)', fontSize: '11px' }}>
-              Member Access
+              Mess Portal
             </span>
           </div>
           <p style={{ fontSize: '13px', color: 'var(--color-ash)', marginTop: '4px' }}>
-            {step === 'phone'
-              ? 'Sign in or register with your mobile phone number'
-              : `Enter 6-digit verification code sent to +91 ${phoneNumber.replace(/\D/g, '').slice(-10)}`}
+            {tab === 'signin'
+              ? 'Sign in with your Email & secret Access PIN'
+              : 'Register for a digital meal pass & 54-meal quota'}
           </p>
         </div>
 
@@ -165,6 +144,48 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             <X size={20} />
           </button>
         )}
+      </div>
+
+      {/* Tabs */}
+      <div style={{
+        display: 'flex',
+        borderBottom: '1px solid var(--color-hairline)',
+        backgroundColor: 'var(--color-canvas)'
+      }}>
+        <button
+          type="button"
+          onClick={() => { setTab('signin'); setErrorMsg(null); }}
+          style={{
+            flex: 1,
+            padding: '12px',
+            border: 'none',
+            background: tab === 'signin' ? '#FFFFFF' : 'transparent',
+            fontWeight: 600,
+            fontSize: '13px',
+            color: tab === 'signin' ? 'var(--color-ink)' : 'var(--color-ash)',
+            borderBottom: tab === 'signin' ? '2px solid var(--color-stone)' : 'none',
+            cursor: 'pointer'
+          }}
+        >
+          Sign In (Everyday Access)
+        </button>
+        <button
+          type="button"
+          onClick={() => { setTab('register'); setErrorMsg(null); }}
+          style={{
+            flex: 1,
+            padding: '12px',
+            border: 'none',
+            background: tab === 'register' ? '#FFFFFF' : 'transparent',
+            fontWeight: 600,
+            fontSize: '13px',
+            color: tab === 'register' ? 'var(--color-ink)' : 'var(--color-ash)',
+            borderBottom: tab === 'register' ? '2px solid var(--color-stone)' : 'none',
+            cursor: 'pointer'
+          }}
+        >
+          New Member Sign-Up
+        </button>
       </div>
 
       {/* Content Body */}
@@ -187,61 +208,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           </div>
         )}
 
-        {step === 'phone' ? (
-          <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {/* Mobile Phone Number */}
+        {tab === 'signin' ? (
+          <form onSubmit={handleSignIn} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* Email or Member ID */}
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)', marginBottom: '8px' }}>
-                Mobile Phone Number <span style={{ color: 'var(--color-danger)' }}>*</span>
-              </label>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                border: '1.5px solid var(--color-hairline)',
-                borderRadius: 'var(--radius-lg)',
-                padding: '2px 12px',
-                backgroundColor: '#FFFFFF',
-                transition: 'border-color 0.15s ease'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  paddingRight: '10px',
-                  borderRight: '1px solid var(--color-hairline)',
-                  color: 'var(--color-stone)',
-                  fontSize: '14px',
-                  fontWeight: 600
-                }}>
-                  <span>🇮🇳</span> +91
-                </div>
-                <input
-                  type="tel"
-                  placeholder="98765 43210"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  required
-                  autoFocus
-                  maxLength={14}
-                  style={{
-                    flex: 1,
-                    border: 'none',
-                    outline: 'none',
-                    padding: '10px 12px',
-                    fontSize: '16px',
-                    fontFamily: 'var(--font-mono)',
-                    color: 'var(--color-ink)',
-                    letterSpacing: '0.04em'
-                  }}
-                />
-                <Phone size={18} color="var(--color-ash)" />
-              </div>
-            </div>
-
-            {/* Full Name */}
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)', marginBottom: '8px' }}>
-                Your Full Name <span style={{ fontWeight: 400, color: 'var(--color-ash)' }}>(for digital pass)</span>
+                Email Address or Member ID
               </label>
               <div style={{
                 display: 'flex',
@@ -253,40 +225,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               }}>
                 <input
                   type="text"
-                  placeholder="e.g. Tanishk Goswami"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  style={{
-                    flex: 1,
-                    border: 'none',
-                    outline: 'none',
-                    padding: '10px 4px',
-                    fontSize: '14px',
-                    color: 'var(--color-ink)'
-                  }}
-                />
-                <User size={18} color="var(--color-ash)" />
-              </div>
-            </div>
-
-            {/* Email Address (Optional) */}
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)', marginBottom: '8px' }}>
-                Email Address <span style={{ fontWeight: 400, color: 'var(--color-ash)' }}>(Optional - for invoices & updates)</span>
-              </label>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                border: '1.5px solid var(--color-hairline)',
-                borderRadius: 'var(--radius-lg)',
-                padding: '2px 12px',
-                backgroundColor: '#FFFFFF'
-              }}>
-                <input
-                  type="email"
-                  placeholder="e.g. name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="e.g. tanishk@gmail.com or M-101"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  required
+                  autoFocus
                   style={{
                     flex: 1,
                     border: 'none',
@@ -300,9 +243,47 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               </div>
             </div>
 
+            {/* Secret PIN / Access Code */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)' }}>
+                  Secret PIN / Access Code
+                </label>
+                <span style={{ fontSize: '11px', color: 'var(--color-ash)' }}>Default: 1234</span>
+              </div>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                border: '1.5px solid var(--color-hairline)',
+                borderRadius: 'var(--radius-lg)',
+                padding: '2px 12px',
+                backgroundColor: '#FFFFFF'
+              }}>
+                <input
+                  type="password"
+                  placeholder="4 to 6 digit PIN"
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value)}
+                  required
+                  maxLength={8}
+                  style={{
+                    flex: 1,
+                    border: 'none',
+                    outline: 'none',
+                    padding: '10px 4px',
+                    fontSize: '16px',
+                    fontFamily: 'var(--font-mono)',
+                    letterSpacing: '0.2em',
+                    color: 'var(--color-ink)'
+                  }}
+                />
+                <Lock size={18} color="var(--color-ash)" />
+              </div>
+            </div>
+
             <button
               type="submit"
-              disabled={loading || phoneNumber.replace(/\D/g, '').length < 10}
+              disabled={loading || !identifier.trim() || !pin.trim()}
               className="btn btn-primary"
               style={{
                 width: '100%',
@@ -319,145 +300,154 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             >
               {loading ? (
                 <>
-                  <RefreshCw size={16} className="animate-spin" /> Sending SMS OTP...
+                  <RefreshCw size={16} className="animate-spin" /> Signing In...
                 </>
               ) : (
                 <>
-                  Send Verification Code <ArrowRight size={16} />
+                  Access Meal Pass <ArrowRight size={16} />
                 </>
               )}
             </button>
           </form>
         ) : (
-          <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {simulatedCode && (
-              <div style={{
-                padding: '12px 14px',
-                backgroundColor: 'rgba(212, 160, 23, 0.1)',
-                border: '1px solid rgba(212, 160, 23, 0.3)',
-                borderRadius: 'var(--radius-md)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '8px'
-              }}>
-                <div style={{ fontSize: '13px', color: 'var(--color-ink)' }}>
-                  ⚡ <strong>Verification OTP:</strong> <strong>{simulatedCode}</strong>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setOtp(simulatedCode)}
-                  className="btn btn-pill"
-                  style={{
-                    backgroundColor: 'var(--color-gold)',
-                    color: '#FFFFFF',
-                    fontSize: '11px',
-                    fontWeight: 600,
-                    padding: '4px 10px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Auto-fill {simulatedCode}
-                </button>
-              </div>
-            )}
+          <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* Full Name */}
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)', marginBottom: '8px' }}>
-                Enter 6-Digit OTP Received on Mobile
+                Full Name
               </label>
-              <input
-                type="text"
-                placeholder="• • • • • •"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                required
-                autoFocus
-                maxLength={6}
-                style={{
-                  width: '100%',
-                  padding: '14px 16px',
-                  fontSize: '24px',
-                  textAlign: 'center',
-                  fontFamily: 'var(--font-mono)',
-                  letterSpacing: '0.4em',
-                  borderRadius: 'var(--radius-lg)',
-                  border: '1.5px solid var(--color-hairline)',
-                  outline: 'none',
-                  color: 'var(--color-ink)',
-                  backgroundColor: '#FAFAF8'
-                }}
-              />
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                border: '1.5px solid var(--color-hairline)',
+                borderRadius: 'var(--radius-lg)',
+                padding: '2px 12px',
+                backgroundColor: '#FFFFFF'
+              }}>
+                <input
+                  type="text"
+                  placeholder="e.g. Tanishk Goswami"
+                  value={regFullName}
+                  onChange={(e) => setRegFullName(e.target.value)}
+                  required
+                  autoFocus
+                  style={{
+                    flex: 1,
+                    border: 'none',
+                    outline: 'none',
+                    padding: '10px 4px',
+                    fontSize: '14px',
+                    color: 'var(--color-ink)'
+                  }}
+                />
+                <User size={18} color="var(--color-ash)" />
+              </div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
-              <button
-                type="button"
-                onClick={() => { setStep('phone'); setOtp(''); }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--color-stone)',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  textDecoration: 'underline'
-                }}
-              >
-                Change Mobile Number
-              </button>
-
-              {resendCooldown > 0 ? (
-                <span style={{ color: 'var(--color-ash)' }}>Resend in {resendCooldown}s</span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleSendOtp}
+            {/* Email Address */}
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)', marginBottom: '8px' }}>
+                Email Address (used for everyday login)
+              </label>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                border: '1.5px solid var(--color-hairline)',
+                borderRadius: 'var(--radius-lg)',
+                padding: '2px 12px',
+                backgroundColor: '#FFFFFF'
+              }}>
+                <input
+                  type="email"
+                  placeholder="e.g. tanishk@gmail.com"
+                  value={regEmail}
+                  onChange={(e) => setRegEmail(e.target.value)}
+                  required
                   style={{
-                    background: 'none',
+                    flex: 1,
                     border: 'none',
-                    color: 'var(--color-primary)',
-                    cursor: 'pointer',
-                    fontWeight: 600
+                    outline: 'none',
+                    padding: '10px 4px',
+                    fontSize: '14px',
+                    color: 'var(--color-ink)'
                   }}
-                >
-                  Resend SMS
-                </button>
-              )}
+                />
+                <Mail size={18} color="var(--color-ash)" />
+              </div>
+            </div>
+
+            {/* Create PIN */}
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)', marginBottom: '8px' }}>
+                Create 4-Digit Secret PIN
+              </label>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                border: '1.5px solid var(--color-hairline)',
+                borderRadius: 'var(--radius-lg)',
+                padding: '2px 12px',
+                backgroundColor: '#FFFFFF'
+              }}>
+                <input
+                  type="password"
+                  placeholder="e.g. 1234 or 2026"
+                  value={regPin}
+                  onChange={(e) => setRegPin(e.target.value)}
+                  required
+                  maxLength={6}
+                  style={{
+                    flex: 1,
+                    border: 'none',
+                    outline: 'none',
+                    padding: '10px 4px',
+                    fontSize: '16px',
+                    fontFamily: 'var(--font-mono)',
+                    letterSpacing: '0.2em',
+                    color: 'var(--color-ink)'
+                  }}
+                />
+                <KeyRound size={18} color="var(--color-ash)" />
+              </div>
+              <p style={{ fontSize: '11px', color: 'var(--color-ash)', marginTop: '4px' }}>
+                You will use this PIN with your email to log in every day without needing an SMS.
+              </p>
             </div>
 
             <button
               type="submit"
-              disabled={loading || otp.length < 6}
+              disabled={loading || !regFullName.trim() || !regEmail.trim() || regPin.length < 4}
               className="btn btn-primary"
               style={{
                 width: '100%',
                 padding: '12px',
                 fontSize: '15px',
                 fontWeight: 600,
+                marginTop: '6px',
                 borderRadius: 'var(--radius-lg)',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                gap: '8px',
-                marginTop: '8px'
+                gap: '8px'
               }}
             >
               {loading ? (
                 <>
-                  <RefreshCw size={16} className="animate-spin" /> Verifying...
+                  <RefreshCw size={16} className="animate-spin" /> Creating Pass...
                 </>
               ) : (
                 <>
-                  <CheckCircle2 size={16} /> Verify & Access Meal Pass
+                  Create Account & Get Pass <ArrowRight size={16} />
                 </>
               )}
             </button>
           </form>
         )}
 
-        {/* Quick Staff Accounts */}
+        {/* Staff & Pre-Seeded Accounts */}
         <div style={{
-          marginTop: '24px',
-          paddingTop: '20px',
+          marginTop: '20px',
+          paddingTop: '16px',
           borderTop: '1px solid var(--color-hairline)'
         }}>
           <div style={{
@@ -467,10 +457,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             marginBottom: '10px'
           }}>
             <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-ash)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Staff & Pre-Seeded Accounts
-            </span>
-            <span style={{ fontSize: '11px', color: 'var(--color-muted)' }}>
-              Quick Login
+              Staff & Pre-Seeded Quick Access
             </span>
           </div>
 
@@ -489,7 +476,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               }}
             >
               <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-ink)' }}>Ramesh Patel</div>
-              <div style={{ fontSize: '10px', color: 'var(--color-ash)' }}>Receptionist Scanner</div>
+              <div style={{ fontSize: '10px', color: 'var(--color-ash)' }}>Receptionist • PIN: 1234</div>
             </button>
 
             <button
@@ -506,7 +493,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               }}
             >
               <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-ink)' }}>Mess Owner</div>
-              <div style={{ fontSize: '10px', color: 'var(--color-gold)' }}>Full Admin Console</div>
+              <div style={{ fontSize: '10px', color: 'var(--color-gold)' }}>Admin Console • PIN: 1234</div>
             </button>
           </div>
         </div>

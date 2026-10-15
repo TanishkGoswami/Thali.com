@@ -15,6 +15,8 @@ export interface Profile {
   role: Role;
   status: ProfileStatus;
   qr_token: string; // Opaque random token for scanning
+  pin_code?: string;
+  phone_verified?: boolean;
   created_at: string;
   updated_at: string;
 }

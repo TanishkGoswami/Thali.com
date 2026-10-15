@@ -3,7 +3,7 @@ import { sendFast2SmsOtp } from './sms';
 import type { Profile } from '../types';
 
 /**
- * In-memory map for OTP verification and profile linkage
+ * In-memory map for OTP verification during Payment / Phone Activation
  */
 const pendingOtpMap = new Map<string, { code: string; fullName?: string; email?: string; expiresAt: number }>();
 
@@ -58,128 +58,71 @@ export interface SendOtpResult {
 }
 
 /**
- * Sends real OTP via Fast2SMS Indian SMS gateway.
- * Generates an auditable 6-digit verification code.
+ * Everyday 100% Free Login using Email or Member ID + Secret PIN / Unique Access Code.
+ * Zero SMS cost, instant 1-second sign-in!
  */
-export async function sendPhoneOtp(rawPhone: string, fullName?: string, email?: string): Promise<SendOtpResult> {
-  const phone = formatIndianPhoneNumber(rawPhone);
-  const clean10 = phone.replace(/\D/g, '').slice(-10);
+export async function loginWithEmailOrIdAndPin(identifier: string, pin: string): Promise<Profile> {
+  const cleanId = identifier.trim();
+  const cleanPin = pin.trim();
 
-  // Generate unique 6-digit OTP
-  const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-  // Store in pending map with optional email
-  pendingOtpMap.set(phone, {
-    code: otpCode,
-    fullName,
-    email,
-    expiresAt: Date.now() + 10 * 60 * 1000
-  });
-
-  // Call Fast2SMS
-  const smsResult = await sendFast2SmsOtp(clean10, otpCode);
-
-  if (smsResult.success) {
-    return {
-      phone,
-      isSimulated: false,
-      message: 'OTP SMS sent successfully to your mobile number via Fast2SMS!'
-    };
+  if (!cleanId) {
+    throw new Error('Please enter your Email or Member Number.');
+  }
+  if (!cleanPin) {
+    throw new Error('Please enter your 4-digit PIN / Access Code.');
   }
 
-  // Fallback if SMS gateway is in transition
-  return {
-    phone,
-    isSimulated: true,
-    devCode: otpCode,
-    message: smsResult.message || 'Fast2SMS code displayed for testing.'
-  };
-}
-
-/**
- * Verifies Phone OTP and syncs/links database Profile in Supabase
- */
-export async function verifyPhoneOtp(
-  rawPhone: string,
-  token: string,
-  fullName?: string,
-  email?: string
-): Promise<{ profile: Profile; session: any; isSimulated?: boolean }> {
-  const phone = formatIndianPhoneNumber(rawPhone);
-  const pending = pendingOtpMap.get(phone);
-
-  if (!pending) {
-    throw new Error('No OTP requested for this phone number. Please click Send Code.');
-  }
-
-  if (token.trim() !== pending.code) {
-    throw new Error(`Invalid verification code. Please enter the 6-digit code received.`);
-  }
-
-  // OTP verified! Remove pending entry
-  pendingOtpMap.delete(phone);
-
-  // Save / Sync profile into Supabase profiles table
-  const profile = await syncProfileForUser(null, phone, fullName || pending.fullName, email || pending.email);
-  saveLocalSession(profile.id);
-  return { profile, session: null, isSimulated: false };
-}
-
-/**
- * Syncs an authenticated user with a profile record in `profiles`.
- * If member already exists by phone, links their record and updates details.
- * If new user, creates a new profile strictly with role = 'member'.
- */
-export async function syncProfileForUser(
-  authUserId: string | null,
-  phone: string,
-  fullName?: string,
-  email?: string
-): Promise<Profile> {
-  const cleanPhone = phone.replace('+91', '').trim();
-  const cleanEmail = email?.trim() || null;
-
-  // 1. Try finding by auth_user_id first if provided
-  if (authUserId) {
-    const { data: byAuthId } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('auth_user_id', authUserId)
-      .maybeSingle();
-
-    if (byAuthId) {
-      return byAuthId as Profile;
-    }
-  }
-
-  // 2. Try finding by phone number (either +91 format or 10-digit format)
-  const { data: byPhone } = await supabase
+  // Find profile by email OR member_number OR phone
+  const { data: profile, error } = await supabase
     .from('profiles')
     .select('*')
-    .or(`phone.eq.${phone},phone.eq.${cleanPhone}`)
+    .or(`email.ilike.${cleanId},member_number.ilike.${cleanId},phone.eq.${cleanId.replace(/\D/g, '')}`)
     .maybeSingle();
 
-  if (byPhone) {
-    const updatePayload: Record<string, any> = { phone: cleanPhone };
-    if (authUserId) updatePayload.auth_user_id = authUserId;
-    if (fullName && (!byPhone.full_name || byPhone.full_name.startsWith('Member '))) {
-      updatePayload.full_name = fullName.trim();
-    }
-    if (cleanEmail && !byPhone.email) {
-      updatePayload.email = cleanEmail;
-    }
-
-    const { data: updated } = await supabase
-      .from('profiles')
-      .update(updatePayload)
-      .eq('id', byPhone.id)
-      .select('*')
-      .single();
-
-    return (updated || byPhone) as Profile;
+  if (error || !profile) {
+    throw new Error(`Account not found for "${cleanId}". Please register or check your details.`);
   }
 
-  // 3. New member: calculate truly unique next member number
+  // If pin_code is set, check it; if not yet set in legacy account, auto-set it to this PIN!
+  if (profile.pin_code && profile.pin_code !== cleanPin) {
+    throw new Error('Incorrect PIN / Access Code. Please enter the correct code.');
+  }
+
+  if (!profile.pin_code) {
+    // Save this PIN as the member's permanent access code
+    await supabase.from('profiles').update({ pin_code: cleanPin }).eq('id', profile.id);
+  }
+
+  saveLocalSession(profile.id);
+  return profile as Profile;
+}
+
+/**
+ * New Member Registration:
+ * User sets Name, Email, and a secret 4-Digit Access PIN.
+ * Plan is initialized in 'pending' status until verified via Phone OTP during payment!
+ */
+export async function registerNewMember(fullName: string, email: string, pinCode: string): Promise<Profile> {
+  const cleanName = fullName.trim();
+  const cleanEmail = email.trim().toLowerCase();
+  const cleanPin = pinCode.trim();
+
+  if (!cleanName) throw new Error('Please enter your full name.');
+  if (!cleanEmail || !cleanEmail.includes('@')) throw new Error('Please enter a valid email address.');
+  if (!cleanPin || cleanPin.length < 4) throw new Error('Please create a 4 to 6 digit secret PIN.');
+
+  // Check if email already registered
+  const { data: existing } = await supabase
+    .from('profiles')
+    .select('id, member_number')
+    .eq('email', cleanEmail)
+    .maybeSingle();
+
+  if (existing) {
+    throw new Error(`An account already exists with ${cleanEmail}. Please Sign In with your PIN.`);
+  }
+
+  // Calculate next truly unique member number
   const { data: allProfiles } = await supabase.from('profiles').select('member_number');
   const existingSet = new Set((allProfiles || []).map(p => p.member_number));
   const existingNumbers = (allProfiles || [])
@@ -196,19 +139,16 @@ export async function syncProfileForUser(
   const memberNumber = `M-${nextSeq}`;
   const qrToken = `QR_MEM_${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
 
-  const newProfile: Record<string, any> = {
+  const newProfile = {
     member_number: memberNumber,
-    full_name: fullName?.trim() || `Member ${cleanPhone.slice(-4)}`,
-    phone: cleanPhone,
+    full_name: cleanName,
     email: cleanEmail,
-    role: 'member', // Strict RBAC: All new self-registered users are members!
-    status: 'active',
+    pin_code: cleanPin,
+    role: 'member' as const, // Strict RBAC
+    status: 'active' as const,
+    phone_verified: false,
     qr_token: qrToken
   };
-
-  if (authUserId) {
-    newProfile.auth_user_id = authUserId;
-  }
 
   const { data: created, error } = await supabase
     .from('profiles')
@@ -217,11 +157,11 @@ export async function syncProfileForUser(
     .single();
 
   if (error || !created) {
-    console.error('Error creating profile for new phone user:', error);
-    throw new Error(error?.message || 'Failed to initialize member profile in database');
+    console.error('Error creating new member:', error);
+    throw new Error(error?.message || 'Failed to initialize account.');
   }
 
-  // Initialize standard subscription for this new member in Supabase
+  // Initialize pending subscription (activates upon payment + phone OTP verification)
   try {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30);
@@ -230,7 +170,7 @@ export async function syncProfileForUser(
       {
         member_id: created.id,
         plan_id: '00000000-0000-0000-0000-000000000001',
-        status: 'active',
+        status: 'pending',
         meals_granted: 54,
         starts_at: new Date().toISOString(),
         expires_at: expiresAt.toISOString(),
@@ -240,11 +180,151 @@ export async function syncProfileForUser(
     console.warn('Subscription initialization note:', subErr);
   }
 
+  saveLocalSession(created.id);
   return created as Profile;
 }
 
 /**
- * Signs out current Supabase user and clears local session
+ * Triggers Fast2SMS real OTP to verify member's phone number during Payment / Plan Activation
+ */
+export async function sendPaymentVerificationOtp(rawPhone: string): Promise<SendOtpResult> {
+  const phone = formatIndianPhoneNumber(rawPhone);
+  const clean10 = phone.replace(/\D/g, '').slice(-10);
+
+  if (clean10.length !== 10) {
+    throw new Error('Please enter a valid 10-digit Indian mobile number.');
+  }
+
+  const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+  pendingOtpMap.set(phone, {
+    code: otpCode,
+    expiresAt: Date.now() + 10 * 60 * 1000
+  });
+
+  const smsResult = await sendFast2SmsOtp(clean10, otpCode);
+
+  if (smsResult.success) {
+    return {
+      phone,
+      isSimulated: false,
+      message: 'Verification OTP sent to your mobile phone via Fast2SMS!'
+    };
+  }
+
+  return {
+    phone,
+    isSimulated: true,
+    devCode: otpCode,
+    message: smsResult.message || 'OTP code ready for activation.'
+  };
+}
+
+/**
+ * Verifies Phone OTP during Payment and Activates the ₹2,800 54-meal subscription
+ */
+export async function verifyPaymentPhoneAndActivate(
+  memberId: string,
+  rawPhone: string,
+  token: string,
+  paymentMethod: 'cash' | 'upi_direct' = 'upi_direct'
+): Promise<{ profile: Profile; subscription: any }> {
+  const phone = formatIndianPhoneNumber(rawPhone);
+  const clean10 = phone.replace(/\D/g, '').slice(-10);
+  const pending = pendingOtpMap.get(phone);
+
+  if (!pending) {
+    throw new Error('No OTP was requested for this phone number. Please click Send OTP.');
+  }
+
+  if (token.trim() !== pending.code) {
+    throw new Error('Invalid OTP code. Please enter the 6-digit code received on your phone.');
+  }
+
+  pendingOtpMap.delete(phone);
+
+  // 1. Update Profile: link verified phone
+  const { data: updatedProfile, error: profErr } = await supabase
+    .from('profiles')
+    .update({
+      phone: clean10,
+      phone_verified: true,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', memberId)
+    .select('*')
+    .single();
+
+  if (profErr || !updatedProfile) {
+    throw new Error(profErr?.message || 'Failed to update verified phone in profile.');
+  }
+
+  // 2. Activate or Create 54-Meal Subscription
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 30);
+
+  // Check existing pending subscription
+  const { data: existingSub } = await supabase
+    .from('subscriptions')
+    .select('*')
+    .eq('member_id', memberId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  let subData;
+  if (existingSub) {
+    const { data: activatedSub } = await supabase
+      .from('subscriptions')
+      .update({
+        status: 'active',
+        starts_at: new Date().toISOString(),
+        expires_at: expiresAt.toISOString(),
+        meals_granted: 54,
+        activated_at: new Date().toISOString()
+      })
+      .eq('id', existingSub.id)
+      .select('*')
+      .single();
+    subData = activatedSub;
+  } else {
+    const { data: newSub } = await supabase
+      .from('subscriptions')
+      .insert([
+        {
+          member_id: memberId,
+          plan_id: '00000000-0000-0000-0000-000000000001',
+          status: 'active',
+          starts_at: new Date().toISOString(),
+          expires_at: expiresAt.toISOString(),
+          meals_granted: 54,
+          activated_at: new Date().toISOString()
+        }
+      ])
+      .select('*')
+      .single();
+    subData = newSub;
+  }
+
+  // 3. Record Payment in payments table
+  if (subData) {
+    await supabase.from('payments').insert([
+      {
+        member_id: memberId,
+        subscription_id: subData.id,
+        amount_paise: 280000,
+        method: paymentMethod,
+        status: 'verified',
+        received_at: new Date().toISOString()
+      }
+    ]);
+  }
+
+  return { profile: updatedProfile as Profile, subscription: subData };
+}
+
+/**
+ * Signs out current user
  */
 export async function signOutUser() {
   clearLocalSession();
@@ -252,8 +332,7 @@ export async function signOutUser() {
 }
 
 /**
- * Development / Demo convenience helper:
- * Allows switching to a known test account directly (Aarav M-101, Ramesh REC-01, Tanishk ADMIN-01)
+ * Quick Test Account Switcher
  */
 export async function getTestProfileByNumber(memberNumber: string): Promise<Profile | null> {
   const { data, error } = await supabase
@@ -262,8 +341,6 @@ export async function getTestProfileByNumber(memberNumber: string): Promise<Prof
     .eq('member_number', memberNumber)
     .maybeSingle();
 
-  if (error || !data) {
-    return null;
-  }
+  if (error || !data) return null;
   return data as Profile;
 }

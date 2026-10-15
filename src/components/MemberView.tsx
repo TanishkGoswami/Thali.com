@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
-import { Sparkles, RefreshCw, UtensilsCrossed, ShieldCheck, History, Clock, X } from 'lucide-react';
+import { Sparkles, RefreshCw, UtensilsCrossed, ShieldCheck, History, Clock, X, PhoneCall } from 'lucide-react';
 import type { Profile, DailyMenu, MealTransaction } from '../types';
 import { api } from '../services/api';
+import { PaymentActivationModal } from './PaymentActivationModal';
 
 interface MemberViewProps {
   member: Profile & { remaining_meals?: number; subscription_status?: string; expires_at?: string };
@@ -18,6 +19,7 @@ export const MemberView: React.FC<MemberViewProps> = ({
   onRefresh
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [showPaymentActivationModal, setShowPaymentActivationModal] = useState(false);
   const [showRenewModal, setShowRenewModal] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'upi_direct' | 'cash' | 'gateway'>('upi_direct');
   const [renewing, setRenewing] = useState(false);
@@ -98,6 +100,36 @@ export const MemberView: React.FC<MemberViewProps> = ({
         </div>
       </div>
 
+      {/* Pending Activation & Phone Verification Notice */}
+      {(!member.phone_verified || member.subscription_status !== 'active') && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '12px',
+          padding: '16px 20px',
+          backgroundColor: 'rgba(212, 160, 23, 0.08)',
+          border: '1.5px solid var(--color-gold)',
+          borderRadius: 'var(--radius-lg)'
+        }}>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: '15px', color: 'var(--color-ink)' }}>
+              ⚡ Plan Activation Pending — ₹2,800 / 54 Meals
+            </div>
+            <p style={{ fontSize: '13px', color: 'var(--color-stone)', marginTop: '2px' }}>
+              Verify your mobile phone via SMS OTP to confirm your contact and activate your digital QR meal pass.
+            </p>
+          </div>
+          <button
+            onClick={() => setShowPaymentActivationModal(true)}
+            className="btn btn-primary"
+            style={{ padding: '8px 18px', fontSize: '13px', borderRadius: 'var(--radius-full)' }}
+          >
+            <PhoneCall size={14} /> Verify Phone & Activate Pass
+          </button>
+        </div>
+      )}
 
       {/* Grid: QR Pass & Balance Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
@@ -250,11 +282,11 @@ export const MemberView: React.FC<MemberViewProps> = ({
 
           {/* Action Blue CTA */}
           <button
-            onClick={() => setShowRenewModal(true)}
+            onClick={() => setShowPaymentActivationModal(true)}
             className="btn btn-primary"
             style={{ width: '100%', marginTop: '24px' }}
           >
-            <Sparkles size={16} /> Renew Subscription (₹2,800)
+            <Sparkles size={16} /> {member.subscription_status === 'active' ? 'Renew Subscription (₹2,800)' : 'Verify Phone & Activate (₹2,800)'}
           </button>
         </div>
       </div>
@@ -512,6 +544,13 @@ export const MemberView: React.FC<MemberViewProps> = ({
         </div>
       )}
 
+      {/* Payment & Phone Verification Modal */}
+      <PaymentActivationModal
+        isOpen={showPaymentActivationModal}
+        onClose={() => setShowPaymentActivationModal(false)}
+        member={member}
+        onSuccess={onRefresh}
+      />
     </div>
   );
 };
