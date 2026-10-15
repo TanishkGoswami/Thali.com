@@ -781,57 +781,122 @@ export const AdminView: React.FC<AdminViewProps> = ({
       {/* Tab 2: Payment Approvals */}
       {activeTab === 'payments' && (
         <div className="card">
-          <span className="eyebrow">Payment Verification Queue</span>
-          <h2 style={{ fontSize: '18px', marginTop: '2px' }}>Pending Subscriptions</h2>
-          <p style={{ color: 'var(--color-ink-mute)', fontSize: '12px', marginTop: '2px', marginBottom: '14px' }}>
-            Subscriptions remain unusable until verified by an authorized mess owner. Choose Cash or Online to activate.
-          </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px', marginBottom: '14px' }}>
+            <div>
+              <span className="eyebrow" style={{ color: 'var(--color-primary)' }}>Payment Verification Queue</span>
+              <h2 style={{ fontSize: '20px', fontWeight: 600, marginTop: '2px', color: 'var(--color-ink)' }}>
+                Pending Subscriptions ({members.filter(m => m.subscription_status === 'pending').length})
+              </h2>
+              <p style={{ color: 'var(--color-ink-mute)', fontSize: '12px', marginTop: '2px' }}>
+                Subscriptions remain unusable until verified by an authorized mess owner. Choose Cash or Online to activate.
+              </p>
+            </div>
+            {members.filter(m => m.subscription_status === 'pending').length > 0 && (
+              <span className="badge badge-warning" style={{ fontSize: '11px', fontWeight: 600 }}>
+                Action Required
+              </span>
+            )}
+          </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {members.filter(m => m.subscription_status === 'pending').map(m => (
               <div
                 key={m.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '12px 16px',
-                  backgroundColor: 'var(--color-canvas-soft)',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--color-hairline)',
-                  flexWrap: 'wrap',
-                  gap: '8px'
-                }}
+                className="pending-subscription-card"
               >
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
-                    <span className="tnum badge badge-indigo truncate-text" style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, fontSize: '11px', maxWidth: '100px', display: 'block' }} title={m.member_number}>
-                      {m.member_number}
+                <div className="pending-card-info">
+                  {/* Top Row: Full Member # and Status Pill */}
+                  <div className="pending-card-header-mobile">
+                    <span
+                      className="tnum badge badge-indigo"
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontWeight: 600,
+                        fontSize: '11px',
+                        padding: '2px 8px',
+                        letterSpacing: '0.04em'
+                      }}
+                    >
+                      #{m.member_number}
                     </span>
-                    <strong className="truncate-text" style={{ fontSize: '13px', color: 'var(--color-ink)', maxWidth: '200px', display: 'inline-block' }} title={m.full_name}>
-                      {m.full_name}
-                    </strong>
+                    <span className="badge badge-pending" style={{ fontSize: '10px', fontWeight: 500 }}>
+                      ⏳ Payment Pending
+                    </span>
                   </div>
-                  <p className="tnum" style={{ fontSize: '11px', color: 'var(--color-ink-mute)', marginTop: '2px' }}>
-                    Monthly Mess Thali (54 Meals) • <strong>₹2,800</strong>
-                  </p>
+
+                  {/* Full Member Name (No 2-letter truncation!) */}
+                  <div className="pending-card-name" style={{ marginTop: '4px' }}>
+                    {m.full_name}
+                  </div>
+
+                  {/* Contact and Plan Info */}
+                  <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px', fontSize: '12px', color: 'var(--color-ink-mute)', marginTop: '2px' }}>
+                    {m.phone && (
+                      <span className="tnum" style={{ color: 'var(--color-ink-secondary)', fontWeight: 500 }}>
+                        📞 +91 {m.phone}
+                      </span>
+                    )}
+                    {m.phone && <span>•</span>}
+                    <span className="tnum" style={{ color: 'var(--color-ink-secondary)' }}>
+                      Monthly Mess Thali (54 Meals) • <strong style={{ color: 'var(--color-ink)' }}>₹2,800</strong>
+                    </span>
+                  </div>
+
+                  {/* 2-Meal Plan Badge */}
+                  {m.meal_plan_type && MEAL_PLAN_CONFIG[m.meal_plan_type] && (
+                    <div style={{ marginTop: '4px' }}>
+                      <span
+                        style={{
+                          fontSize: '10px',
+                          fontWeight: 500,
+                          padding: '2px 8px',
+                          borderRadius: 'var(--radius-pill)',
+                          ...MEAL_PLAN_CONFIG[m.meal_plan_type].badgeStyle
+                        }}
+                      >
+                        🍱 Plan: {MEAL_PLAN_CONFIG[m.meal_plan_type].hindiName} ({MEAL_PLAN_CONFIG[m.meal_plan_type].shortLabel})
+                      </span>
+                    </div>
+                  )}
                 </div>
 
+                {/* Primary Action Button: Full-width on mobile */}
                 <button
                   type="button"
                   onClick={() => setSelectedMemberForApproval(m)}
-                  className="btn btn-primary btn-pill"
-                  style={{ fontSize: '11px', padding: '5px 12px', gap: '5px' }}
+                  className="btn btn-primary btn-pill pending-card-btn"
                 >
-                  <CheckCircle2 size={12} /> Approve & Mark Paid (₹2,800)
+                  <CheckCircle2 size={14} /> Approve & Mark Paid (₹2,800)
                 </button>
               </div>
             ))}
 
             {members.filter(m => m.subscription_status === 'pending').length === 0 && (
-              <p style={{ textAlign: 'center', padding: '24px', color: 'var(--color-ink-mute)', fontSize: '12px' }}>
-                No pending payments awaiting verification.
-              </p>
+              <div style={{
+                textAlign: 'center',
+                padding: '36px 20px',
+                backgroundColor: 'var(--color-canvas-soft)',
+                borderRadius: 'var(--radius-md)',
+                border: '1px dashed var(--color-hairline)'
+              }}>
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--color-success-bg)',
+                  color: 'var(--color-success)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 10px'
+                }}>
+                  <CheckCircle2 size={20} />
+                </div>
+                <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-ink)' }}>All Payments Verified!</h4>
+                <p style={{ color: 'var(--color-ink-mute)', fontSize: '12px', marginTop: '2px' }}>
+                  No pending payments awaiting verification in the queue.
+                </p>
+              </div>
             )}
           </div>
         </div>
@@ -840,12 +905,19 @@ export const AdminView: React.FC<AdminViewProps> = ({
       {/* Tab 3: Daily Menus */}
       {activeTab === 'menu' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+          <div className="menus-header-row">
             <div>
-              <span className="eyebrow">Kitchen Publishing</span>
-              <h2 style={{ fontSize: '18px', marginTop: '2px' }}>Today's Dining Menus</h2>
+              <span className="eyebrow" style={{ color: 'var(--color-primary)' }}>Kitchen Publishing</span>
+              <h2 style={{ fontSize: '20px', fontWeight: 600, marginTop: '2px', color: 'var(--color-ink)' }}>
+                Today's Dining Menus
+              </h2>
+              <p style={{ color: 'var(--color-ink-mute)', fontSize: '12px', marginTop: '2px' }}>
+                Publish and edit dishes served for breakfast, lunch, and dinner.
+              </p>
             </div>
-            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+
+            {/* Menu Creation Action Pills (Touch-scrollable on mobile) */}
+            <div className="menu-action-pills scroll-pills-x">
               <button
                 type="button"
                 onClick={() => {
@@ -853,8 +925,9 @@ export const AdminView: React.FC<AdminViewProps> = ({
                   setShowMenuEditor(true);
                 }}
                 className="btn btn-secondary btn-pill"
+                style={{ fontSize: '12px', padding: '6px 12px', gap: '5px' }}
               >
-                <Plus size={12} /> Breakfast Menu
+                <span>🌅</span> + Breakfast Menu
               </button>
               <button
                 type="button"
@@ -863,8 +936,9 @@ export const AdminView: React.FC<AdminViewProps> = ({
                   setShowMenuEditor(true);
                 }}
                 className="btn btn-secondary btn-pill"
+                style={{ fontSize: '12px', padding: '6px 12px', gap: '5px' }}
               >
-                <Plus size={12} /> Lunch Menu
+                <span>☀️</span> + Lunch Menu
               </button>
               <button
                 type="button"
@@ -873,48 +947,106 @@ export const AdminView: React.FC<AdminViewProps> = ({
                   setShowMenuEditor(true);
                 }}
                 className="btn btn-primary btn-pill"
+                style={{ fontSize: '12px', padding: '6px 12px', gap: '5px' }}
               >
-                <Plus size={12} /> Dinner Menu
+                <span>🌙</span> + Dinner Menu
               </button>
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px' }}>
-            {menus.map(menu => (
-              <div key={menu.id} className="card">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <h3 style={{ fontSize: '16px', fontWeight: 600, textTransform: 'capitalize' }}>
-                    {menu.meal_period === 'breakfast' ? 'Breakfast Menu (नाश्ता)' : menu.meal_period === 'lunch' ? 'Lunch Menu (दोपहर)' : 'Dinner Menu (रात)'}
-                  </h3>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span className="badge badge-active" style={{ fontSize: '9px', padding: '1px 5px' }}>{menu.status}</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMenuEditorPeriod(menu.meal_period);
-                        setShowMenuEditor(true);
-                      }}
-                      className="btn btn-secondary btn-pill"
-                      style={{ fontSize: '10px', padding: '2px 6px' }}
-                    >
-                      Edit
-                    </button>
+          {/* Menus Responsive Grid */}
+          <div className="menu-card-container">
+            {menus.map(menu => {
+              const isBreakfast = menu.meal_period === 'breakfast';
+              const isLunch = menu.meal_period === 'lunch';
+              const periodIcon = isBreakfast ? '🌅' : isLunch ? '☀️' : '🌙';
+              const periodTitle = isBreakfast ? 'Breakfast Menu (नाश्ता)' : isLunch ? 'Lunch Menu (दोपहर)' : 'Dinner Menu (रात)';
+              const accentColor = isBreakfast ? '#059669' : isLunch ? '#2563eb' : '#533afd';
+
+              return (
+                <div
+                  key={menu.id}
+                  className="card"
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    padding: '16px',
+                    position: 'relative',
+                    overflow: 'hidden'
+                  }}
+                >
+                  {/* Top accent bar */}
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: '3px',
+                    backgroundColor: accentColor
+                  }} />
+
+                  <div>
+                    {/* Header: Title, published badge, Edit button */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '6px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '18px' }}>{periodIcon}</span>
+                        <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-ink)' }}>
+                          {periodTitle}
+                        </h3>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span className="badge badge-active" style={{ fontSize: '10px', padding: '2px 7px' }}>
+                          ● {menu.status}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMenuEditorPeriod(menu.meal_period);
+                            setShowMenuEditor(true);
+                          }}
+                          className="btn btn-secondary btn-pill"
+                          style={{ fontSize: '11px', padding: '3px 9px', gap: '4px' }}
+                          title={`Edit ${menu.meal_period} menu`}
+                        >
+                          <Edit3 size={11} /> Edit
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Subtitle / Notes */}
+                    <p style={{ color: 'var(--color-ink-mute)', fontSize: '12px', marginBottom: '12px', lineHeight: 1.4 }}>
+                      <strong style={{ color: 'var(--color-ink)' }}>{menu.title}</strong>
+                      {menu.notes && <span> — {menu.notes}</span>}
+                    </p>
+
+                    {/* Dish Items List */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {menu.items && menu.items.length > 0 ? (
+                        menu.items.map(item => (
+                          <div
+                            key={item.id}
+                            className="dish-item-row"
+                          >
+                            <span style={{ fontWeight: 500, color: 'var(--color-ink)' }}>
+                              {item.name}
+                            </span>
+                            <span className="dish-category-pill">
+                              {item.category}
+                            </span>
+                          </div>
+                        ))
+                      ) : (
+                        <p style={{ fontSize: '12px', color: 'var(--color-ink-mute)', fontStyle: 'italic', padding: '8px 0' }}>
+                          No dishes added yet. Click Edit to add today's items.
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <p style={{ color: 'var(--color-ink-mute)', fontSize: '12px', marginBottom: '10px' }}>
-                  <strong>{menu.title}</strong> — {menu.notes}
-                </p>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                  {menu.items?.map(item => (
-                    <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 8px', backgroundColor: 'var(--color-canvas-soft)', borderRadius: 'var(--radius-sm)', fontSize: '12px' }}>
-                      <span style={{ fontWeight: 500, color: 'var(--color-ink)' }}>{item.name}</span>
-                      <span style={{ color: 'var(--color-ink-mute)', fontSize: '10px' }}>{item.category}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
