@@ -179,9 +179,20 @@ export async function syncProfileForUser(
     return (updated || byPhone) as Profile;
   }
 
-  // 3. New member: create new profile strictly with role = 'member'
-  const { count } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
-  const nextSeq = (count || 0) + 101;
+  // 3. New member: calculate truly unique next member number
+  const { data: allProfiles } = await supabase.from('profiles').select('member_number');
+  const existingSet = new Set((allProfiles || []).map(p => p.member_number));
+  const existingNumbers = (allProfiles || [])
+    .map(p => {
+      const match = p.member_number?.match(/^M-(\d+)$/i);
+      return match ? parseInt(match[1], 10) : 0;
+    })
+    .filter(n => !isNaN(n) && n > 0);
+
+  let nextSeq = (existingNumbers.length > 0 ? Math.max(...existingNumbers) : 100) + 1;
+  while (existingSet.has(`M-${nextSeq}`)) {
+    nextSeq++;
+  }
   const memberNumber = `M-${nextSeq}`;
   const qrToken = `QR_MEM_${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
 
