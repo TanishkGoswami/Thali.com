@@ -141,11 +141,11 @@ export const AdminPaymentApprovalModal: React.FC<AdminPaymentApprovalModalProps>
             alignItems: 'center'
           }}>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span className="tnum badge badge-indigo" style={{ fontSize: '11px', fontFamily: 'var(--font-mono)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+                <span className="tnum badge badge-indigo truncate-text" style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', maxWidth: '100px', display: 'block' }} title={member.member_number}>
                   {member.member_number}
                 </span>
-                <strong style={{ fontSize: '14px', color: 'var(--color-ink)' }}>
+                <strong className="truncate-text" style={{ fontSize: '14px', color: 'var(--color-ink)', maxWidth: '180px', display: 'inline-block' }} title={member.full_name}>
                   {member.full_name}
                 </strong>
               </div>

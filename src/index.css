@@ -497,6 +497,35 @@ h4 {
 }
 
 /* -------------------------------------------------------------
+   Admin Directory Table & Mobile Responsive System
+   ------------------------------------------------------------- */
+.truncate-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.table-desktop-view {
+  display: block;
+  width: 100%;
+}
+
+.cards-mobile-view {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .table-desktop-view {
+    display: none !important;
+  }
+  .cards-mobile-view {
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+/* -------------------------------------------------------------
    Print Media Styling (Isolates Official Counter Standee)
    ------------------------------------------------------------- */
 @media print {

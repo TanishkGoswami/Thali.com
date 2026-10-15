@@ -403,64 +403,100 @@ export const AdminView: React.FC<AdminViewProps> = ({
             </div>
           </div>
 
-          <div className="table-responsive">
-            <table style={{ width: '100%', minWidth: '580px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
+          {/* Desktop Table View (visible on screens >= 769px) */}
+          <div className="table-responsive table-desktop-view">
+            <table style={{ width: '100%', minWidth: '650px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--color-hairline)', color: 'var(--color-ink-mute)' }}>
-                  <th style={{ padding: '8px 10px', fontWeight: 500 }}>Member #</th>
-                  <th style={{ padding: '8px 10px', fontWeight: 500 }}>Full Name</th>
-                  <th style={{ padding: '8px 10px', fontWeight: 500 }}>Phone</th>
-                  <th style={{ padding: '8px 10px', fontWeight: 500 }}>Meals Left</th>
-                  <th style={{ padding: '8px 10px', fontWeight: 500 }}>Status</th>
-                  <th style={{ padding: '8px 10px', fontWeight: 500, textAlign: 'right' }}>Actions</th>
+                  <th style={{ width: '16%', minWidth: '100px', maxWidth: '120px', padding: '10px 12px', fontWeight: 500 }}>Member #</th>
+                  <th style={{ width: '22%', minWidth: '130px', maxWidth: '170px', padding: '10px 12px', fontWeight: 500 }}>Full Name</th>
+                  <th style={{ width: '15%', minWidth: '110px', padding: '10px 12px', fontWeight: 500 }}>Phone</th>
+                  <th style={{ width: '12%', minWidth: '90px', padding: '10px 12px', fontWeight: 500 }}>Meals Left</th>
+                  <th style={{ width: '17%', minWidth: '130px', padding: '10px 12px', fontWeight: 500 }}>Status</th>
+                  <th style={{ width: '18%', minWidth: '185px', padding: '10px 12px', fontWeight: 500, textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map(m => (
-                  <tr key={m.id} style={{ borderBottom: '1px solid var(--color-hairline)' }}>
-                    <td className="tnum" style={{ padding: '10px', fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--color-ink)' }}>
-                      {m.member_number}
+                  <tr
+                    key={m.id}
+                    style={{
+                      borderBottom: '1px solid var(--color-hairline)',
+                      transition: 'background-color var(--transition-fast)'
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--color-canvas-soft)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                  >
+                    <td style={{ padding: '10px 12px', verticalAlign: 'middle' }}>
+                      <span
+                        className="tnum truncate-text"
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontWeight: 600,
+                          color: 'var(--color-ink)',
+                          display: 'block',
+                          maxWidth: '120px'
+                        }}
+                        title={m.member_number}
+                      >
+                        {m.member_number}
+                      </span>
                     </td>
-                    <td style={{ padding: '10px', fontWeight: 500, color: 'var(--color-ink)' }}>{m.full_name}</td>
-                    <td className="tnum" style={{ padding: '10px', color: 'var(--color-ink-mute)' }}>{m.phone || '—'}</td>
-                    <td className="tnum" style={{ padding: '10px' }}>
+                    <td style={{ padding: '10px 12px', verticalAlign: 'middle' }}>
+                      <span
+                        className="truncate-text"
+                        style={{
+                          fontWeight: 500,
+                          color: 'var(--color-ink)',
+                          display: 'block',
+                          maxWidth: '160px'
+                        }}
+                        title={m.full_name}
+                      >
+                        {m.full_name}
+                      </span>
+                    </td>
+                    <td className="tnum" style={{ padding: '10px 12px', color: 'var(--color-ink-mute)', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                      {m.phone ? `+91 ${m.phone}` : '—'}
+                    </td>
+                    <td className="tnum" style={{ padding: '10px 12px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
                       <strong style={{ color: (m.remaining_meals ?? 0) <= 5 ? 'var(--color-error)' : 'var(--color-ink)' }}>
                         {m.remaining_meals ?? 0}
-                      </strong> / 54
+                      </strong> <span style={{ color: 'var(--color-ink-mute-2)', fontSize: '11px' }}>/ 54</span>
                     </td>
-                    <td style={{ padding: '10px' }}>
+                    <td style={{ padding: '10px 12px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
                       {m.subscription_status === 'pending' ? (
-                        <span className="badge badge-pending" style={{ fontSize: '10px', padding: '2px 7px' }}>
+                        <span className="badge badge-pending" style={{ fontSize: '10px', padding: '2px 8px' }}>
                           Payment Pending
                         </span>
                       ) : !m.phone_verified ? (
-                        <span className="badge badge-indigo" style={{ fontSize: '10px', padding: '2px 7px' }}>
+                        <span className="badge badge-indigo" style={{ fontSize: '10px', padding: '2px 8px' }}>
                           {m.payment_method === 'cash' ? '💵 Cash' : '📱 Online'} • OTP Pending
                         </span>
                       ) : (
-                        <span className="badge badge-active" style={{ fontSize: '10px', padding: '2px 7px' }}>
+                        <span className="badge badge-active" style={{ fontSize: '10px', padding: '2px 8px' }}>
                           ● Active ({m.payment_method === 'cash' ? 'Cash' : 'Online'})
                         </span>
                       )}
                     </td>
-                    <td style={{ padding: '10px', textAlign: 'right' }}>
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <td style={{ padding: '10px 12px', textAlign: 'right', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
                         {m.subscription_status === 'pending' && (
                           <button
                             type="button"
                             onClick={() => setSelectedMemberForApproval(m)}
                             className="btn btn-primary btn-pill"
-                            style={{ fontSize: '11px', padding: '3px 8px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                            style={{ fontSize: '11px', padding: '3px 9px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                             title="Approve payment (Cash or Online) & activate pass"
                           >
-                            <CheckCircle2 size={11} /> Mark Paid
+                            <CheckCircle2 size={12} /> Mark Paid
                           </button>
                         )}
                         <button
                           type="button"
                           onClick={() => setSelectedMemberForEdit(m)}
                           className="btn btn-secondary btn-pill"
-                          style={{ fontSize: '11px', padding: '3px 8px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                          style={{ fontSize: '11px', padding: '3px 9px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                           title="Edit member details & balance"
                         >
                           <Edit3 size={11} /> Edit
@@ -472,12 +508,12 @@ export const AdminView: React.FC<AdminViewProps> = ({
                           className="btn btn-outline btn-pill"
                           style={{
                             fontSize: '11px',
-                            padding: '3px 8px',
+                            padding: '3px 9px',
                             color: 'var(--color-error)',
                             borderColor: 'var(--color-error-border)',
                             display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '3px'
+                            gap: '4px'
                           }}
                           title="Delete member from database"
                         >
@@ -490,6 +526,162 @@ export const AdminView: React.FC<AdminViewProps> = ({
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Card-Based List View (visible on screens <= 768px) */}
+          <div className="cards-mobile-view">
+            {filtered.map(m => (
+              <div
+                key={m.id}
+                style={{
+                  backgroundColor: '#ffffff',
+                  border: '1px solid var(--color-hairline)',
+                  borderRadius: 'var(--radius-lg)',
+                  padding: '14px',
+                  boxShadow: 'var(--shadow-level-1)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px'
+                }}
+              >
+                {/* Mobile Card Row 1: Member #, Truncated Name, and Status Badge */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
+                    <span
+                      className="tnum badge badge-indigo truncate-text"
+                      style={{
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '11px',
+                        padding: '2px 6px',
+                        flexShrink: 0,
+                        maxWidth: '90px',
+                        display: 'block'
+                      }}
+                      title={m.member_number}
+                    >
+                      {m.member_number}
+                    </span>
+
+                    <span
+                      className="truncate-text"
+                      style={{
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        color: 'var(--color-ink)',
+                        lineHeight: 1.2,
+                        display: 'block',
+                        maxWidth: '150px'
+                      }}
+                      title={m.full_name}
+                    >
+                      {m.full_name}
+                    </span>
+                  </div>
+
+                  <div style={{ flexShrink: 0 }}>
+                    {m.subscription_status === 'pending' ? (
+                      <span className="badge badge-pending" style={{ fontSize: '10px', padding: '2px 6px' }}>
+                        Pending
+                      </span>
+                    ) : !m.phone_verified ? (
+                      <span className="badge badge-indigo" style={{ fontSize: '10px', padding: '2px 6px' }}>
+                        {m.payment_method === 'cash' ? '💵 Cash' : '📱 Online'} • OTP
+                      </span>
+                    ) : (
+                      <span className="badge badge-active" style={{ fontSize: '10px', padding: '2px 6px' }}>
+                        ● Active ({m.payment_method === 'cash' ? 'Cash' : 'Online'})
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Mobile Card Row 2: Phone & Meals Remaining Quota */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '7px 10px',
+                  backgroundColor: 'var(--color-canvas-soft)',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: '12px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--color-ink-secondary)' }}>
+                    <span style={{ color: 'var(--color-ink-mute)', fontSize: '11px' }}>Phone:</span>
+                    <span className="tnum" style={{ fontWeight: 500, color: 'var(--color-ink)' }}>
+                      {m.phone ? `+91 ${m.phone}` : '—'}
+                    </span>
+                  </div>
+
+                  <div className="tnum" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ color: 'var(--color-ink-mute)', fontSize: '11px' }}>Meals:</span>
+                    <strong style={{ color: (m.remaining_meals ?? 0) <= 5 ? 'var(--color-error)' : 'var(--color-ink)' }}>
+                      {m.remaining_meals ?? 0}
+                    </strong>
+                    <span style={{ color: 'var(--color-ink-mute-2)', fontSize: '10px' }}>/ 54</span>
+                  </div>
+                </div>
+
+                {/* Mobile Card Row 3: Action Buttons */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginTop: '2px' }}>
+                  {m.subscription_status === 'pending' && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedMemberForApproval(m)}
+                      className="btn btn-primary btn-pill"
+                      style={{
+                        flex: '1 1 100%',
+                        fontSize: '12px',
+                        padding: '6px 10px',
+                        justifyContent: 'center',
+                        gap: '5px'
+                      }}
+                    >
+                      <CheckCircle2 size={13} /> Approve & Mark Paid (₹2,800)
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMemberForEdit(m)}
+                    className="btn btn-secondary btn-pill"
+                    style={{
+                      flex: 1,
+                      fontSize: '11px',
+                      padding: '5px 8px',
+                      justifyContent: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    <Edit3 size={11} /> Edit Details
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={deletingId === m.id}
+                    onClick={() => handleDeleteMember(m)}
+                    className="btn btn-outline btn-pill"
+                    style={{
+                      flex: 1,
+                      fontSize: '11px',
+                      padding: '5px 8px',
+                      color: 'var(--color-error)',
+                      borderColor: 'var(--color-error-border)',
+                      justifyContent: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    <Trash2 size={11} /> {deletingId === m.id ? '...' : 'Delete'}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Empty Search State */}
+          {filtered.length === 0 && (
+            <p style={{ textAlign: 'center', padding: '24px', color: 'var(--color-ink-mute)', fontSize: '13px' }}>
+              No members found matching "{searchMember}".
+            </p>
+          )}
         </div>
       )}
 
@@ -518,10 +710,14 @@ export const AdminView: React.FC<AdminViewProps> = ({
                   gap: '8px'
                 }}
               >
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span className="tnum" style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, fontSize: '11px' }}>{m.member_number}</span>
-                    <strong style={{ fontSize: '13px', color: 'var(--color-ink)' }}>{m.full_name}</strong>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+                    <span className="tnum badge badge-indigo truncate-text" style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, fontSize: '11px', maxWidth: '100px', display: 'block' }} title={m.member_number}>
+                      {m.member_number}
+                    </span>
+                    <strong className="truncate-text" style={{ fontSize: '13px', color: 'var(--color-ink)', maxWidth: '200px', display: 'inline-block' }} title={m.full_name}>
+                      {m.full_name}
+                    </strong>
                   </div>
                   <p className="tnum" style={{ fontSize: '11px', color: 'var(--color-ink-mute)', marginTop: '2px' }}>
                     Monthly Mess Thali (54 Meals) • <strong>₹2,800</strong>
