@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, CreditCard, Utensils, Plus, Check, Search, Edit3, FileSpreadsheet, X, QrCode, Trash2, Camera, Printer } from 'lucide-react';
+import { Users, CreditCard, Utensils, Plus, Search, Edit3, FileSpreadsheet, X, QrCode, Trash2, Camera, Printer, CheckCircle2 } from 'lucide-react';
 import type { Profile, DailyMenu } from '../types';
 import { api } from '../services/api';
 import { CsvImporter } from './CsvImporter';
@@ -7,9 +7,10 @@ import { MemberEditModal } from './MemberEditModal';
 import { MenuEditorModal } from './MenuEditorModal';
 import { CounterQrModal } from './CounterQrModal';
 import { CameraScannerModal } from './CameraScannerModal';
+import { AdminPaymentApprovalModal } from './AdminPaymentApprovalModal';
 
 interface AdminViewProps {
-  members: (Profile & { remaining_meals?: number; subscription_status?: string })[];
+  members: (Profile & { remaining_meals?: number; subscription_status?: string; payment_method?: 'cash' | 'upi_direct' })[];
   menus: DailyMenu[];
   onRefresh: () => void;
   activeMealPeriod?: 'lunch' | 'dinner';
@@ -28,6 +29,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
   // Modals state
   const [showAddMember, setShowAddMember] = useState(false);
   const [selectedMemberForEdit, setSelectedMemberForEdit] = useState<(Profile & { remaining_meals?: number; subscription_status?: string }) | null>(null);
+  const [selectedMemberForApproval, setSelectedMemberForApproval] = useState<(Profile & { remaining_meals?: number; subscription_status?: string; payment_method?: 'cash' | 'upi_direct' }) | null>(null);
   const [showMenuEditor, setShowMenuEditor] = useState(false);
   const [menuEditorPeriod, setMenuEditorPeriod] = useState<'lunch' | 'dinner'>('lunch');
   const [showCounterStandee, setShowCounterStandee] = useState(false);
@@ -427,12 +429,33 @@ export const AdminView: React.FC<AdminViewProps> = ({
                       </strong> / 54
                     </td>
                     <td style={{ padding: '10px' }}>
-                      <span className={`badge badge-${m.subscription_status === 'active' ? 'active' : 'pending'}`} style={{ fontSize: '10px', padding: '1px 6px' }}>
-                        {m.subscription_status}
-                      </span>
+                      {m.subscription_status === 'pending' ? (
+                        <span className="badge badge-pending" style={{ fontSize: '10px', padding: '2px 7px' }}>
+                          Payment Pending
+                        </span>
+                      ) : !m.phone_verified ? (
+                        <span className="badge badge-indigo" style={{ fontSize: '10px', padding: '2px 7px' }}>
+                          {m.payment_method === 'cash' ? '💵 Cash' : '📱 Online'} • OTP Pending
+                        </span>
+                      ) : (
+                        <span className="badge badge-active" style={{ fontSize: '10px', padding: '2px 7px' }}>
+                          ● Active ({m.payment_method === 'cash' ? 'Cash' : 'Online'})
+                        </span>
+                      )}
                     </td>
                     <td style={{ padding: '10px', textAlign: 'right' }}>
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        {m.subscription_status === 'pending' && (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedMemberForApproval(m)}
+                            className="btn btn-primary btn-pill"
+                            style={{ fontSize: '11px', padding: '3px 8px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                            title="Approve payment (Cash or Online) & activate pass"
+                          >
+                            <CheckCircle2 size={11} /> Mark Paid
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={() => setSelectedMemberForEdit(m)}
@@ -476,7 +499,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
           <span className="eyebrow">Payment Verification Queue</span>
           <h2 style={{ fontSize: '18px', marginTop: '2px' }}>Pending Subscriptions</h2>
           <p style={{ color: 'var(--color-ink-mute)', fontSize: '12px', marginTop: '2px', marginBottom: '14px' }}>
-            Subscriptions remain unusable until verified by an authorized mess owner.
+            Subscriptions remain unusable until verified by an authorized mess owner. Choose Cash or Online to activate.
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -487,7 +510,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  padding: '10px 14px',
+                  padding: '12px 16px',
                   backgroundColor: 'var(--color-canvas-soft)',
                   borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--color-hairline)',
@@ -507,14 +530,11 @@ export const AdminView: React.FC<AdminViewProps> = ({
 
                 <button
                   type="button"
-                  onClick={async () => {
-                    alert(`Verified payment for ${m.full_name}! 54 meals activated.`);
-                    onRefresh();
-                  }}
+                  onClick={() => setSelectedMemberForApproval(m)}
                   className="btn btn-primary btn-pill"
-                  style={{ fontSize: '11px', padding: '4px 10px' }}
+                  style={{ fontSize: '11px', padding: '5px 12px', gap: '5px' }}
                 >
-                  <Check size={12} /> Activate (₹2,800)
+                  <CheckCircle2 size={12} /> Approve & Mark Paid (₹2,800)
                 </button>
               </div>
             ))}
@@ -747,6 +767,16 @@ export const AdminView: React.FC<AdminViewProps> = ({
         onScanSuccess={handleScanSuccess}
         mealPeriod={activeMealPeriod}
       />
+
+      {/* Admin Payment Approval & Member Activation Modal */}
+      {selectedMemberForApproval && (
+        <AdminPaymentApprovalModal
+          isOpen={Boolean(selectedMemberForApproval)}
+          onClose={() => setSelectedMemberForApproval(null)}
+          member={selectedMemberForApproval}
+          onSuccess={onRefresh}
+        />
+      )}
 
     </div>
   );

@@ -27,9 +27,18 @@ export const api = {
       .select('subscription_id, meal_delta, status')
       .eq('status', 'accepted');
 
+    // Fetch verified payments
+    const { data: payments } = await supabase
+      .from('payments')
+      .select('member_id, subscription_id, method, status, amount_paise, created_at')
+      .eq('status', 'verified')
+      .order('created_at', { ascending: false });
+
     return profiles.map(profile => {
       const memberSubs = (subs || []).filter(s => s.member_id === profile.id);
       const activeSub = memberSubs.find(s => s.status === 'active') || memberSubs[0];
+      const memberPayments = (payments || []).filter(p => p.member_id === profile.id);
+      const latestPayment = memberPayments[0];
 
       let remaining = 0;
       if (activeSub) {
@@ -42,7 +51,11 @@ export const api = {
         ...profile,
         remaining_meals: activeSub ? remaining : 0,
         subscription_status: activeSub ? activeSub.status : 'none',
-        expires_at: activeSub?.expires_at
+        expires_at: activeSub?.expires_at,
+        subscription_id: activeSub?.id,
+        payment_method: latestPayment?.method as 'cash' | 'upi_direct' | undefined,
+        payment_status: latestPayment ? 'verified' : (activeSub?.status === 'active' ? 'verified' : 'pending'),
+        phone_verified: Boolean(profile.phone_verified)
       };
     });
   },
@@ -121,6 +134,107 @@ export const api = {
       .eq('subscription_id', subscriptionId);
 
     return true;
+  },
+
+  // Admin approves payment and activates member pass with Cash or Online mode
+  async approveMemberPayment({
+    memberId,
+    paymentMethod,
+    amountPaise = 280000,
+    referenceNotes,
+    verifierId
+  }: {
+    memberId: string;
+    paymentMethod: 'cash' | 'upi_direct';
+    amountPaise?: number;
+    referenceNotes?: string;
+    verifierId?: string;
+  }): Promise<{ success: boolean; message?: string }> {
+    try {
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 30);
+
+      // 1. Fetch existing subscription for this member
+      const { data: existingSub } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('member_id', memberId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      let subId = existingSub?.id;
+
+      if (existingSub) {
+        const { error: subErr } = await supabase
+          .from('subscriptions')
+          .update({
+            status: 'active',
+            meals_granted: 54,
+            starts_at: new Date().toISOString(),
+            expires_at: expiresAt.toISOString(),
+            activated_at: new Date().toISOString()
+          })
+          .eq('id', existingSub.id);
+
+        if (subErr) throw subErr;
+      } else {
+        const { data: newSub, error: newSubErr } = await supabase
+          .from('subscriptions')
+          .insert([
+            {
+              member_id: memberId,
+              plan_id: '00000000-0000-0000-0000-000000000001',
+              status: 'active',
+              meals_granted: 54,
+              starts_at: new Date().toISOString(),
+              expires_at: expiresAt.toISOString(),
+              activated_at: new Date().toISOString()
+            }
+          ])
+          .select('id')
+          .single();
+
+        if (newSubErr) throw newSubErr;
+        subId = newSub.id;
+      }
+
+      // 2. Record payment in payments table
+      if (subId) {
+        await supabase.from('payments').insert([
+          {
+            member_id: memberId,
+            subscription_id: subId,
+            amount_paise: amountPaise,
+            method: paymentMethod,
+            status: 'verified',
+            reference_text: referenceNotes || (paymentMethod === 'cash' ? 'Cash at Counter' : 'Online / UPI Direct'),
+            verified_by: verifierId,
+            verified_at: new Date().toISOString()
+          }
+        ]);
+      }
+
+      // 3. Audit Log
+      try {
+        await supabase.from('audit_logs').insert([
+          {
+            action: 'PAYMENT_APPROVED_ACTIVE',
+            entity_type: 'subscription',
+            entity_id: subId,
+            reason: `Admin activated pass via ${paymentMethod === 'cash' ? 'Cash' : 'Online / UPI'} (₹${amountPaise / 100})`,
+            actor_id: verifierId
+          }
+        ]);
+      } catch (auditErr) {
+        console.warn('Audit log write note:', auditErr);
+      }
+
+      return { success: true };
+    } catch (err: any) {
+      console.error('Error approving member payment:', err);
+      return { success: false, message: err?.message || 'Failed to approve payment.' };
+    }
   },
 
   // Create new member registration

@@ -14,7 +14,8 @@ import {
   AlertCircle,
   Printer,
   QrCode,
-  User
+  User,
+  Lock
 } from 'lucide-react';
 import type { Profile, DailyMenu, MealTransaction, CheckInResult } from '../types';
 import { api, COUNTER_STANDEE_QR } from '../services/api';
@@ -24,7 +25,7 @@ import { CameraScannerModal } from './CameraScannerModal';
 import { CounterQrModal } from './CounterQrModal';
 
 interface MemberViewProps {
-  member: Profile & { remaining_meals?: number; subscription_status?: string; expires_at?: string };
+  member: Profile & { remaining_meals?: number; subscription_status?: string; expires_at?: string; payment_method?: 'cash' | 'upi_direct' };
   menus: DailyMenu[];
   activeMealPeriod: 'lunch' | 'dinner';
   onRefresh: () => void;
@@ -87,6 +88,26 @@ export const MemberView: React.FC<MemberViewProps> = ({
           success: false,
           code: 'INVALID_QR',
           message: 'Invalid Counter QR. Please point your camera at the official Thali.com Mess Desk Standee QR.'
+        });
+        return;
+      }
+
+      if (member.subscription_status !== 'active') {
+        sound.playError();
+        setSelfCheckInReceipt({
+          success: false,
+          code: 'PAYMENT_PENDING',
+          message: 'Payment Pending: Please pay ₹2,800 at the mess counter. Admin must activate your pass before dining.'
+        });
+        return;
+      }
+
+      if (!member.phone_verified) {
+        sound.playError();
+        setSelfCheckInReceipt({
+          success: false,
+          code: 'PHONE_NOT_VERIFIED',
+          message: 'Phone Verification Required: Please verify your mobile number via OTP before dining.'
         });
         return;
       }
@@ -278,33 +299,104 @@ export const MemberView: React.FC<MemberViewProps> = ({
 
       {/* Pending Activation & Phone Verification Notice */}
       {(!member.phone_verified || member.subscription_status !== 'active') && (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '12px',
-          padding: '14px 16px',
-          backgroundColor: 'var(--color-warning-bg)',
-          border: '1px solid var(--color-warning-border)',
-          borderRadius: 'var(--radius-lg)'
-        }}>
-          <div>
-            <div className="tnum" style={{ fontWeight: 600, fontSize: '14px', color: 'var(--color-ink)' }}>
-              ⚡ Plan Activation Pending — ₹2,800 / 54 Meals
+        member.subscription_status !== 'active' ? (
+          // State 1: Member has not paid yet / Admin has not confirmed payment
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '12px',
+            padding: '16px 18px',
+            backgroundColor: '#fffbeb',
+            border: '1px solid #fde68a',
+            borderRadius: 'var(--radius-lg)'
+          }}>
+            <div style={{ maxWidth: '650px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <span className="badge badge-pending" style={{ fontSize: '11px', fontWeight: 600 }}>
+                  Step 1: Payment Pending
+                </span>
+                <span className="tnum" style={{ fontWeight: 600, fontSize: '14px', color: 'var(--color-ink)' }}>
+                  Monthly Fee: ₹2,800 (54 Meals)
+                </span>
+              </div>
+              <p style={{ fontSize: '13px', color: 'var(--color-ink-secondary)', marginTop: '6px', lineHeight: 1.45 }}>
+                Mess counter par jakar <strong>Cash ya UPI (Online)</strong> se payment karein. Admin dwara payment confirm karne ke baad hi aapka OTP verification unlock hoga.
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', fontSize: '11px', color: '#b45309' }}>
+                <Lock size={12} />
+                <span>Phone & OTP verification locked until payment is verified by Mess Admin.</span>
+              </div>
             </div>
-            <p style={{ fontSize: '13px', color: 'var(--color-ink-secondary)', marginTop: '2px' }}>
-              Verify mobile number via SMS to activate your digital card & start dining.
-            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <button
+                type="button"
+                disabled
+                className="btn btn-secondary btn-pill"
+                style={{
+                  cursor: 'not-allowed',
+                  opacity: 0.7,
+                  backgroundColor: '#f3f4f6',
+                  borderColor: '#e5e7eb',
+                  color: '#6b7280',
+                  gap: '6px',
+                  fontSize: '12px',
+                  padding: '8px 14px'
+                }}
+                title="Payment must be confirmed by Admin before phone verification"
+              >
+                <Lock size={13} /> OTP Locked (Pay at Counter)
+              </button>
+              <span style={{ fontSize: '10px', color: 'var(--color-ink-mute)', textAlign: 'center' }}>
+                Visit counter to pay
+              </span>
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setShowPaymentActivationModal(true)}
-            className="btn btn-primary btn-pill btn-mobile-full"
-          >
-            <PhoneCall size={13} /> Verify & Activate Pass
-          </button>
-        </div>
+        ) : (
+          // State 2: Admin has confirmed payment (Cash or Online), but Phone not yet verified via OTP
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '12px',
+            padding: '16px 18px',
+            backgroundColor: 'var(--color-success-bg)',
+            border: '1px solid var(--color-success-border)',
+            borderRadius: 'var(--radius-lg)'
+          }}>
+            <div style={{ maxWidth: '650px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <span className="badge badge-active" style={{ fontSize: '11px', fontWeight: 600 }}>
+                  ✅ Step 2: Payment Received ({member.payment_method === 'cash' ? '💵 Cash' : '📱 Online / UPI'})
+                </span>
+                <span className="tnum" style={{ fontWeight: 600, fontSize: '14px', color: 'var(--color-ink)' }}>
+                  Pass Approved • ₹2,800 Paid
+                </span>
+              </div>
+              <p style={{ fontSize: '13px', color: 'var(--color-ink-secondary)', marginTop: '6px', lineHeight: 1.45 }}>
+                Admin ne aapka payment confirm kar diya hai! Ab apna 10-digit mobile number 1-time OTP se verify karke dining pass start karein.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowPaymentActivationModal(true)}
+              className="btn btn-primary btn-pill btn-mobile-full"
+              style={{
+                gap: '6px',
+                padding: '9px 18px',
+                fontSize: '13px',
+                fontWeight: 600,
+                boxShadow: '0 2px 8px rgba(83, 58, 253, 0.25)'
+              }}
+            >
+              <PhoneCall size={14} /> Verify Phone via OTP
+            </button>
+          </div>
+        )
       )}
 
       {/* Self Check-In CTA Bar (Model 2: Student scans mess counter QR) */}

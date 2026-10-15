@@ -7,7 +7,7 @@ import confetti from 'canvas-confetti';
 interface PaymentActivationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  member: Profile & { remaining_meals?: number; subscription_status?: string };
+  member: Profile & { remaining_meals?: number; subscription_status?: string; payment_method?: 'cash' | 'upi_direct' };
   onSuccess: () => void;
 }
 
@@ -31,6 +31,11 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
     e.preventDefault();
     setErrorMsg(null);
 
+    if (member.subscription_status !== 'active') {
+      setErrorMsg('Payment not verified by Mess Admin. Please pay ₹2,800 at the counter first. Admin will activate your pass to unlock OTP verification.');
+      return;
+    }
+
     const clean = phone.replace(/\D/g, '').slice(-10);
     if (clean.length < 10) {
       setErrorMsg('Please enter a valid 10-digit Indian mobile number.');
@@ -39,7 +44,7 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
 
     setLoading(true);
     try {
-      const res = await sendPaymentVerificationOtp(clean);
+      const res = await sendPaymentVerificationOtp(clean, member.id);
       if (res.isSimulated && res.devCode) {
         setSimulatedCode(res.devCode);
       } else {
@@ -169,18 +174,50 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
           )}
 
           {step === 'phone' && (
-            <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{
-                padding: '12px 14px',
-                backgroundColor: 'var(--color-canvas-soft)',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid var(--color-hairline)',
-                fontSize: '13px',
-                color: 'var(--color-ink-secondary)',
-                lineHeight: 1.45
-              }}>
-                <strong>One-Time Verification:</strong> We only send an SMS OTP during subscription activation to verify your contact for pass renewals.
+            member.subscription_status !== 'active' ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{
+                  padding: '16px',
+                  backgroundColor: '#fffbeb',
+                  border: '1px solid #fde68a',
+                  borderRadius: 'var(--radius-md)',
+                  color: '#92400e',
+                  fontSize: '13px',
+                  lineHeight: 1.5
+                }}>
+                  <strong>🔒 Payment Required Before OTP:</strong>
+                  <p style={{ marginTop: '6px' }}>
+                    Aapki monthly mess fee (₹2,800) pending hai. Kripya mess counter par jakar <strong>Cash ya UPI (Online)</strong> se payment karein. Admin dwara payment confirm karne ke baad hi OTP verification unlock hoga.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="btn btn-secondary btn-pill"
+                  style={{ width: '100%', padding: '10px' }}
+                >
+                  Close & Pay at Mess Counter
+                </button>
               </div>
+            ) : (
+              <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{
+                  padding: '12px 14px',
+                  backgroundColor: 'var(--color-success-bg)',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--color-success-border)',
+                  fontSize: '13px',
+                  color: 'var(--color-success)',
+                  lineHeight: 1.45,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <ShieldCheck size={18} style={{ flexShrink: 0 }} />
+                  <div>
+                    <strong>Payment Confirmed ({member.payment_method === 'cash' ? '💵 Cash' : '📱 Online / UPI'}):</strong> Enter your mobile number to receive the 1-time OTP.
+                  </div>
+                </div>
 
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '6px' }}>
@@ -254,7 +291,7 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
                 )}
               </button>
             </form>
-          )}
+          ))}
 
           {step === 'otp' && (
             <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

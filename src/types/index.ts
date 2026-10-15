@@ -17,6 +17,8 @@ export interface Profile {
   qr_token: string; // Opaque random token for scanning
   pin_code?: string;
   phone_verified?: boolean;
+  payment_method?: 'cash' | 'upi_direct';
+  payment_status?: 'pending' | 'verified';
   created_at: string;
   updated_at: string;
 }
@@ -107,7 +109,7 @@ export interface DailyMenu {
 
 export interface CheckInResult {
   success: boolean;
-  code: 'ACCEPTED' | 'DUPLICATE_CHECKIN' | 'ZERO_BALANCE' | 'SUBSCRIPTION_EXPIRED' | 'PAYMENT_PENDING' | 'INVALID_QR' | 'MEMBER_INACTIVE' | 'ERROR';
+  code: 'ACCEPTED' | 'DUPLICATE_CHECKIN' | 'ZERO_BALANCE' | 'SUBSCRIPTION_EXPIRED' | 'PAYMENT_PENDING' | 'PHONE_NOT_VERIFIED' | 'INVALID_QR' | 'MEMBER_INACTIVE' | 'ERROR';
   message: string;
   member_name?: string;
   member_number?: string;

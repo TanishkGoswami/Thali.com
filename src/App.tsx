@@ -12,12 +12,12 @@ import type { Role, Profile, DailyMenu, MealTransaction } from './types';
 import { Loader2 } from 'lucide-react';
 
 export function App() {
-  const [currentUser, setCurrentUser] = useState<(Profile & { remaining_meals?: number; subscription_status?: string; expires_at?: string }) | null>(null);
+  const [currentUser, setCurrentUser] = useState<(Profile & { remaining_meals?: number; subscription_status?: string; expires_at?: string; payment_method?: 'cash' | 'upi_direct' }) | null>(null);
   const [currentRole, setCurrentRole] = useState<Role>('member');
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [activeMealPeriod, setActiveMealPeriod] = useState<'lunch' | 'dinner'>('lunch');
-  const [members, setMembers] = useState<(Profile & { remaining_meals?: number; subscription_status?: string; expires_at?: string })[]>([]);
+  const [members, setMembers] = useState<(Profile & { remaining_meals?: number; subscription_status?: string; expires_at?: string; payment_method?: 'cash' | 'upi_direct' })[]>([]);
   const [menus, setMenus] = useState<DailyMenu[]>([]);
   const [recentTransactions, setRecentTransactions] = useState<(MealTransaction & { member_name?: string; member_number?: string })[]>([]);
   const [loading, setLoading] = useState(true);

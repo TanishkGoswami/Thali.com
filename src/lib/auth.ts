@@ -187,12 +187,29 @@ export async function registerNewMember(fullName: string, email: string, pinCode
 /**
  * Triggers Fast2SMS real OTP to verify member's phone number during Payment / Plan Activation
  */
-export async function sendPaymentVerificationOtp(rawPhone: string): Promise<SendOtpResult> {
+export async function sendPaymentVerificationOtp(rawPhone: string, memberId?: string): Promise<SendOtpResult> {
   const phone = formatIndianPhoneNumber(rawPhone);
   const clean10 = phone.replace(/\D/g, '').slice(-10);
 
   if (clean10.length !== 10) {
     throw new Error('Please enter a valid 10-digit Indian mobile number.');
+  }
+
+  // Cost & Security Guard: Block OTP request if member payment is not confirmed by admin!
+  if (memberId) {
+    const { data: sub } = await supabase
+      .from('subscriptions')
+      .select('id, status')
+      .eq('member_id', memberId)
+      .eq('status', 'active')
+      .limit(1)
+      .maybeSingle();
+
+    if (!sub) {
+      throw new Error(
+        'Payment not confirmed by Mess Admin. OTP can only be requested after the admin marks your payment (Cash or UPI) as received at the counter.'
+      );
+    }
   }
 
   const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
