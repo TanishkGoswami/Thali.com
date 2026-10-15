@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Lock, Mail, User, ArrowRight, RefreshCw, AlertCircle, X, KeyRound, Utensils } from 'lucide-react';
+import { Lock, Mail, User, ArrowRight, RefreshCw, AlertCircle, X, KeyRound } from 'lucide-react';
 import { loginWithEmailOrIdAndPin, registerNewMember, getTestProfileByNumber, saveLocalSession } from '../lib/auth';
 import type { Profile } from '../types';
 
@@ -101,71 +101,17 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       overflow: 'hidden',
       animation: 'fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
     }}>
-      {/* Brand Header */}
+      {/* Top Bar with Segmented Pill Tabs & optional Close Button */}
       <div style={{
-        padding: '24px 20px 16px',
-        borderBottom: '1px solid var(--color-hairline)',
+        padding: '16px 16px 0',
+        backgroundColor: '#ffffff',
         display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start'
-      }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{
-              width: '28px',
-              height: '28px',
-              borderRadius: '7px',
-              backgroundColor: 'var(--color-primary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#ffffff'
-            }}>
-              <Utensils size={15} />
-            </div>
-            <span style={{
-              fontSize: '20px',
-              fontWeight: 600,
-              letterSpacing: '-0.4px',
-              color: 'var(--color-ink)'
-            }}>
-              Thali<span style={{ color: 'var(--color-primary)' }}>.com</span>
-            </span>
-            <span className="badge badge-indigo" style={{ fontSize: '10px' }}>
-              Portal
-            </span>
-          </div>
-          <p style={{ fontSize: '12px', color: 'var(--color-ink-mute)', marginTop: '4px' }}>
-            {tab === 'signin'
-              ? 'Sign in to access your digital meal pass & balance'
-              : 'Sign up for a monthly meal pass with 54 meals'}
-          </p>
-        </div>
-
-        {allowClose && onClose && !embedded && (
-          <button
-            type="button"
-            onClick={onClose}
-            className="btn btn-outline btn-pill"
-            style={{
-              padding: '6px',
-              color: 'var(--color-ink-mute)',
-              border: 'none',
-              cursor: 'pointer'
-            }}
-          >
-            <X size={18} />
-          </button>
-        )}
-      </div>
-
-      {/* Segmented Pill Tabs */}
-      <div style={{
-        padding: '10px 20px 0',
-        backgroundColor: '#ffffff'
+        alignItems: 'center',
+        gap: '8px'
       }}>
         <div style={{
           display: 'flex',
+          flex: 1,
           backgroundColor: 'var(--color-canvas-soft)',
           padding: '3px',
           borderRadius: 'var(--radius-pill)',
@@ -181,8 +127,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               color: tab === 'signin' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
               boxShadow: tab === 'signin' ? 'var(--shadow-level-1)' : 'none',
               fontSize: '12px',
-              fontWeight: tab === 'signin' ? 500 : 400,
-              padding: '6px'
+              fontWeight: tab === 'signin' ? 600 : 400,
+              padding: '7px'
             }}
           >
             Sign In
@@ -197,13 +143,31 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               color: tab === 'register' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
               boxShadow: tab === 'register' ? 'var(--shadow-level-1)' : 'none',
               fontSize: '12px',
-              fontWeight: tab === 'register' ? 500 : 400,
-              padding: '6px'
+              fontWeight: tab === 'register' ? 600 : 400,
+              padding: '7px'
             }}
           >
             New Member
           </button>
         </div>
+
+        {allowClose && onClose && !embedded && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="btn btn-outline btn-pill"
+            style={{
+              padding: '6px',
+              color: 'var(--color-ink-mute)',
+              border: 'none',
+              cursor: 'pointer',
+              flexShrink: 0
+            }}
+            title="Close"
+          >
+            <X size={18} />
+          </button>
+        )}
       </div>
 
       {/* Content Form Body */}
