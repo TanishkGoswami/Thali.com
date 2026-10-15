@@ -447,6 +447,56 @@ h4 {
 }
 
 /* -------------------------------------------------------------
+   Navbar Responsive Alignment & Name Truncation
+   ------------------------------------------------------------- */
+.navbar-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+}
+
+.user-name-truncate {
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .navbar-switcher-desktop {
+    display: none !important;
+  }
+  .navbar-switcher-mobile {
+    display: flex !important;
+    width: 100%;
+    justify-content: center;
+    padding-top: 4px;
+    margin-top: 2px;
+  }
+  .user-name-truncate {
+    max-width: 82px;
+  }
+}
+
+@media (min-width: 769px) {
+  .navbar-switcher-desktop {
+    display: flex !important;
+  }
+  .navbar-switcher-mobile {
+    display: none !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .user-name-truncate {
+    max-width: 68px;
+  }
+}
+
+/* -------------------------------------------------------------
    Print Media Styling (Isolates Official Counter Standee)
    ------------------------------------------------------------- */
 @media print {
