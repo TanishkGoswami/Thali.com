@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Save, Plus, Minus } from 'lucide-react';
+import { X, Save, Plus, Minus, Trash2 } from 'lucide-react';
 import type { Profile } from '../types';
 import { api } from '../services/api';
 import { supabase } from '../lib/supabase';
@@ -26,6 +26,7 @@ export const MemberEditModal: React.FC<MemberEditModalProps> = ({
   const [adjustReason, setAdjustReason] = useState<string>('');
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -89,6 +90,29 @@ export const MemberEditModal: React.FC<MemberEditModalProps> = ({
       setErrorMsg(err.message || 'Failed to update member.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete ${member.full_name} (${member.member_number})?\n\nThis will remove their profile and release phone number (${member.phone || 'N/A'}) for future registrations.`
+    );
+    if (!confirmDelete) return;
+
+    setIsDeleting(true);
+    setErrorMsg(null);
+    try {
+      const res = await api.deleteMember(member.id);
+      if (res.success) {
+        onSuccess();
+        onClose();
+      } else {
+        setErrorMsg(res.message || 'Failed to delete member.');
+      }
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'Error occurred while deleting member.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -283,23 +307,39 @@ export const MemberEditModal: React.FC<MemberEditModalProps> = ({
           </div>
 
           {/* Action Buttons */}
-          <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
             <button
               type="button"
-              onClick={onClose}
-              className="btn btn-secondary btn-pill"
-              style={{ flex: 1 }}
+              disabled={isDeleting || isSubmitting}
+              onClick={handleDelete}
+              className="btn btn-outline btn-pill"
+              style={{
+                color: 'var(--color-error)',
+                borderColor: 'var(--color-error-border)',
+                gap: '5px',
+                fontSize: '12px'
+              }}
             >
-              Cancel
+              <Trash2 size={13} /> {isDeleting ? 'Deleting...' : 'Delete Member'}
             </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="btn btn-primary"
-              style={{ flex: 2, gap: '6px' }}
-            >
-              <Save size={14} /> {isSubmitting ? 'Saving...' : 'Save & Update'}
-            </button>
+
+            <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
+              <button
+                type="button"
+                onClick={onClose}
+                className="btn btn-secondary btn-pill"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting || isDeleting}
+                className="btn btn-primary"
+                style={{ gap: '6px' }}
+              >
+                <Save size={14} /> {isSubmitting ? 'Saving...' : 'Save & Update'}
+              </button>
+            </div>
           </div>
 
         </form>

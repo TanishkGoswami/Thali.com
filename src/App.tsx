@@ -174,6 +174,7 @@ export function App() {
           members={members}
           menus={menus}
           onRefresh={loadData}
+          activeMealPeriod={activeMealPeriod}
         />
       );
     }

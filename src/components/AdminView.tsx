@@ -1,22 +1,25 @@
 import React, { useState } from 'react';
-import { Users, CreditCard, Utensils, Plus, Check, Search, Edit3, FileSpreadsheet, X, QrCode } from 'lucide-react';
+import { Users, CreditCard, Utensils, Plus, Check, Search, Edit3, FileSpreadsheet, X, QrCode, Trash2, Camera } from 'lucide-react';
 import type { Profile, DailyMenu } from '../types';
 import { api } from '../services/api';
 import { CsvImporter } from './CsvImporter';
 import { MemberEditModal } from './MemberEditModal';
 import { MenuEditorModal } from './MenuEditorModal';
 import { CounterQrModal } from './CounterQrModal';
+import { CameraScannerModal } from './CameraScannerModal';
 
 interface AdminViewProps {
   members: (Profile & { remaining_meals?: number; subscription_status?: string })[];
   menus: DailyMenu[];
   onRefresh: () => void;
+  activeMealPeriod?: 'lunch' | 'dinner';
 }
 
 export const AdminView: React.FC<AdminViewProps> = ({
   members,
   menus,
-  onRefresh
+  onRefresh,
+  activeMealPeriod = 'lunch'
 }) => {
   const [activeTab, setActiveTab] = useState<'members' | 'payments' | 'menu' | 'import'>('members');
   const [searchMember, setSearchMember] = useState('');
@@ -28,6 +31,8 @@ export const AdminView: React.FC<AdminViewProps> = ({
   const [showMenuEditor, setShowMenuEditor] = useState(false);
   const [menuEditorPeriod, setMenuEditorPeriod] = useState<'lunch' | 'dinner'>('lunch');
   const [showCounterStandee, setShowCounterStandee] = useState(false);
+  const [showCameraScanner, setShowCameraScanner] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const [newFullName, setNewFullName] = useState('');
   const [newPhone, setNewPhone] = useState('');
@@ -73,6 +78,40 @@ export const AdminView: React.FC<AdminViewProps> = ({
     }
   };
 
+  const handleDeleteMember = async (m: Profile) => {
+    const confirmDelete = window.confirm(
+      `Delete member ${m.full_name} (${m.member_number})?\n\nThis will remove their profile and release phone number (${m.phone || 'N/A'}) for future registrations.`
+    );
+    if (!confirmDelete) return;
+
+    setDeletingId(m.id);
+    try {
+      const res = await api.deleteMember(m.id);
+      if (res.success) {
+        onRefresh();
+      } else {
+        alert(res.message || 'Failed to delete member.');
+      }
+    } catch (err: any) {
+      alert(err?.message || 'Error occurred while deleting member.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleScanSuccess = async (token: string) => {
+    setShowCameraScanner(false);
+    try {
+      const currentHour = new Date().getHours();
+      const currentPeriod = (currentHour >= 16 || currentHour < 5) ? 'dinner' : 'lunch';
+      const res = await api.checkInMeal(token, currentPeriod);
+      alert(res.message || (res.success ? 'Meal checked in successfully!' : 'Check in failed'));
+      onRefresh();
+    } catch (e: any) {
+      alert('Error during check-in: ' + e?.message);
+    }
+  };
+
   return (
     <div style={{ maxWidth: '1180px', margin: '0 auto', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
       
@@ -99,9 +138,19 @@ export const AdminView: React.FC<AdminViewProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <button
             type="button"
+            onClick={() => setShowCameraScanner(true)}
+            className="btn btn-secondary btn-pill"
+            style={{ gap: '6px' }}
+            title="Scan student digital pass with camera"
+          >
+            <Camera size={14} /> Scan Pass
+          </button>
+          <button
+            type="button"
             onClick={() => setShowCounterStandee(true)}
             className="btn btn-secondary btn-pill"
             style={{ gap: '6px' }}
+            title="Open printable Mess Counter Standee QR for student self-check-in"
           >
             <QrCode size={14} /> Desk QR Standee
           </button>
@@ -327,14 +376,35 @@ export const AdminView: React.FC<AdminViewProps> = ({
                       </span>
                     </td>
                     <td style={{ padding: '10px', textAlign: 'right' }}>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedMemberForEdit(m)}
-                        className="btn btn-secondary btn-pill"
-                        style={{ fontSize: '11px', padding: '3px 8px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
-                      >
-                        <Edit3 size={11} /> Edit
-                      </button>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedMemberForEdit(m)}
+                          className="btn btn-secondary btn-pill"
+                          style={{ fontSize: '11px', padding: '3px 8px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                          title="Edit member details & balance"
+                        >
+                          <Edit3 size={11} /> Edit
+                        </button>
+                        <button
+                          type="button"
+                          disabled={deletingId === m.id}
+                          onClick={() => handleDeleteMember(m)}
+                          className="btn btn-outline btn-pill"
+                          style={{
+                            fontSize: '11px',
+                            padding: '3px 8px',
+                            color: 'var(--color-error)',
+                            borderColor: 'var(--color-error-border)',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px'
+                          }}
+                          title="Delete member from database"
+                        >
+                          <Trash2 size={11} /> {deletingId === m.id ? '...' : 'Delete'}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -612,6 +682,14 @@ export const AdminView: React.FC<AdminViewProps> = ({
       <CounterQrModal
         isOpen={showCounterStandee}
         onClose={() => setShowCounterStandee(false)}
+      />
+
+      {/* Optical Camera QR Scanner Modal */}
+      <CameraScannerModal
+        isOpen={showCameraScanner}
+        onClose={() => setShowCameraScanner(false)}
+        onScanSuccess={handleScanSuccess}
+        mealPeriod={activeMealPeriod}
       />
 
     </div>

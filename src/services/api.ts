@@ -232,6 +232,54 @@ export const api = {
     return true;
   },
 
+  // Delete a member record permanently or archive and release phone/credentials
+  async deleteMember(memberId: string): Promise<{ success: boolean; message?: string }> {
+    try {
+      // 1. First attempt via PostgreSQL RPC if migration is applied
+      const { data: rpcData, error: rpcErr } = await supabase.rpc('admin_delete_member', { p_member_id: memberId });
+      if (!rpcErr && rpcData?.success) {
+        return { success: true };
+      }
+
+      // 2. Cascade delete linked records
+      await supabase.from('payments').delete().eq('member_id', memberId);
+      await supabase.from('meal_transactions').delete().eq('member_id', memberId);
+
+      // Delete subscriptions
+      const { error: subErr } = await supabase.from('subscriptions').delete().eq('member_id', memberId);
+      if (subErr) {
+        // If subscriptions cannot be deleted due to foreign key restrictions, archive profile and clear phone/email to free credentials
+        console.warn('Subscriptions delete restricted, archiving profile:', subErr);
+        const { error: archErr } = await supabase
+          .from('profiles')
+          .update({
+            status: 'archived',
+            phone: null,
+            email: null,
+            member_number: `ARCHIVED_${Date.now()}_${memberId.slice(0, 4)}`,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', memberId);
+
+        if (!archErr) {
+          return { success: true, message: 'Member archived and credentials released.' };
+        }
+        return { success: false, message: subErr.message };
+      }
+
+      // Delete profile permanently
+      const { error: profErr } = await supabase.from('profiles').delete().eq('id', memberId);
+      if (profErr) {
+        return { success: false, message: profErr.message };
+      }
+
+      return { success: true };
+    } catch (err: any) {
+      console.error('Error in deleteMember:', err);
+      return { success: false, message: err?.message || 'Delete operation failed' };
+    }
+  },
+
   // Extend active subscription validity
   async extendSubscription(subscriptionId: string, additionalDays: number): Promise<boolean> {
     const { data: sub } = await supabase
