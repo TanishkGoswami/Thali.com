@@ -24,6 +24,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [resendCooldown, setResendCooldown] = useState(0);
 
+  const [simulatedCode, setSimulatedCode] = useState<string | null>(null);
+
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (resendCooldown > 0) {
@@ -47,12 +49,16 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
     setLoading(true);
     try {
-      await sendPhoneOtp(clean);
+      const res = await sendPhoneOtp(clean, fullName);
+      if (res.isSimulated && res.devCode) {
+        setSimulatedCode(res.devCode);
+      } else {
+        setSimulatedCode(null);
+      }
       setStep('otp');
       setResendCooldown(30);
     } catch (err: any) {
       console.error('Send OTP error:', err);
-      // Give clear actionable feedback
       setErrorMsg(err.message || 'Failed to send OTP. Please check the number or use a test account below.');
     } finally {
       setLoading(false);
@@ -71,7 +77,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
     setLoading(true);
     try {
-      const { profile } = await verifyPhoneOtp(phoneNumber, otp);
+      const { profile } = await verifyPhoneOtp(phoneNumber, otp, fullName);
       onLoginSuccess(profile);
       if (onClose) onClose();
     } catch (err: any) {
@@ -301,6 +307,37 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             </form>
           ) : (
             <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {simulatedCode && (
+                <div style={{
+                  padding: '12px 14px',
+                  backgroundColor: 'rgba(212, 160, 23, 0.1)',
+                  border: '1px solid rgba(212, 160, 23, 0.3)',
+                  borderRadius: 'var(--radius-md)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '8px'
+                }}>
+                  <div style={{ fontSize: '13px', color: 'var(--color-ink)' }}>
+                    ⚡ <strong>Test Mode:</strong> Your OTP code is <strong>{simulatedCode}</strong>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setOtp(simulatedCode)}
+                    className="btn btn-pill"
+                    style={{
+                      backgroundColor: 'var(--color-gold)',
+                      color: '#FFFFFF',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      padding: '4px 10px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Auto-fill {simulatedCode}
+                  </button>
+                </div>
+              )}
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)', marginBottom: '8px' }}>
                   Enter 6-Digit OTP Code
