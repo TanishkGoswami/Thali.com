@@ -5,7 +5,33 @@ import type { Profile } from '../types';
 /**
  * In-memory map for OTP verification and profile linkage
  */
-const pendingOtpMap = new Map<string, { code: string; fullName?: string; expiresAt: number }>();
+const pendingOtpMap = new Map<string, { code: string; fullName?: string; email?: string; expiresAt: number }>();
+
+const SESSION_STORAGE_KEY = 'thali_session_user_id';
+
+export function saveLocalSession(userId: string) {
+  try {
+    localStorage.setItem(SESSION_STORAGE_KEY, userId);
+  } catch (e) {
+    console.warn('LocalStorage access note:', e);
+  }
+}
+
+export function getLocalSessionId(): string | null {
+  try {
+    return localStorage.getItem(SESSION_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function clearLocalSession() {
+  try {
+    localStorage.removeItem(SESSION_STORAGE_KEY);
+  } catch (e) {
+    console.warn('LocalStorage clear note:', e);
+  }
+}
 
 /**
  * Normalizes an Indian phone number to E.164 format (+91XXXXXXXXXX)
@@ -34,20 +60,19 @@ export interface SendOtpResult {
 /**
  * Sends real OTP via Fast2SMS Indian SMS gateway.
  * Generates an auditable 6-digit verification code.
- * If Fast2SMS API requires ₹100 activation credit, it cleanly notifies the user
- * and provides the generated code so onboarding is never blocked.
  */
-export async function sendPhoneOtp(rawPhone: string, fullName?: string): Promise<SendOtpResult> {
+export async function sendPhoneOtp(rawPhone: string, fullName?: string, email?: string): Promise<SendOtpResult> {
   const phone = formatIndianPhoneNumber(rawPhone);
   const clean10 = phone.replace(/\D/g, '').slice(-10);
 
   // Generate unique 6-digit OTP
   const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-  // Store in pending map
+  // Store in pending map with optional email
   pendingOtpMap.set(phone, {
     code: otpCode,
     fullName,
+    email,
     expiresAt: Date.now() + 10 * 60 * 1000
   });
 
@@ -62,12 +87,12 @@ export async function sendPhoneOtp(rawPhone: string, fullName?: string): Promise
     };
   }
 
-  // If Fast2SMS needs ₹100 wallet activation credit
+  // Fallback if SMS gateway is in transition
   return {
     phone,
     isSimulated: true,
     devCode: otpCode,
-    message: smsResult.message || 'Fast2SMS pending ₹100 activation credit. Code displayed below for instant testing.'
+    message: smsResult.message || 'Fast2SMS code displayed for testing.'
   };
 }
 
@@ -77,7 +102,8 @@ export async function sendPhoneOtp(rawPhone: string, fullName?: string): Promise
 export async function verifyPhoneOtp(
   rawPhone: string,
   token: string,
-  fullName?: string
+  fullName?: string,
+  email?: string
 ): Promise<{ profile: Profile; session: any; isSimulated?: boolean }> {
   const phone = formatIndianPhoneNumber(rawPhone);
   const pending = pendingOtpMap.get(phone);
@@ -87,24 +113,31 @@ export async function verifyPhoneOtp(
   }
 
   if (token.trim() !== pending.code) {
-    throw new Error(`Invalid verification code. Please enter the 6-digit code (${pending.code}).`);
+    throw new Error(`Invalid verification code. Please enter the 6-digit code received.`);
   }
 
   // OTP verified! Remove pending entry
   pendingOtpMap.delete(phone);
 
   // Save / Sync profile into Supabase profiles table
-  const profile = await syncProfileForUser(null, phone, fullName || pending.fullName);
+  const profile = await syncProfileForUser(null, phone, fullName || pending.fullName, email || pending.email);
+  saveLocalSession(profile.id);
   return { profile, session: null, isSimulated: false };
 }
 
 /**
  * Syncs an authenticated user with a profile record in `profiles`.
- * If member already exists by phone, links their record.
+ * If member already exists by phone, links their record and updates details.
  * If new user, creates a new profile strictly with role = 'member'.
  */
-export async function syncProfileForUser(authUserId: string | null, phone: string, fullName?: string): Promise<Profile> {
+export async function syncProfileForUser(
+  authUserId: string | null,
+  phone: string,
+  fullName?: string,
+  email?: string
+): Promise<Profile> {
   const cleanPhone = phone.replace('+91', '').trim();
+  const cleanEmail = email?.trim() || null;
 
   // 1. Try finding by auth_user_id first if provided
   if (authUserId) {
@@ -132,6 +165,9 @@ export async function syncProfileForUser(authUserId: string | null, phone: strin
     if (fullName && (!byPhone.full_name || byPhone.full_name.startsWith('Member '))) {
       updatePayload.full_name = fullName.trim();
     }
+    if (cleanEmail && !byPhone.email) {
+      updatePayload.email = cleanEmail;
+    }
 
     const { data: updated } = await supabase
       .from('profiles')
@@ -143,8 +179,7 @@ export async function syncProfileForUser(authUserId: string | null, phone: strin
     return (updated || byPhone) as Profile;
   }
 
-  // 3. New walk-in / member: create new profile strictly with role = 'member'
-  // Fetch existing count to generate sequence number
+  // 3. New member: create new profile strictly with role = 'member'
   const { count } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
   const nextSeq = (count || 0) + 101;
   const memberNumber = `M-${nextSeq}`;
@@ -154,6 +189,7 @@ export async function syncProfileForUser(authUserId: string | null, phone: strin
     member_number: memberNumber,
     full_name: fullName?.trim() || `Member ${cleanPhone.slice(-4)}`,
     phone: cleanPhone,
+    email: cleanEmail,
     role: 'member', // Strict RBAC: All new self-registered users are members!
     status: 'active',
     qr_token: qrToken
@@ -197,9 +233,10 @@ export async function syncProfileForUser(authUserId: string | null, phone: strin
 }
 
 /**
- * Signs out current Supabase user
+ * Signs out current Supabase user and clears local session
  */
 export async function signOutUser() {
+  clearLocalSession();
   await supabase.auth.signOut();
 }
 

@@ -5,10 +5,10 @@ import { ReceptionistView } from './components/ReceptionistView';
 import { AdminView } from './components/AdminView';
 import { LoginModal } from './components/LoginModal';
 import { api } from './services/api';
-import { signOutUser } from './lib/auth';
+import { signOutUser, getLocalSessionId } from './lib/auth';
 import { supabase } from './lib/supabase';
 import type { Role, Profile, DailyMenu, MealTransaction } from './types';
-import { Loader2, ShieldAlert } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 export function App() {
   const [currentUser, setCurrentUser] = useState<(Profile & { remaining_meals?: number; subscription_status?: string; expires_at?: string }) | null>(null);
@@ -32,19 +32,20 @@ export function App() {
       setMenus(menusData);
       setRecentTransactions(txsData);
 
-      // If no currentUser yet, initialize with default Aarav Mehta M-101 or first member
-      setCurrentUser((prev) => {
-        if (prev) {
-          // Refresh current user's profile with latest subscription data
-          const updated = membersData.find(m => m.id === prev.id || m.member_number === prev.member_number);
-          return updated || prev;
+      // Authenticated session check: Only restore if a real user logged in previously
+      const savedUserId = getLocalSessionId();
+      if (savedUserId) {
+        const matchingUser = membersData.find(m => m.id === savedUserId);
+        if (matchingUser) {
+          setCurrentUser(matchingUser);
+          setCurrentRole(matchingUser.role);
+        } else {
+          setCurrentUser(null);
         }
-        const defaultUser = membersData.find(m => m.member_number === 'M-101') || membersData[0] || null;
-        if (defaultUser) {
-          setCurrentRole(defaultUser.role);
-        }
-        return defaultUser;
-      });
+      } else {
+        // If no user has logged in, remain strictly logged out!
+        setCurrentUser(null);
+      }
     } catch (err) {
       console.error('Error loading data:', err);
     } finally {
@@ -95,6 +96,7 @@ export function App() {
     setCurrentUser(enriched);
     setCurrentRole(profile.role);
     setIsLoginModalOpen(false);
+    loadData();
   };
 
   // Handle Logout
@@ -105,53 +107,23 @@ export function App() {
       console.warn('Sign out note:', err);
     }
     setCurrentUser(null);
-    setIsLoginModalOpen(true);
+    setIsLoginModalOpen(false);
   };
 
   // Strict Role-Based View Guard
   const renderRoleGuardedContent = () => {
+    // When not logged in, show ONLY the dedicated full-screen Login / Sign-in page!
     if (!currentUser) {
       return (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '50vh',
-          padding: '32px 16px',
-          textAlign: 'center'
-        }}>
-          <div style={{
-            width: '64px',
-            height: '64px',
-            borderRadius: 'var(--radius-full)',
-            backgroundColor: 'var(--color-surface)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: '16px',
-            color: 'var(--color-stone)'
-          }}>
-            <ShieldAlert size={32} />
-          </div>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '28px', color: 'var(--color-ink)', marginBottom: '8px' }}>
-            Sign In to Thali.com
-          </h2>
-          <p style={{ maxWidth: '440px', fontSize: '15px', color: 'var(--color-ash)', marginBottom: '24px' }}>
-            Please authenticate using your verified mobile number to view your active meal pass or access staff tools.
-          </p>
-          <button
-            onClick={() => setIsLoginModalOpen(true)}
-            className="btn btn-primary"
-            style={{ padding: '12px 28px', fontSize: '15px', borderRadius: 'var(--radius-full)' }}
-          >
-            Sign In with Phone OTP
-          </button>
-        </div>
+        <LoginModal
+          isOpen={true}
+          embedded={true}
+          onLoginSuccess={handleLoginSuccess}
+          allowClose={false}
+        />
       );
     }
 
-    // Strict Enforcement:
     // 1. Regular members can ONLY see MemberView. Admin and Receptionist views are blocked!
     if (currentUser.role === 'member') {
       return (
@@ -243,13 +215,15 @@ export function App() {
         )}
       </main>
 
-      {/* Login Modal for Phone Number OTP and Test Accounts */}
-      <LoginModal
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-        onLoginSuccess={handleLoginSuccess}
-        allowClose={currentUser !== null}
-      />
+      {/* Floating Login Modal (for switching or staff login while already logged in) */}
+      {isLoginModalOpen && (
+        <LoginModal
+          isOpen={isLoginModalOpen}
+          onClose={() => setIsLoginModalOpen(false)}
+          onLoginSuccess={handleLoginSuccess}
+          allowClose={currentUser !== null}
+        />
+      )}
 
       {/* Footer styled with Oura's Ink Band Soft */}
       <footer style={{
