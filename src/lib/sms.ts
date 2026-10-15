@@ -28,8 +28,9 @@ export async function sendFast2SmsOtp(phone10Digit: string, otpCode: string): Pr
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        route: 'otp',
-        variables_values: otpCode,
+        route: 'q',
+        message: `Your Thali.com verification OTP code is ${otpCode}. Valid for 10 minutes.`,
+        language: 'english',
         numbers: cleanPhone
       })
     });
@@ -39,24 +40,7 @@ export async function sendFast2SmsOtp(phone10Digit: string, otpCode: string): Pr
     if (data.return === true || data.status_code === 200) {
       return {
         success: true,
-        message: 'OTP SMS sent successfully to your mobile number via Fast2SMS!'
-      };
-    }
-
-    // Handle Fast2SMS new account requirement: ₹100 activation recharge
-    if (data.status_code === 999) {
-      return {
-        success: false,
-        message: 'Fast2SMS requirement: Please add ₹100 credit on Fast2SMS dashboard to activate API.',
-        isSimulated: true
-      };
-    }
-
-    if (data.status_code === 996) {
-      return {
-        success: false,
-        message: data.message || 'OTP route requires verification on Fast2SMS.',
-        isSimulated: true
+        message: 'Real OTP SMS sent successfully to your mobile number via Fast2SMS!'
       };
     }
 
