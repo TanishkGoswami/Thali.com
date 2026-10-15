@@ -257,15 +257,12 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
                           <div style={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '4px',
+                            gap: '5px',
                             fontWeight: 600,
                             fontSize: '12px',
                             color: isSelected ? 'var(--color-primary)' : 'var(--color-ink)'
                           }}>
-                            <Utensils size={12} /> {plan.hindiName}
-                          </div>
-                          <div style={{ fontSize: '11px', fontWeight: 500, color: isSelected ? 'var(--color-ink)' : 'var(--color-ink-secondary)', marginTop: '2px' }}>
-                            {plan.name}
+                            <Utensils size={12} /> {plan.name}
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '10px', color: 'var(--color-ink-mute)', marginTop: '4px' }}>
                             <Clock size={10} />

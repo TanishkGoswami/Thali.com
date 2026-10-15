@@ -264,10 +264,10 @@ export const MemberEditModal: React.FC<MemberEditModalProps> = ({
                       fontSize: '11px',
                       color: isSelected ? 'var(--color-primary)' : 'var(--color-ink)'
                     }}>
-                      {plan.hindiName}
+                      {plan.name}
                     </div>
                     <div style={{ fontSize: '10px', color: 'var(--color-ink-mute)', marginTop: '2px' }}>
-                      {plan.shortLabel}
+                      {plan.timeSlotsText}
                     </div>
                   </button>
                 );

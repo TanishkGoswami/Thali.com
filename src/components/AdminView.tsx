@@ -761,7 +761,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
                         ...MEAL_PLAN_CONFIG[m.meal_plan_type].badgeStyle
                       }}
                     >
-                      🍱 {MEAL_PLAN_CONFIG[m.meal_plan_type].name} ({MEAL_PLAN_CONFIG[m.meal_plan_type].shortLabel})
+                      🍱 {MEAL_PLAN_CONFIG[m.meal_plan_type].name}
                     </span>
                   </div>
                 )}
@@ -907,7 +907,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
                           ...MEAL_PLAN_CONFIG[m.meal_plan_type].badgeStyle
                         }}
                       >
-                        🍱 Plan: {MEAL_PLAN_CONFIG[m.meal_plan_type].name} ({MEAL_PLAN_CONFIG[m.meal_plan_type].shortLabel})
+                        🍱 Plan: {MEAL_PLAN_CONFIG[m.meal_plan_type].name}
                       </span>
                     </div>
                   )}

@@ -558,7 +558,7 @@ export const MemberView: React.FC<MemberViewProps> = ({
                   Thali<span style={{ color: '#60a5fa' }}>.com</span>
                 </div>
                 <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.65)', marginTop: '3px', fontWeight: 500 }}>
-                  {planConfig.name} ({planConfig.shortLabel})
+                  {planConfig.name} Pass
                 </div>
               </div>
             </div>

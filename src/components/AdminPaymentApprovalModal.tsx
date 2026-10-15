@@ -208,10 +208,7 @@ export const AdminPaymentApprovalModal: React.FC<AdminPaymentApprovalModalProps>
                       fontSize: '12px',
                       color: isSelected ? 'var(--color-primary)' : 'var(--color-ink)'
                     }}>
-                      <Utensils size={13} /> {plan.hindiName}
-                    </div>
-                    <div style={{ fontSize: '11px', fontWeight: 500, color: isSelected ? 'var(--color-ink)' : 'var(--color-ink-secondary)', marginTop: '2px' }}>
-                      {plan.name}
+                      <Utensils size={13} /> {plan.name}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '10px', color: 'var(--color-ink-mute)', marginTop: '4px' }}>
                       <Clock size={10} />
