@@ -640,22 +640,17 @@ export const MemberView: React.FC<MemberViewProps> = ({
                 type="button"
                 onClick={() => setShowPersonalQr(!showPersonalQr)}
                 style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  background: showPersonalQr ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.08)',
-                  border: '1px solid rgba(255, 255, 255, 0.16)',
-                  borderRadius: '7px',
-                  padding: '4px 10px',
-                  color: '#ffffff',
-                  fontSize: '11px',
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  color: 'rgba(255, 255, 255, 0.85)',
+                  fontSize: '11.5px',
                   fontWeight: 500,
                   cursor: 'pointer',
-                  transition: 'all 0.15s ease'
+                  transition: 'color 0.15s ease'
                 }}
               >
-                <QrCode size={12} style={{ color: '#93c5fd' }} />
-                <span>{showPersonalQr ? 'Hide Personal QR' : 'Show Personal QR'}</span>
+                {showPersonalQr ? 'Hide Personal QR' : 'Show Personal QR'}
               </button>
             </div>
           </div>
