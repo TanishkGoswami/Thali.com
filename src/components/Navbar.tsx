@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Utensils, QrCode, Shield, User, LogOut, LogIn } from 'lucide-react';
+import React from 'react';
+import { Utensils, QrCode, Shield, User, LogIn } from 'lucide-react';
 import type { Role, Profile } from '../types';
 
 interface NavbarProps {
@@ -9,7 +9,8 @@ interface NavbarProps {
   activeMealPeriod?: 'lunch' | 'dinner';
   onMealPeriodChange?: (period: 'lunch' | 'dinner') => void;
   onOpenLogin: () => void;
-  onLogout: () => void;
+  onOpenProfile?: () => void;
+  onLogout?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -17,9 +18,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentRole,
   onRoleChange,
   onOpenLogin,
-  onLogout
+  onOpenProfile
 }) => {
-  const [logoutHovered, setLogoutHovered] = useState(false);
 
   // Derive user initials for clean avatar circle
   const initials = currentUser?.full_name
@@ -147,30 +147,45 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Right Section: Clean User Profile Capsule & Logout */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
             {currentUser ? (
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '2px 4px 2px 6px',
-                borderRadius: 'var(--radius-pill)',
-                backgroundColor: '#ffffff',
-                border: '1px solid var(--color-hairline)',
-                boxShadow: 'var(--shadow-level-1)',
-                flexShrink: 0
-              }}>
+              <button
+                type="button"
+                onClick={onOpenProfile}
+                title="View & Edit Profile"
+                className="btn-pill"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '3px 10px 3px 4px',
+                  borderRadius: 'var(--radius-pill)',
+                  backgroundColor: '#ffffff',
+                  border: '1px solid var(--color-hairline)',
+                  boxShadow: 'var(--shadow-level-1)',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  transition: 'all var(--transition-fast)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--color-primary-border)';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-level-2)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--color-hairline)';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-level-1)';
+                }}
+              >
                 {/* User Avatar Initials */}
                 <div style={{
                   width: '26px',
                   height: '26px',
                   borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #f0effe 0%, #e0e7ff 100%)',
-                  color: 'var(--color-primary)',
+                  background: 'linear-gradient(135deg, #533afd 0%, #4434d4 100%)',
+                  color: '#ffffff',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '10px',
                   fontWeight: 600,
-                  border: '1px solid #dcd8fe',
                   flexShrink: 0
                 }}>
                   {initials}
@@ -204,36 +219,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     )}
                   </div>
                 </div>
-
-                {/* Hairline Divider */}
-                <div style={{ width: '1px', height: '16px', backgroundColor: 'var(--color-hairline)', margin: '0 2px' }} />
-
-                {/* Sleek Logout Button */}
-                <button
-                  type="button"
-                  onClick={onLogout}
-                  title="Sign out"
-                  onMouseEnter={() => setLogoutHovered(true)}
-                  onMouseLeave={() => setLogoutHovered(false)}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    padding: '3px 7px',
-                    borderRadius: 'var(--radius-pill)',
-                    backgroundColor: logoutHovered ? 'var(--color-error-bg)' : 'transparent',
-                    color: logoutHovered ? 'var(--color-error)' : 'var(--color-ink-mute)',
-                    border: logoutHovered ? '1px solid var(--color-error-border)' : '1px solid transparent',
-                    cursor: 'pointer',
-                    fontSize: '11px',
-                    fontWeight: 500,
-                    transition: 'all var(--transition-fast)'
-                  }}
-                >
-                  <LogOut size={12} />
-                  <span>Logout</span>
-                </button>
-              </div>
+              </button>
             ) : (
               <button
                 type="button"

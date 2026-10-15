@@ -4,6 +4,7 @@ import { MemberView } from './components/MemberView';
 import { ReceptionistView } from './components/ReceptionistView';
 import { AdminView } from './components/AdminView';
 import { LoginModal } from './components/LoginModal';
+import { ProfileModal } from './components/ProfileModal';
 import { api } from './services/api';
 import { signOutUser, getLocalSessionId } from './lib/auth';
 import { supabase } from './lib/supabase';
@@ -14,6 +15,7 @@ export function App() {
   const [currentUser, setCurrentUser] = useState<(Profile & { remaining_meals?: number; subscription_status?: string; expires_at?: string }) | null>(null);
   const [currentRole, setCurrentRole] = useState<Role>('member');
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [activeMealPeriod, setActiveMealPeriod] = useState<'lunch' | 'dinner'>('lunch');
   const [members, setMembers] = useState<(Profile & { remaining_meals?: number; subscription_status?: string; expires_at?: string })[]>([]);
   const [menus, setMenus] = useState<DailyMenu[]>([]);
@@ -131,6 +133,7 @@ export function App() {
           menus={menus}
           activeMealPeriod={activeMealPeriod}
           onRefresh={loadData}
+          onOpenProfile={() => setIsProfileModalOpen(true)}
         />
       );
     }
@@ -166,6 +169,7 @@ export function App() {
             menus={menus}
             activeMealPeriod={activeMealPeriod}
             onRefresh={loadData}
+            onOpenProfile={() => setIsProfileModalOpen(true)}
             onSwitchToAdmin={() => setCurrentRole('owner_admin')}
           />
         );
@@ -187,6 +191,7 @@ export function App() {
         menus={menus}
         activeMealPeriod={activeMealPeriod}
         onRefresh={loadData}
+        onOpenProfile={() => setIsProfileModalOpen(true)}
       />
     );
   };
@@ -209,6 +214,7 @@ export function App() {
         currentRole={currentRole}
         onRoleChange={setCurrentRole}
         onOpenLogin={() => setIsLoginModalOpen(true)}
+        onOpenProfile={() => setIsProfileModalOpen(true)}
         onLogout={handleLogout}
       />
 
@@ -223,6 +229,22 @@ export function App() {
           renderRoleGuardedContent()
         )}
       </main>
+
+      {/* Member Profile Modal */}
+      {isProfileModalOpen && currentUser && (
+        <ProfileModal
+          isOpen={isProfileModalOpen}
+          onClose={() => setIsProfileModalOpen(false)}
+          currentUser={currentUser}
+          onLogout={handleLogout}
+          onUpdateSuccess={(updatedData) => {
+            if (updatedData) {
+              setCurrentUser(prev => prev ? ({ ...prev, ...updatedData }) : null);
+            }
+            loadData();
+          }}
+        />
+      )}
 
       {/* Floating Login Modal (for switching or staff login while already logged in) */}
       {isLoginModalOpen && (

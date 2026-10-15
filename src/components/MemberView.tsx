@@ -13,7 +13,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Printer,
-  QrCode
+  QrCode,
+  User
 } from 'lucide-react';
 import type { Profile, DailyMenu, MealTransaction, CheckInResult } from '../types';
 import { api, COUNTER_STANDEE_QR } from '../services/api';
@@ -27,6 +28,7 @@ interface MemberViewProps {
   menus: DailyMenu[];
   activeMealPeriod: 'lunch' | 'dinner';
   onRefresh: () => void;
+  onOpenProfile?: () => void;
   onSwitchToAdmin?: () => void;
 }
 
@@ -35,6 +37,7 @@ export const MemberView: React.FC<MemberViewProps> = ({
   menus,
   activeMealPeriod,
   onRefresh,
+  onOpenProfile,
   onSwitchToAdmin
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -241,6 +244,16 @@ export const MemberView: React.FC<MemberViewProps> = ({
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          {onOpenProfile && (
+            <button
+              type="button"
+              onClick={onOpenProfile}
+              className="btn btn-secondary btn-pill"
+              title="View & Edit Account Profile"
+            >
+              <User size={13} /> Profile
+            </button>
+          )}
           <button
             type="button"
             onClick={loadMemberHistory}

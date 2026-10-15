@@ -215,7 +215,7 @@ export const api = {
   // Update member profile
   async updateMemberProfile(
     memberId: string,
-    updates: { full_name?: string; phone?: string; status?: 'active' | 'inactive' | 'archived' }
+    updates: { full_name?: string; phone?: string; email?: string; pin_code?: string; status?: 'active' | 'inactive' | 'archived' }
   ): Promise<boolean> {
     const { error } = await supabase
       .from('profiles')
