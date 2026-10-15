@@ -300,88 +300,102 @@ export const AdminView: React.FC<AdminViewProps> = ({
         </div>
       </div>
 
-      {/* Navigation Tabs (Smooth horizontal scrolling on mobile) */}
-      <div className="scroll-pills-x" style={{
-        alignItems: 'center',
-        gap: '4px',
-        backgroundColor: 'var(--color-canvas-soft)',
-        padding: '3px',
-        borderRadius: 'var(--radius-pill)',
-        border: '1px solid var(--color-hairline)',
-        width: 'fit-content',
-        maxWidth: '100%'
+      {/* Navigation Tabs (App-Style Smooth Momentum Horizontal Scroll Bar) */}
+      <div style={{
+        width: '100%',
+        overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch',
+        scrollbarWidth: 'none',
+        paddingBottom: '4px'
       }}>
-        <button
-          type="button"
-          onClick={() => setActiveTab('members')}
-          className="btn btn-pill"
-          style={{
-            backgroundColor: activeTab === 'members' ? '#ffffff' : 'transparent',
-            color: activeTab === 'members' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
-            boxShadow: activeTab === 'members' ? 'var(--shadow-level-1)' : 'none',
-            fontSize: '12px',
-            fontWeight: activeTab === 'members' ? 500 : 400
-          }}
-        >
-          <Users size={13} /> Directory ({members.length})
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('headcount')}
-          className="btn btn-pill"
-          style={{
-            backgroundColor: activeTab === 'headcount' ? '#ffffff' : 'transparent',
-            color: activeTab === 'headcount' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
-            boxShadow: activeTab === 'headcount' ? 'var(--shadow-level-1)' : 'none',
-            fontSize: '12px',
-            fontWeight: activeTab === 'headcount' ? 500 : 400
-          }}
-        >
-          <ChefHat size={13} /> Kitchen Headcount
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('payments')}
-          className="btn btn-pill"
-          style={{
-            backgroundColor: activeTab === 'payments' ? '#ffffff' : 'transparent',
-            color: activeTab === 'payments' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
-            boxShadow: activeTab === 'payments' ? 'var(--shadow-level-1)' : 'none',
-            fontSize: '12px',
-            fontWeight: activeTab === 'payments' ? 500 : 400
-          }}
-        >
-          <CreditCard size={13} /> Approvals ({pendingCount})
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('menu')}
-          className="btn btn-pill"
-          style={{
-            backgroundColor: activeTab === 'menu' ? '#ffffff' : 'transparent',
-            color: activeTab === 'menu' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
-            boxShadow: activeTab === 'menu' ? 'var(--shadow-level-1)' : 'none',
-            fontSize: '12px',
-            fontWeight: activeTab === 'menu' ? 500 : 400
-          }}
-        >
-          <Utensils size={13} /> Menus
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('import')}
-          className="btn btn-pill"
-          style={{
-            backgroundColor: activeTab === 'import' ? '#ffffff' : 'transparent',
-            color: activeTab === 'import' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
-            boxShadow: activeTab === 'import' ? 'var(--shadow-level-1)' : 'none',
-            fontSize: '12px',
-            fontWeight: activeTab === 'import' ? 500 : 400
-          }}
-        >
-          <FileSpreadsheet size={13} /> CSV Import
-        </button>
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '4px',
+          backgroundColor: 'var(--color-canvas-soft)',
+          padding: '4px',
+          borderRadius: 'var(--radius-pill)',
+          border: '1px solid var(--color-hairline)',
+          minWidth: 'max-content'
+        }}>
+          <button
+            type="button"
+            onClick={() => setActiveTab('members')}
+            className="btn btn-pill"
+            style={{
+              backgroundColor: activeTab === 'members' ? '#ffffff' : 'transparent',
+              color: activeTab === 'members' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+              boxShadow: activeTab === 'members' ? 'var(--shadow-level-1)' : 'none',
+              fontSize: '12px',
+              fontWeight: activeTab === 'members' ? 600 : 400,
+              padding: '6px 14px'
+            }}
+          >
+            <Users size={13} /> Directory ({members.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('headcount')}
+            className="btn btn-pill"
+            style={{
+              backgroundColor: activeTab === 'headcount' ? '#ffffff' : 'transparent',
+              color: activeTab === 'headcount' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+              boxShadow: activeTab === 'headcount' ? 'var(--shadow-level-1)' : 'none',
+              fontSize: '12px',
+              fontWeight: activeTab === 'headcount' ? 600 : 400,
+              padding: '6px 14px'
+            }}
+          >
+            <ChefHat size={13} /> Kitchen Headcount
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('payments')}
+            className="btn btn-pill"
+            style={{
+              backgroundColor: activeTab === 'payments' ? '#ffffff' : 'transparent',
+              color: activeTab === 'payments' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+              boxShadow: activeTab === 'payments' ? 'var(--shadow-level-1)' : 'none',
+              fontSize: '12px',
+              fontWeight: activeTab === 'payments' ? 600 : 400,
+              padding: '6px 14px'
+            }}
+          >
+            <CreditCard size={13} /> Approvals ({pendingCount})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('menu')}
+            className="btn btn-pill"
+            style={{
+              backgroundColor: activeTab === 'menu' ? '#ffffff' : 'transparent',
+              color: activeTab === 'menu' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+              boxShadow: activeTab === 'menu' ? 'var(--shadow-level-1)' : 'none',
+              fontSize: '12px',
+              fontWeight: activeTab === 'menu' ? 600 : 400,
+              padding: '6px 14px'
+            }}
+          >
+            <Utensils size={13} /> Menus
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('import')}
+            className="btn btn-pill"
+            style={{
+              backgroundColor: activeTab === 'import' ? '#ffffff' : 'transparent',
+              color: activeTab === 'import' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+              boxShadow: activeTab === 'import' ? 'var(--shadow-level-1)' : 'none',
+              fontSize: '12px',
+              fontWeight: activeTab === 'import' ? 600 : 400,
+              padding: '6px 14px'
+            }}
+          >
+            <FileSpreadsheet size={13} /> CSV Import
+          </button>
+        </div>
       </div>
+
 
       {/* Tab: Kitchen Headcount */}
       {activeTab === 'headcount' && (

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { ChefHat, RefreshCw, Users, UserX, CheckCircle2, Clock, Check } from 'lucide-react';
-
 import type { DailyHeadcount, MealPeriod, MealSkip } from '../types';
 import { MEAL_CUTOFF_CONFIG, isMealCutoffPassed, getLocalDateString } from '../types';
 import { api } from '../services/api';
@@ -49,30 +48,28 @@ export const KitchenHeadcountCard: React.FC = () => {
     loadHeadcount();
   }, [dateOffset]);
 
-  const periods: { period: MealPeriod; title: string; icon: string; accentColor: string }[] = [
-    { period: 'breakfast', title: 'Breakfast', icon: '🌅', accentColor: '#059669' },
-    { period: 'lunch', title: 'Lunch', icon: '☀️', accentColor: '#2563eb' },
-    { period: 'dinner', title: 'Dinner', icon: '🌙', accentColor: '#7c3aed' }
+  const periods: { period: MealPeriod; title: string; icon: string; accentColor: string; bgAccent: string }[] = [
+    { period: 'breakfast', title: 'Breakfast', icon: '🌅', accentColor: '#059669', bgAccent: '#ecfdf5' },
+    { period: 'lunch', title: 'Lunch', icon: '☀️', accentColor: '#2563eb', bgAccent: '#eff6ff' },
+    { period: 'dinner', title: 'Dinner', icon: '🌙', accentColor: '#7c3aed', bgAccent: '#f5f3ff' }
   ];
 
   return (
-    <div className="card" style={{ padding: '20px', backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)' }}>
-      {/* Card Header with Headcount Summary & Day Switcher */}
+    <div className="card" style={{ padding: '16px 14px', backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)' }}>
+      {/* App-Style Header: Title on Left, Refresh on Right in ONE Compact Row */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '12px',
-        marginBottom: '16px',
-        borderBottom: '1px solid var(--color-hairline)',
-        paddingBottom: '14px'
+        gap: '8px',
+        paddingBottom: '12px',
+        borderBottom: '1px solid var(--color-hairline)'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
           <div style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '12px',
+            width: '36px',
+            height: '36px',
+            borderRadius: '10px',
             backgroundColor: 'var(--color-primary-bg)',
             color: 'var(--color-primary)',
             display: 'flex',
@@ -80,101 +77,135 @@ export const KitchenHeadcountCard: React.FC = () => {
             justifyContent: 'center',
             flexShrink: 0
           }}>
-            <ChefHat size={22} />
+            <ChefHat size={20} />
           </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span className="eyebrow" style={{ color: 'var(--color-primary)' }}>Kitchen Intelligence</span>
-              {refreshSuccess && (
-                <span className="badge badge-active" style={{ fontSize: '10px', padding: '1px 6px' }}>
-                  <Check size={10} /> Live Data Synced
-                </span>
-              )}
-            </div>
-            <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--color-ink)', marginTop: '2px' }}>
-              Kitchen Headcount & Food Planning
+          <div style={{ minWidth: 0 }}>
+            <span className="eyebrow" style={{ color: 'var(--color-primary)', fontSize: '10px', display: 'block', lineHeight: 1 }}>
+              Kitchen Intelligence
+            </span>
+            <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-ink)', marginTop: '2px', lineHeight: 1.2 }}>
+              Kitchen Headcount
             </h3>
-            <p style={{ fontSize: '12px', color: 'var(--color-ink-mute)', marginTop: '2px' }}>
-              Showing preparation for: <strong style={{ color: 'var(--color-ink)' }}>{dateOffset === 0 ? `Today (${todayFormatted})` : `Tomorrow (${tomorrowFormatted})`}</strong>
-            </p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          {/* Day Switcher */}
-          <div style={{
-            display: 'inline-flex',
-            backgroundColor: 'var(--color-canvas-soft)',
-            padding: '3px',
-            borderRadius: 'var(--radius-pill)',
-            border: '1px solid var(--color-hairline)',
-            gap: '3px'
-          }}>
-            <button
-              type="button"
-              onClick={() => setDateOffset(0)}
-              className="btn btn-pill"
-              style={{
-                backgroundColor: dateOffset === 0 ? '#ffffff' : 'transparent',
-                color: dateOffset === 0 ? 'var(--color-ink)' : 'var(--color-ink-mute)',
-                boxShadow: dateOffset === 0 ? 'var(--shadow-level-1)' : 'none',
-                fontSize: '12px',
-                fontWeight: dateOffset === 0 ? 600 : 400,
-                padding: '5px 14px'
-              }}
-            >
-              📅 Today ({todayFormatted})
-            </button>
-            <button
-              type="button"
-              onClick={() => setDateOffset(1)}
-              className="btn btn-pill"
-              style={{
-                backgroundColor: dateOffset === 1 ? '#ffffff' : 'transparent',
-                color: dateOffset === 1 ? 'var(--color-ink)' : 'var(--color-ink-mute)',
-                boxShadow: dateOffset === 1 ? 'var(--shadow-level-1)' : 'none',
-                fontSize: '12px',
-                fontWeight: dateOffset === 1 ? 600 : 400,
-                padding: '5px 14px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-            >
-              <span>📅 Tomorrow ({tomorrowFormatted})</span>
-              {tomorrowSkipsCount > 0 && (
-                <span style={{
-                  backgroundColor: '#fef3c7',
-                  color: '#b45309',
-                  border: '1px solid #fde68a',
-                  borderRadius: 'var(--radius-pill)',
-                  padding: '1px 6px',
-                  fontSize: '10px',
-                  fontWeight: 700
-                }}>
-                  {tomorrowSkipsCount} Skips
-                </span>
-              )}
-            </button>
-          </div>
-
-          <button
-            type="button"
-            disabled={loading}
-            onClick={loadHeadcount}
-            className="btn btn-secondary btn-pill"
-            style={{ fontSize: '12px', padding: '6px 12px', gap: '5px' }}
-            title="Refresh headcount data"
-          >
-            <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
-            {loading ? 'Refreshing...' : 'Refresh'}
-          </button>
-        </div>
+        {/* Top-Right Compact Refresh Button */}
+        <button
+          type="button"
+          disabled={loading}
+          onClick={loadHeadcount}
+          className="btn btn-secondary btn-pill"
+          style={{
+            fontSize: '11px',
+            padding: '5px 10px',
+            gap: '4px',
+            flexShrink: 0,
+            backgroundColor: refreshSuccess ? 'var(--color-success-bg)' : '#ffffff',
+            borderColor: refreshSuccess ? 'var(--color-success-border)' : 'var(--color-hairline)',
+            color: refreshSuccess ? 'var(--color-success)' : 'var(--color-ink)'
+          }}
+          title="Refresh headcount data"
+        >
+          {refreshSuccess ? <Check size={12} /> : <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />}
+          <span>{loading ? '...' : refreshSuccess ? 'Synced' : 'Refresh'}</span>
+        </button>
       </div>
 
-      {/* 3 Sessions Cards Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
-        {periods.map(({ period, title, icon, accentColor }) => {
+      {/* 100% Full-Width Segmented Day Switcher (Mobile Native App Style: Zero Overflow) */}
+      <div style={{
+        marginTop: '12px',
+        marginBottom: '14px',
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: '4px',
+        backgroundColor: 'var(--color-canvas-soft)',
+        padding: '3px',
+        borderRadius: 'var(--radius-pill)',
+        border: '1px solid var(--color-hairline)'
+      }}>
+        {/* Today Tab */}
+        <button
+          type="button"
+          onClick={() => setDateOffset(0)}
+          className="btn btn-pill"
+          style={{
+            width: '100%',
+            backgroundColor: dateOffset === 0 ? '#ffffff' : 'transparent',
+            color: dateOffset === 0 ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+            boxShadow: dateOffset === 0 ? 'var(--shadow-level-1)' : 'none',
+            fontSize: '12px',
+            fontWeight: dateOffset === 0 ? 600 : 500,
+            padding: '7px 8px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '1px',
+            lineHeight: 1.1
+          }}
+        >
+          <span>Today</span>
+          <span style={{ fontSize: '10px', opacity: dateOffset === 0 ? 0.8 : 0.6 }}>{todayFormatted}</span>
+        </button>
+
+        {/* Tomorrow Tab */}
+        <button
+          type="button"
+          onClick={() => setDateOffset(1)}
+          className="btn btn-pill"
+          style={{
+            width: '100%',
+            backgroundColor: dateOffset === 1 ? '#ffffff' : 'transparent',
+            color: dateOffset === 1 ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+            boxShadow: dateOffset === 1 ? 'var(--shadow-level-1)' : 'none',
+            fontSize: '12px',
+            fontWeight: dateOffset === 1 ? 600 : 500,
+            padding: '7px 8px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '1px',
+            lineHeight: 1.1
+          }}
+        >
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            <span>Tomorrow</span>
+            {tomorrowSkipsCount > 0 && (
+              <span style={{
+                backgroundColor: '#fef3c7',
+                color: '#b45309',
+                border: '1px solid #fde68a',
+                borderRadius: 'var(--radius-pill)',
+                padding: '0px 5px',
+                fontSize: '9px',
+                fontWeight: 700
+              }}>
+                {tomorrowSkipsCount} Skips
+              </span>
+            )}
+          </div>
+          <span style={{ fontSize: '10px', opacity: dateOffset === 1 ? 0.8 : 0.6 }}>{tomorrowFormatted}</span>
+        </button>
+      </div>
+
+      {/* Target Date Banner */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        fontSize: '11px',
+        color: 'var(--color-ink-mute)',
+        marginBottom: '12px',
+        padding: '0 2px'
+      }}>
+        <span>Target: <strong style={{ color: 'var(--color-ink)' }}>{dateOffset === 0 ? `Today (${todayFormatted})` : `Tomorrow (${tomorrowFormatted})`}</strong></span>
+        <span>{dateOffset === 0 ? 'Live service today' : 'Advance kitchen prep'}</span>
+      </div>
+
+      {/* 3 Meal Sessions: Compact, App-Style Stack on Mobile / Responsive Grid on Desktop */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {periods.map(({ period, title, icon, accentColor, bgAccent }) => {
           const stats = headcount ? headcount[period] : { enrolled: 0, skipped: 0, consumed: 0 };
           const expectedToCook = Math.max(0, (stats?.enrolled ?? 0) - (stats?.skipped ?? 0));
           const cutoff = MEAL_CUTOFF_CONFIG[period];
@@ -186,134 +217,127 @@ export const KitchenHeadcountCard: React.FC = () => {
               style={{
                 borderRadius: 'var(--radius-md)',
                 border: '1px solid var(--color-hairline)',
-                backgroundColor: 'var(--color-canvas-soft)',
-                padding: '16px',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
+                backgroundColor: '#ffffff',
+                padding: '12px 14px',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03)',
                 position: 'relative',
                 overflow: 'hidden'
               }}
             >
-              {/* Top Accent Strip */}
+              {/* Left Accent Color Indicator Bar */}
               <div style={{
                 position: 'absolute',
                 top: 0,
+                bottom: 0,
                 left: 0,
-                right: 0,
-                height: '3px',
+                width: '4px',
                 backgroundColor: accentColor
               }} />
 
-              <div>
-                {/* Session Title & Cutoff */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '20px' }}>{icon}</span>
-                    <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--color-ink)' }}>
-                      {title}
-                    </h4>
-                  </div>
-
-                  <span className="badge" style={{
-                    fontSize: '10px',
-                    backgroundColor: isPassed ? 'rgba(107, 114, 128, 0.1)' : 'rgba(5, 150, 105, 0.1)',
-                    color: isPassed ? '#6b7280' : '#059669',
-                    border: '1px solid currentColor'
-                  }}>
-                    {isPassed ? '● Slot Locked' : '● Cutoff Open'}
-                  </span>
+              {/* Session Top Row: Meal Title & Cutoff Badge */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '16px' }}>{icon}</span>
+                  <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-ink)' }}>
+                    {title}
+                  </h4>
                 </div>
 
-                {/* Big Metric: Expected Plates to Cook */}
-                <div style={{
-                  marginTop: '16px',
-                  padding: '14px',
-                  backgroundColor: '#ffffff',
-                  borderRadius: 'var(--radius-md)',
-                  border: '1px solid var(--color-hairline)',
-                  textAlign: 'center',
-                  boxShadow: 'var(--shadow-level-1)'
+                <span className="badge" style={{
+                  fontSize: '10px',
+                  padding: '2px 7px',
+                  backgroundColor: isPassed ? 'rgba(107, 114, 128, 0.08)' : 'rgba(5, 150, 105, 0.1)',
+                  color: isPassed ? '#6b7280' : '#059669',
+                  border: '1px solid currentColor'
                 }}>
-                  <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-ink-mute)', fontWeight: 600 }}>
-                    Expected Plates to Cook
+                  {isPassed ? '● Slot Locked' : '● Cutoff Open'}
+                </span>
+              </div>
+
+              {/* Main Metric Row: Plates to Cook on Left + 3 Micro-Metrics on Right */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                backgroundColor: bgAccent,
+                padding: '10px 12px',
+                borderRadius: 'var(--radius-sm)',
+                gap: '8px'
+              }}>
+                {/* Big Metric: Expected Plates to Cook */}
+                <div>
+                  <div style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-ink-mute)', fontWeight: 700 }}>
+                    PLATES TO COOK
                   </div>
                   <div className="tnum" style={{
-                    fontSize: '32px',
+                    fontSize: '28px',
                     fontWeight: 700,
                     color: accentColor,
-                    lineHeight: 1.2,
-                    marginTop: '4px'
+                    lineHeight: 1.1,
+                    marginTop: '2px'
                   }}>
                     {expectedToCook}
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--color-ink-secondary)', marginTop: '2px' }}>
-                    plates needed for {dateOffset === 0 ? 'today' : 'tomorrow'}
-                  </div>
                 </div>
 
-                {/* Granular Breakdown */}
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr 1fr',
-                  gap: '6px',
-                  marginTop: '12px'
-                }}>
+                {/* 3 Metric Pills */}
+                <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                   {/* Enrolled */}
                   <div style={{
-                    padding: '8px',
                     backgroundColor: '#ffffff',
-                    borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--color-hairline)',
-                    textAlign: 'center'
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '4px 8px',
+                    textAlign: 'center',
+                    minWidth: '52px'
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px', fontSize: '10px', color: 'var(--color-ink-mute)' }}>
-                      <Users size={10} /> Enrolled
+                    <div style={{ fontSize: '9px', color: 'var(--color-ink-mute)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
+                      <Users size={9} /> Total
                     </div>
-                    <div className="tnum" style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-ink)', marginTop: '2px' }}>
+                    <div className="tnum" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)' }}>
                       {stats?.enrolled ?? 0}
                     </div>
                   </div>
 
                   {/* Skipped */}
                   <div style={{
-                    padding: '8px',
-                    backgroundColor: stats?.skipped ? '#fffbeb' : '#ffffff',
+                    backgroundColor: (stats?.skipped ?? 0) > 0 ? '#fef3c7' : '#ffffff',
+                    border: `1px solid ${(stats?.skipped ?? 0) > 0 ? '#fde68a' : 'var(--color-hairline)'}`,
                     borderRadius: 'var(--radius-sm)',
-                    border: `1px solid ${stats?.skipped ? '#fde68a' : 'var(--color-hairline)'}`,
-                    textAlign: 'center'
+                    padding: '4px 8px',
+                    textAlign: 'center',
+                    minWidth: '52px'
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px', fontSize: '10px', color: stats?.skipped ? '#b45309' : 'var(--color-ink-mute)' }}>
-                      <UserX size={10} /> Skipped
+                    <div style={{ fontSize: '9px', color: (stats?.skipped ?? 0) > 0 ? '#b45309' : 'var(--color-ink-mute)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
+                      <UserX size={9} /> Skips
                     </div>
-                    <div className="tnum" style={{ fontSize: '14px', fontWeight: 600, color: stats?.skipped ? '#b45309' : 'var(--color-ink)', marginTop: '2px' }}>
+                    <div className="tnum" style={{ fontSize: '13px', fontWeight: 700, color: (stats?.skipped ?? 0) > 0 ? '#b45309' : 'var(--color-ink)' }}>
                       {stats?.skipped ?? 0}
                     </div>
                   </div>
 
                   {/* Eaten */}
                   <div style={{
-                    padding: '8px',
                     backgroundColor: '#ffffff',
-                    borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--color-hairline)',
-                    textAlign: 'center'
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '4px 8px',
+                    textAlign: 'center',
+                    minWidth: '52px'
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px', fontSize: '10px', color: 'var(--color-ink-mute)' }}>
-                      <CheckCircle2 size={10} /> Eaten
+                    <div style={{ fontSize: '9px', color: 'var(--color-ink-mute)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
+                      <CheckCircle2 size={9} /> Eaten
                     </div>
-                    <div className="tnum" style={{ fontSize: '14px', fontWeight: 600, color: '#059669', marginTop: '2px' }}>
+                    <div className="tnum" style={{ fontSize: '13px', fontWeight: 600, color: '#059669' }}>
                       {stats?.consumed ?? 0}
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Cut-off footer */}
+              {/* Cutoff Deadline Footer */}
               <div style={{
-                marginTop: '12px',
-                paddingTop: '8px',
-                borderTop: '1px solid var(--color-hairline)',
+                marginTop: '8px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
@@ -322,9 +346,10 @@ export const KitchenHeadcountCard: React.FC = () => {
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <Clock size={10} />
-                  <span>Cut-off Deadline:</span>
+                  <span>Cut-off:</span>
+                  <strong style={{ color: 'var(--color-ink)' }}>{cutoff.timeStr}</strong>
                 </div>
-                <strong style={{ color: 'var(--color-ink)' }}>{cutoff.timeStr}</strong>
+                <span>{dateOffset === 0 ? 'Today' : 'Tomorrow'}</span>
               </div>
             </div>
           );
@@ -333,30 +358,33 @@ export const KitchenHeadcountCard: React.FC = () => {
 
       {/* Detailed Member Skips Audit Table / List */}
       <div style={{
-        marginTop: '20px',
-        padding: '16px',
+        marginTop: '14px',
+        padding: '12px 14px',
         backgroundColor: 'var(--color-canvas-soft)',
         borderRadius: 'var(--radius-md)',
         border: '1px solid var(--color-hairline)'
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <UserX size={16} color="#b45309" />
-            <h4 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-ink)' }}>
-              Skipped Members List for {dateOffset === 0 ? `Today (${todayFormatted})` : `Tomorrow (${tomorrowFormatted})`}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <UserX size={15} color="#b45309" />
+            <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)' }}>
+              Skipped Members ({dateOffset === 0 ? 'Today' : 'Tomorrow'})
             </h4>
-            <span className="badge" style={{ backgroundColor: skippedMembers.length > 0 ? '#fef3c7' : '#e5e7eb', color: skippedMembers.length > 0 ? '#b45309' : '#6b7280', fontSize: '11px', fontWeight: 600 }}>
-              {skippedMembers.length} {skippedMembers.length === 1 ? 'member' : 'members'}
-            </span>
           </div>
 
-          <span style={{ fontSize: '11px', color: 'var(--color-ink-mute)' }}>
-            These members marked "Not Coming" before deadline
+          <span className="badge" style={{
+            backgroundColor: skippedMembers.length > 0 ? '#fef3c7' : '#e5e7eb',
+            color: skippedMembers.length > 0 ? '#b45309' : '#6b7280',
+            fontSize: '10px',
+            fontWeight: 700,
+            padding: '2px 7px'
+          }}>
+            {skippedMembers.length} {skippedMembers.length === 1 ? 'member' : 'members'}
           </span>
         </div>
 
         {skippedMembers.length > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {skippedMembers.map((s) => {
               const isBreakfast = s.meal_period === 'breakfast';
               const isLunch = s.meal_period === 'lunch';
@@ -370,38 +398,35 @@ export const KitchenHeadcountCard: React.FC = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    padding: '10px 14px',
+                    padding: '8px 12px',
                     backgroundColor: '#ffffff',
                     borderRadius: 'var(--radius-sm)',
                     border: '1px solid #fed7aa',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
-                    flexWrap: 'wrap',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
                     gap: '8px'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
                     <span
                       className="tnum badge badge-indigo"
                       style={{
                         fontFamily: 'var(--font-mono)',
                         fontWeight: 600,
-                        fontSize: '11px',
-                        padding: '2px 8px'
+                        fontSize: '10px',
+                        padding: '2px 6px',
+                        flexShrink: 0
                       }}
                     >
                       #{s.member_number || 'N/A'}
                     </span>
-                    <strong style={{ fontSize: '14px', color: 'var(--color-ink)' }}>
+                    <strong style={{ fontSize: '13px', color: 'var(--color-ink)', wordBreak: 'break-word' }}>
                       {s.member_name}
                     </strong>
-                    <span className={`badge ${periodBadgeClass}`} style={{ fontSize: '11px', textTransform: 'capitalize' }}>
-                      {periodIcon} {s.meal_period} Skipped
-                    </span>
                   </div>
 
-                  <div style={{ fontSize: '11px', color: 'var(--color-ink-mute)', fontStyle: 'italic' }}>
-                    {s.reason || 'Marked Not Coming via Mobile App'}
-                  </div>
+                  <span className={`badge ${periodBadgeClass}`} style={{ fontSize: '10px', padding: '2px 6px', textTransform: 'capitalize', flexShrink: 0 }}>
+                    {periodIcon} {s.meal_period}
+                  </span>
                 </div>
               );
             })}
@@ -409,14 +434,14 @@ export const KitchenHeadcountCard: React.FC = () => {
         ) : (
           <div style={{
             textAlign: 'center',
-            padding: '18px 12px',
+            padding: '12px 8px',
             backgroundColor: '#ffffff',
             borderRadius: 'var(--radius-sm)',
             border: '1px dashed var(--color-hairline)',
             color: 'var(--color-ink-mute)',
-            fontSize: '12px'
+            fontSize: '11px'
           }}>
-            No members have marked leave for {dateOffset === 0 ? 'today' : 'tomorrow'}. Expected 100% attendance from enrolled plans.
+            ✓ No leaves marked for {dateOffset === 0 ? 'today' : 'tomorrow'}. 100% attendance expected.
           </div>
         )}
       </div>

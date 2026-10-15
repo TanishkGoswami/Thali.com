@@ -81,70 +81,82 @@ export const MealSkipCard: React.FC<MealSkipCardProps> = ({
   ];
 
   return (
-    <div className="card" style={{ padding: '20px' }}>
-      {/* Header with Title and Day Switcher */}
+    <div className="card" style={{ padding: '16px 14px', backgroundColor: '#ffffff', borderRadius: 'var(--radius-lg)' }}>
+      {/* Header with Title */}
       <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '12px',
-        marginBottom: '16px',
-        borderBottom: '1px solid var(--color-hairline)',
-        paddingBottom: '12px'
+        paddingBottom: '12px',
+        borderBottom: '1px solid var(--color-hairline)'
       }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span className="eyebrow" style={{ color: 'var(--color-primary)' }}>Kitchen Headcount & Leave</span>
-          </div>
-          <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--color-ink)', marginTop: '2px' }}>
-            Going Out? Skip a Meal
-          </h3>
-          <p style={{ fontSize: '12px', color: 'var(--color-ink-mute)', marginTop: '2px' }}>
-            Planning for: <strong style={{ color: 'var(--color-ink)' }}>{formattedDateTitle}</strong>. Mark before cut-off to help the mess cook exact plates.
-          </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span className="eyebrow" style={{ color: 'var(--color-primary)' }}>Kitchen Headcount & Leave</span>
         </div>
+        <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--color-ink)', marginTop: '2px' }}>
+          Going Out? Skip a Meal
+        </h3>
+        <p style={{ fontSize: '12px', color: 'var(--color-ink-mute)', marginTop: '2px' }}>
+          Planning for: <strong style={{ color: 'var(--color-ink)' }}>{formattedDateTitle}</strong>. Mark before cutoff to help kitchen cook exact plates.
+        </p>
+      </div>
 
-        {/* Date Selector Pills: Today vs Tomorrow */}
-        <div style={{
-          display: 'inline-flex',
-          backgroundColor: 'var(--color-canvas-soft)',
-          padding: '3px',
-          borderRadius: 'var(--radius-pill)',
-          border: '1px solid var(--color-hairline)',
-          gap: '2px'
-        }}>
-          <button
-            type="button"
-            onClick={() => { setSelectedDateOffset(0); setFeedbackMsg(null); }}
-            className="btn btn-pill"
-            style={{
-              backgroundColor: selectedDateOffset === 0 ? '#ffffff' : 'transparent',
-              color: selectedDateOffset === 0 ? 'var(--color-ink)' : 'var(--color-ink-mute)',
-              boxShadow: selectedDateOffset === 0 ? 'var(--shadow-level-1)' : 'none',
-              fontSize: '11px',
-              fontWeight: selectedDateOffset === 0 ? 600 : 400,
-              padding: '4px 12px'
-            }}
-          >
-            Today
-          </button>
-          <button
-            type="button"
-            onClick={() => { setSelectedDateOffset(1); setFeedbackMsg(null); }}
-            className="btn btn-pill"
-            style={{
-              backgroundColor: selectedDateOffset === 1 ? '#ffffff' : 'transparent',
-              color: selectedDateOffset === 1 ? 'var(--color-ink)' : 'var(--color-ink-mute)',
-              boxShadow: selectedDateOffset === 1 ? 'var(--shadow-level-1)' : 'none',
-              fontSize: '11px',
-              fontWeight: selectedDateOffset === 1 ? 600 : 400,
-              padding: '4px 12px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-          >
+      {/* 100% Full-Width Segmented Day Switcher (Mobile Native App Style: Zero Overflow) */}
+      <div style={{
+        marginTop: '12px',
+        marginBottom: '14px',
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: '4px',
+        backgroundColor: 'var(--color-canvas-soft)',
+        padding: '3px',
+        borderRadius: 'var(--radius-pill)',
+        border: '1px solid var(--color-hairline)'
+      }}>
+        <button
+          type="button"
+          onClick={() => { setSelectedDateOffset(0); setFeedbackMsg(null); }}
+          className="btn btn-pill"
+          style={{
+            width: '100%',
+            backgroundColor: selectedDateOffset === 0 ? '#ffffff' : 'transparent',
+            color: selectedDateOffset === 0 ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+            boxShadow: selectedDateOffset === 0 ? 'var(--shadow-level-1)' : 'none',
+            fontSize: '12px',
+            fontWeight: selectedDateOffset === 0 ? 600 : 500,
+            padding: '7px 8px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '1px',
+            lineHeight: 1.1
+          }}
+        >
+          <span>Today</span>
+          <span style={{ fontSize: '10px', opacity: selectedDateOffset === 0 ? 0.8 : 0.6 }}>
+            {today.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => { setSelectedDateOffset(1); setFeedbackMsg(null); }}
+          className="btn btn-pill"
+          style={{
+            width: '100%',
+            backgroundColor: selectedDateOffset === 1 ? '#ffffff' : 'transparent',
+            color: selectedDateOffset === 1 ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+            boxShadow: selectedDateOffset === 1 ? 'var(--shadow-level-1)' : 'none',
+            fontSize: '12px',
+            fontWeight: selectedDateOffset === 1 ? 600 : 500,
+            padding: '7px 8px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '1px',
+            lineHeight: 1.1
+          }}
+        >
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
             <span>Tomorrow</span>
             {tomorrowSkipsForMember.length > 0 && (
               <span style={{
@@ -152,17 +164,20 @@ export const MealSkipCard: React.FC<MealSkipCardProps> = ({
                 color: '#b45309',
                 border: '1px solid #fde68a',
                 borderRadius: 'var(--radius-pill)',
-                padding: '1px 5px',
-                fontSize: '10px',
+                padding: '0px 5px',
+                fontSize: '9px',
                 fontWeight: 700
               }}>
                 🚫 {tomorrowSkipsForMember.length} Skipped
               </span>
             )}
-          </button>
-
-        </div>
+          </div>
+          <span style={{ fontSize: '10px', opacity: selectedDateOffset === 1 ? 0.8 : 0.6 }}>
+            {tomorrowObj.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}
+          </span>
+        </button>
       </div>
+
 
       {/* Feedback Banner */}
       {feedbackMsg && (
