@@ -30,10 +30,10 @@ export const KitchenHeadcountCard: React.FC = () => {
     loadHeadcount();
   }, [targetDateStr]);
 
-  const periods: { period: MealPeriod; title: string; hindiTitle: string; icon: string; accentColor: string }[] = [
-    { period: 'breakfast', title: 'Breakfast', hindiTitle: 'सुबह का नाश्ता', icon: '🌅', accentColor: '#059669' },
-    { period: 'lunch', title: 'Lunch', hindiTitle: 'दोपहर का खाना', icon: '☀️', accentColor: '#2563eb' },
-    { period: 'dinner', title: 'Dinner', hindiTitle: 'रात का खाना', icon: '🌙', accentColor: '#7c3aed' }
+  const periods: { period: MealPeriod; title: string; icon: string; accentColor: string }[] = [
+    { period: 'breakfast', title: 'Breakfast', icon: '🌅', accentColor: '#059669' },
+    { period: 'lunch', title: 'Lunch', icon: '☀️', accentColor: '#2563eb' },
+    { period: 'dinner', title: 'Dinner', icon: '🌙', accentColor: '#7c3aed' }
   ];
 
   return (
@@ -68,7 +68,7 @@ export const KitchenHeadcountCard: React.FC = () => {
               <span className="eyebrow" style={{ color: 'var(--color-primary)' }}>Kitchen Intelligence</span>
             </div>
             <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--color-ink)', marginTop: '2px' }}>
-              Kitchen Headcount & Food Planning (भोजन तैयारी संख्या)
+              Kitchen Headcount & Food Planning
             </h3>
             <p style={{ fontSize: '12px', color: 'var(--color-ink-mute)', marginTop: '2px' }}>
               Live plates calculation based on enrolled members minus skipped members.
@@ -99,7 +99,7 @@ export const KitchenHeadcountCard: React.FC = () => {
                 padding: '4px 12px'
               }}
             >
-              Today (आज)
+              Today
             </button>
             <button
               type="button"
@@ -114,7 +114,7 @@ export const KitchenHeadcountCard: React.FC = () => {
                 padding: '4px 12px'
               }}
             >
-              Tomorrow (कल)
+              Tomorrow
             </button>
           </div>
 
@@ -133,8 +133,8 @@ export const KitchenHeadcountCard: React.FC = () => {
       </div>
 
       {/* 3 Sessions Cards Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px' }}>
-        {periods.map(({ period, title, hindiTitle, icon, accentColor }) => {
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px' }}>
+        {periods.map(({ period, title, icon, accentColor }) => {
           const stats = headcount ? headcount[period] : { enrolled: 0, skipped: 0, consumed: 0 };
           const expectedToCook = Math.max(0, (stats?.enrolled ?? 0) - (stats?.skipped ?? 0));
           const cutoff = MEAL_CUTOFF_CONFIG[period];
@@ -167,17 +167,12 @@ export const KitchenHeadcountCard: React.FC = () => {
 
               <div>
                 {/* Session Title & Cutoff */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '18px' }}>{icon}</span>
-                      <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-ink)' }}>
-                        {hindiTitle}
-                      </h4>
-                    </div>
-                    <span style={{ fontSize: '11px', color: 'var(--color-ink-mute)', marginLeft: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '20px' }}>{icon}</span>
+                    <h4 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--color-ink)' }}>
                       {title}
-                    </span>
+                    </h4>
                   </div>
 
                   <span className="badge" style={{
@@ -201,7 +196,7 @@ export const KitchenHeadcountCard: React.FC = () => {
                   boxShadow: 'var(--shadow-level-1)'
                 }}>
                   <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-ink-mute)', fontWeight: 600 }}>
-                    Expected Plates to Cook (तैयार थाली)
+                    Expected Plates to Cook
                   </div>
                   <div className="tnum" style={{
                     fontSize: '32px',

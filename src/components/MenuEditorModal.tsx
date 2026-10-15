@@ -31,7 +31,7 @@ export const MenuEditorModal: React.FC<MenuEditorModalProps> = ({
   const [title, setTitle] = useState(
     existingMenu?.title ||
     (mealPeriod === 'breakfast'
-      ? 'Morning Fresh Breakfast / नाश्ता'
+      ? 'Morning Fresh Breakfast'
       : mealPeriod === 'lunch'
       ? 'Deluxe Afternoon Thali'
       : 'Evening Comfort Thali')
@@ -149,7 +149,7 @@ export const MenuEditorModal: React.FC<MenuEditorModalProps> = ({
               type="button"
               onClick={() => {
                 setMealPeriod('breakfast');
-                setTitle('Morning Fresh Breakfast / नाश्ता');
+                setTitle('Morning Fresh Breakfast');
               }}
               className="btn btn-pill"
               style={{
@@ -162,7 +162,7 @@ export const MenuEditorModal: React.FC<MenuEditorModalProps> = ({
                 padding: '5px 8px'
               }}
             >
-              Breakfast (नाश्ता)
+              Breakfast
             </button>
             <button
               type="button"
@@ -181,7 +181,7 @@ export const MenuEditorModal: React.FC<MenuEditorModalProps> = ({
                 padding: '5px 8px'
               }}
             >
-              Lunch (दोपहर)
+              Lunch
             </button>
             <button
               type="button"
@@ -200,7 +200,7 @@ export const MenuEditorModal: React.FC<MenuEditorModalProps> = ({
                 padding: '5px 8px'
               }}
             >
-              Dinner (रात)
+              Dinner
             </button>
           </div>
 

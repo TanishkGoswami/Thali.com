@@ -112,7 +112,7 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
                     padding: '3px 9px'
                   }}
                 >
-                  Breakfast (नाश्ता)
+                  Breakfast
                 </button>
                 <button
                   type="button"
@@ -127,7 +127,7 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
                     padding: '3px 9px'
                   }}
                 >
-                  Lunch (दोपहर)
+                  Lunch
                 </button>
                 <button
                   type="button"
@@ -142,7 +142,7 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
                     padding: '3px 9px'
                   }}
                 >
-                  Dinner (रात)
+                  Dinner
                 </button>
               </div>
             ) : (

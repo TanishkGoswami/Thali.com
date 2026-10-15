@@ -225,7 +225,7 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                     <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)' }}>
-                      1. Choose 2-Meal Timings / भोजन समय चुनें: <span style={{ color: 'var(--color-error)' }}>*</span>
+                      1. Choose 2-Meal Timings: <span style={{ color: 'var(--color-error)' }}>*</span>
                     </label>
                     <span style={{ fontSize: '11px', color: 'var(--color-primary)', fontWeight: 500 }}>
                       2 Meals / Day

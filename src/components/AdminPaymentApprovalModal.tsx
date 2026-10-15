@@ -171,7 +171,7 @@ export const AdminPaymentApprovalModal: React.FC<AdminPaymentApprovalModalProps>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
               <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)' }}>
-                Select 2-Meal Slot / भोजन समय: <span style={{ color: 'var(--color-error)' }}>*</span>
+                Select 2-Meal Slot: <span style={{ color: 'var(--color-error)' }}>*</span>
               </label>
               <span style={{ fontSize: '11px', color: 'var(--color-primary)', fontWeight: 500 }}>
                 2 Meals per day plan

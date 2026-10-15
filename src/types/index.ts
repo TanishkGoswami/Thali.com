@@ -22,7 +22,7 @@ export const MEAL_PLAN_CONFIG: Record<MealPlanType, {
 }> = {
   lunch_dinner: {
     name: 'Lunch & Dinner',
-    hindiName: 'दोपहर + रात',
+    hindiName: 'Lunch & Dinner',
     shortLabel: 'Lunch + Dinner',
     allowedPeriods: ['lunch', 'dinner'],
     badgeClass: 'badge-indigo',
@@ -32,7 +32,7 @@ export const MEAL_PLAN_CONFIG: Record<MealPlanType, {
   },
   breakfast_lunch: {
     name: 'Breakfast & Lunch',
-    hindiName: 'नाश्ता + दोपहर',
+    hindiName: 'Breakfast & Lunch',
     shortLabel: 'Breakfast + Lunch',
     allowedPeriods: ['breakfast', 'lunch'],
     badgeClass: 'badge-active',
@@ -42,7 +42,7 @@ export const MEAL_PLAN_CONFIG: Record<MealPlanType, {
   },
   breakfast_dinner: {
     name: 'Breakfast & Dinner',
-    hindiName: 'नाश्ता + रात',
+    hindiName: 'Breakfast & Dinner',
     shortLabel: 'Breakfast + Dinner',
     allowedPeriods: ['breakfast', 'dinner'],
     badgeClass: 'badge-purple',
@@ -52,7 +52,7 @@ export const MEAL_PLAN_CONFIG: Record<MealPlanType, {
   },
   any_two: {
     name: 'Flexible Any 2',
-    hindiName: 'कोई भी 2 समय (लचीला)',
+    hindiName: 'Flexible Any 2',
     shortLabel: 'Flexible Any 2',
     allowedPeriods: 'any_two',
     badgeClass: 'badge-warning',
@@ -200,9 +200,9 @@ export interface DailyHeadcount {
 }
 
 export const MEAL_CUTOFF_CONFIG: Record<MealPeriod, { hour: number; minute: number; timeStr: string; hindiLabel: string; label: string }> = {
-  breakfast: { hour: 6, minute: 30, timeStr: '06:30 AM', hindiLabel: 'सुबह 06:30 बजे तक', label: 'Previous night up to 06:30 AM' },
-  lunch: { hour: 12, minute: 30, timeStr: '12:30 PM', hindiLabel: 'दोपहर 12:30 बजे तक', label: 'Before 12:30 PM' },
-  dinner: { hour: 18, minute: 30, timeStr: '06:30 PM', hindiLabel: 'शाम 06:30 बजे तक', label: 'Before 06:30 PM' }
+  breakfast: { hour: 6, minute: 30, timeStr: '06:30 AM', hindiLabel: 'Until 06:30 AM', label: 'Previous night up to 06:30 AM' },
+  lunch: { hour: 12, minute: 30, timeStr: '12:30 PM', hindiLabel: 'Until 12:30 PM', label: 'Before 12:30 PM' },
+  dinner: { hour: 18, minute: 30, timeStr: '06:30 PM', hindiLabel: 'Until 06:30 PM', label: 'Before 06:30 PM' }
 };
 
 export function isMealCutoffPassed(serviceDateStr: string, period: MealPeriod): boolean {

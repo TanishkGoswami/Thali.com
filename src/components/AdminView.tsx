@@ -960,7 +960,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
               const isBreakfast = menu.meal_period === 'breakfast';
               const isLunch = menu.meal_period === 'lunch';
               const periodIcon = isBreakfast ? '🌅' : isLunch ? '☀️' : '🌙';
-              const periodTitle = isBreakfast ? 'Breakfast Menu (नाश्ता)' : isLunch ? 'Lunch Menu (दोपहर)' : 'Dinner Menu (रात)';
+              const periodTitle = isBreakfast ? 'Breakfast Menu' : isLunch ? 'Lunch Menu' : 'Dinner Menu';
               const accentColor = isBreakfast ? '#059669' : isLunch ? '#2563eb' : '#533afd';
 
               return (

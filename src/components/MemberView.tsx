@@ -769,7 +769,7 @@ export const MemberView: React.FC<MemberViewProps> = ({
           <div>
             <span className="eyebrow">Dining Menu</span>
             <h2 style={{ fontSize: '20px', marginTop: '2px' }}>
-              Today's {selectedMenuTab === 'breakfast' ? 'Breakfast Specials (नाश्ता)' : selectedMenuTab === 'lunch' ? 'Lunch Specials (दोपहर)' : 'Dinner Specials (रात)'}
+              Today's {selectedMenuTab === 'breakfast' ? 'Breakfast Specials' : selectedMenuTab === 'lunch' ? 'Lunch Specials' : 'Dinner Specials'}
             </h2>
           </div>
 
@@ -1033,7 +1033,7 @@ export const MemberView: React.FC<MemberViewProps> = ({
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <span style={{ fontSize: '12px', fontWeight: 500, textTransform: 'capitalize' }}>
-                          {tx.meal_period === 'breakfast' ? 'Breakfast (नाश्ता)' : tx.meal_period === 'lunch' ? 'Lunch (दोपहर)' : tx.meal_period === 'dinner' ? 'Dinner (रात)' : 'Adjustment'}
+                          {tx.meal_period === 'breakfast' ? 'Breakfast' : tx.meal_period === 'lunch' ? 'Lunch' : tx.meal_period === 'dinner' ? 'Dinner' : 'Adjustment'}
                         </span>
                         <span className="badge badge-active" style={{ fontSize: '9px', padding: '1px 5px' }}>
                           {tx.status}

@@ -68,10 +68,10 @@ export const MealSkipCard: React.FC<MealSkipCardProps> = ({
     }
   };
 
-  const periods: { period: MealPeriod; title: string; hindiTitle: string; icon: string }[] = [
-    { period: 'breakfast', title: 'Breakfast', hindiTitle: 'सुबह का नाश्ता', icon: '🌅' },
-    { period: 'lunch', title: 'Lunch', hindiTitle: 'दोपहर का खाना', icon: '☀️' },
-    { period: 'dinner', title: 'Dinner', hindiTitle: 'रात का खाना', icon: '🌙' }
+  const periods: { period: MealPeriod; title: string; icon: string }[] = [
+    { period: 'breakfast', title: 'Breakfast', icon: '🌅' },
+    { period: 'lunch', title: 'Lunch', icon: '☀️' },
+    { period: 'dinner', title: 'Dinner', icon: '🌙' }
   ];
 
   return (
@@ -92,10 +92,10 @@ export const MealSkipCard: React.FC<MealSkipCardProps> = ({
             <span className="eyebrow" style={{ color: 'var(--color-primary)' }}>Kitchen Headcount & Leave</span>
           </div>
           <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--color-ink)', marginTop: '2px' }}>
-            Going Out? Skip a Meal / आज नहीं खाएंगे?
+            Going Out? Skip a Meal
           </h3>
           <p style={{ fontSize: '12px', color: 'var(--color-ink-mute)', marginTop: '2px' }}>
-            Planning for: <strong style={{ color: 'var(--color-ink)' }}>{formattedDateTitle}</strong>. Mark before cut-off so mess cooks exact plates.
+            Planning for: <strong style={{ color: 'var(--color-ink)' }}>{formattedDateTitle}</strong>. Mark before cut-off to help the mess cook exact plates.
           </p>
         </div>
 
@@ -121,7 +121,7 @@ export const MealSkipCard: React.FC<MealSkipCardProps> = ({
               padding: '4px 12px'
             }}
           >
-            Today (आज)
+            Today
           </button>
           <button
             type="button"
@@ -136,7 +136,7 @@ export const MealSkipCard: React.FC<MealSkipCardProps> = ({
               padding: '4px 12px'
             }}
           >
-            Tomorrow (कल)
+            Tomorrow
           </button>
         </div>
       </div>
@@ -162,7 +162,7 @@ export const MealSkipCard: React.FC<MealSkipCardProps> = ({
 
       {/* 3 Meals Cards Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '12px' }}>
-        {periods.map(({ period, title, hindiTitle, icon }) => {
+        {periods.map(({ period, title, icon }) => {
           const inPlan = isPeriodInPlan(period);
           const cutoff = MEAL_CUTOFF_CONFIG[period];
           const cutoffPassed = isMealCutoffPassed(targetDateStr, period);
@@ -186,17 +186,12 @@ export const MealSkipCard: React.FC<MealSkipCardProps> = ({
             >
               <div>
                 {/* Card Title & Icon */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '18px' }}>{icon}</span>
-                    <div>
-                      <h4 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-ink)' }}>
-                        {hindiTitle}
-                      </h4>
-                      <span style={{ fontSize: '11px', color: 'var(--color-ink-mute)' }}>
-                        {title}
-                      </span>
-                    </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '20px' }}>{icon}</span>
+                    <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-ink)' }}>
+                      {title}
+                    </h4>
                   </div>
 
                   {/* Status Badge */}
@@ -219,17 +214,17 @@ export const MealSkipCard: React.FC<MealSkipCardProps> = ({
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '4px',
+                  gap: '5px',
                   fontSize: '11px',
                   color: cutoffPassed ? '#b45309' : 'var(--color-ink-mute)',
                   marginTop: '10px',
-                  padding: '4px 8px',
+                  padding: '5px 8px',
                   borderRadius: 'var(--radius-sm)',
                   backgroundColor: cutoffPassed ? 'rgba(245, 158, 11, 0.1)' : 'var(--color-canvas-soft)'
                 }}>
                   {cutoffPassed ? <Lock size={12} color="#b45309" /> : <Clock size={12} />}
                   <span>
-                    Cut-off: <strong>{cutoff.timeStr}</strong> {cutoffPassed ? '(Locked)' : `(${cutoff.hindiLabel})`}
+                    Cut-off: <strong>{cutoff.timeStr}</strong> {cutoffPassed ? '(Locked)' : ''}
                   </span>
                 </div>
               </div>
@@ -277,7 +272,7 @@ export const MealSkipCard: React.FC<MealSkipCardProps> = ({
                       </>
                     ) : (
                       <>
-                        <XCircle size={13} /> Mark Not Coming (नहीं खाएंगे)
+                        <XCircle size={13} /> Mark Not Coming
                       </>
                     )}
                   </button>

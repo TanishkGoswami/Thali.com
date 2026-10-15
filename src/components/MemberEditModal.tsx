@@ -238,7 +238,7 @@ export const MemberEditModal: React.FC<MemberEditModalProps> = ({
           {/* 2-Meal Subscription Plan Selector */}
           <div>
             <label style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', display: 'block', marginBottom: '6px' }}>
-              Subscribed 2-Meal Slot / भोजन समय:
+              Subscribed 2-Meal Slot:
             </label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
               {(Object.keys(MEAL_PLAN_CONFIG) as MealPlanType[]).map((key) => {
