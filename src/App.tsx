@@ -206,8 +206,6 @@ export function App() {
         currentUser={currentUser}
         currentRole={currentRole}
         onRoleChange={setCurrentRole}
-        activeMealPeriod={activeMealPeriod}
-        onMealPeriodChange={setActiveMealPeriod}
         onOpenLogin={() => setIsLoginModalOpen(true)}
         onLogout={handleLogout}
       />
