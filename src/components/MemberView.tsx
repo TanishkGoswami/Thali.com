@@ -308,7 +308,7 @@ export const MemberView: React.FC<MemberViewProps> = ({
             Current Slot: <strong style={{ textTransform: 'capitalize', color: 'var(--color-ink)' }}>{activeMealPeriod} Service</strong>
             {!isSlotPermitted && (
               <span style={{ color: '#b45309', fontWeight: 600, marginLeft: '8px', fontSize: '12px' }}>
-                (⚠️ Outside your {planConfig.hindiName} pass)
+                (⚠️ Outside your {planConfig.name} pass)
               </span>
             )}
           </p>
@@ -513,135 +513,247 @@ export const MemberView: React.FC<MemberViewProps> = ({
         
         {/* Card 1: Official Digital Mess Membership ID Card */}
         <div style={{
-          background: 'linear-gradient(145deg, #0d253d 0%, #163659 100%)',
-          borderRadius: '16px',
-          padding: '24px',
+          background: 'linear-gradient(135deg, #0b1f38 0%, #102a4c 50%, #091729 100%)',
+          borderRadius: '20px',
+          padding: '22px 24px',
           color: '#ffffff',
           position: 'relative',
           overflow: 'hidden',
-          boxShadow: '0 12px 32px rgba(13, 37, 61, 0.22)',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
+          boxShadow: '0 16px 36px -10px rgba(7, 21, 38, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.22)',
+          border: '1px solid rgba(255, 255, 255, 0.16)',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          minHeight: '230px'
+          minHeight: '250px'
         }}>
-          {/* Card Atmospheric Background Accents */}
+          {/* Subtle Gloss Sheen Overlay */}
           <div style={{
             position: 'absolute',
-            top: '-40px',
-            right: '-40px',
-            width: '160px',
-            height: '160px',
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(83, 58, 253, 0.35) 0%, transparent 70%)',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'linear-gradient(115deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 42%, transparent 60%)',
             pointerEvents: 'none'
           }} />
 
-          {/* Card Top: Brand Wordmark & Pass Chip */}
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* Atmospheric Glow Accents */}
+          <div style={{
+            position: 'absolute',
+            top: '-50px',
+            right: '-50px',
+            width: '180px',
+            height: '180px',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 70%)',
+            pointerEvents: 'none'
+          }} />
+          <div style={{
+            position: 'absolute',
+            bottom: '-40px',
+            left: '-40px',
+            width: '140px',
+            height: '140px',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%)',
+            pointerEvents: 'none'
+          }} />
+
+          {/* Top Section: Brand & High-Tech Member Badge */}
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              {/* Brand Logo & Title */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <img
                   src="/logo.png"
                   alt="Thali.com"
                   style={{
-                    width: '28px',
-                    height: '28px',
-                    borderRadius: '7px',
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '11px',
                     objectFit: 'contain',
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.35)',
+                    border: '1px solid rgba(255, 255, 255, 0.16)'
                   }}
                 />
-                <div>
-                  <div style={{ fontSize: '15px', fontWeight: 600, letterSpacing: '-0.2px' }}>
-                    Thali<span style={{ color: '#93c5fd' }}>.com</span>
-                  </div>
-                  <div style={{ fontSize: '9px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255, 255, 255, 0.65)' }}>
-                    Official Mess Pass
-                  </div>
+                <div style={{ fontSize: '19px', fontWeight: 700, letterSpacing: '-0.3px', lineHeight: 1.1 }}>
+                  Thali<span style={{ color: '#60a5fa' }}>.com</span>
                 </div>
               </div>
 
-              <span className="tnum" style={{
-                fontSize: '11px',
-                fontWeight: 600,
-                backgroundColor: 'rgba(255, 255, 255, 0.12)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                padding: '2px 8px',
-                borderRadius: '9999px',
-                color: '#93c5fd'
+              {/* Redesigned Premium Glassmorphic Member Badge */}
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '7px',
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                border: '1px solid rgba(147, 197, 253, 0.35)',
+                boxShadow: '0 3px 10px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                padding: '4px 11px',
+                borderRadius: '9999px'
               }}>
-                #{member.member_number}
-              </span>
+                <span style={{
+                  width: '6px',
+                  height: '6px',
+                  borderRadius: '50%',
+                  backgroundColor: '#34d399',
+                  boxShadow: '0 0 8px #34d399'
+                }} />
+                <span className="tnum" style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  letterSpacing: '0.06em',
+                  color: '#e0f2fe'
+                }}>
+                  #{member.member_number}
+                </span>
+              </div>
             </div>
 
-            {/* Member Card Number */}
-            <div className="tnum" style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: '18px',
-              letterSpacing: '0.12em',
-              fontWeight: 500,
+            {/* Smart Card Chip & Contactless RFID Row */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
               marginTop: '16px',
-              color: '#ffffff'
+              marginBottom: '12px'
             }}>
-              MESS — {member.member_number}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                {/* Authentic Golden EMV Chip */}
+                <svg width="40" height="30" viewBox="0 0 40 30" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ borderRadius: '5px', overflow: 'hidden', boxShadow: '0 2px 6px rgba(0,0,0,0.4)', flexShrink: 0 }}>
+                  <rect width="40" height="30" rx="5" fill="url(#emvGold)" />
+                  <rect x="0.5" y="0.5" width="39" height="29" rx="4.5" stroke="#785918" strokeOpacity="0.4" />
+                  <path d="M0 15H14M26 15H40M14 0V30M26 0V30M14 9H26M14 21H26" stroke="#5c4410" strokeWidth="1" strokeOpacity="0.45" />
+                  <rect x="14" y="9" width="12" height="12" rx="2" fill="url(#emvCenter)" stroke="#5c4410" strokeWidth="0.8" strokeOpacity="0.4" />
+                  <defs>
+                    <linearGradient id="emvGold" x1="0" y1="0" x2="40" y2="30" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#fde047" />
+                      <stop offset="0.4" stopColor="#d4af37" />
+                      <stop offset="0.8" stopColor="#aa820a" />
+                      <stop offset="1" stopColor="#855f04" />
+                    </linearGradient>
+                    <linearGradient id="emvCenter" x1="14" y1="9" x2="26" y2="21" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#fef08a" />
+                      <stop offset="1" stopColor="#ca8a04" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+
+                {/* Contactless Wave Icon */}
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255, 255, 255, 0.65)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: 'rotate(90deg)' }}>
+                  <path d="M5 12.55a11 11 0 0 1 14.08 0" />
+                  <path d="M1.42 9a16 16 0 0 1 21.16 0" />
+                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+                </svg>
+              </div>
+
+              {/* Monospace Embossed Card Reference */}
+              <div className="tnum" style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: '14px',
+                fontWeight: 600,
+                letterSpacing: '0.14em',
+                color: 'rgba(255, 255, 255, 0.88)',
+                textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)'
+              }}>
+                MESS • {member.member_number}
+              </div>
             </div>
 
             {/* Member 2-Meal Plan Badge on Card */}
             <div style={{
-              marginTop: '10px',
-              padding: '6px 10px',
-              borderRadius: '8px',
-              backgroundColor: 'rgba(255, 255, 255, 0.12)',
-              border: '1px solid rgba(255, 255, 255, 0.18)',
+              padding: '7px 11px',
+              borderRadius: '9px',
+              backgroundColor: 'rgba(255, 255, 255, 0.09)',
+              border: '1px solid rgba(255, 255, 255, 0.14)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
               gap: '8px'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#fef08a', fontWeight: 600 }}>
-                <UtensilsCrossed size={12} />
-                <span>2-Meal Plan: {planConfig.hindiName}</span>
+                <UtensilsCrossed size={13} style={{ color: '#facc15' }} />
+                <span>2-Meal Plan: {planConfig.name}</span>
               </div>
-              <span className="tnum" style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.75)' }}>
+              <span className="tnum" style={{
+                fontSize: '10px',
+                fontWeight: 600,
+                color: 'rgba(255, 255, 255, 0.85)',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                padding: '2px 7px',
+                borderRadius: '5px'
+              }}>
                 {planConfig.shortLabel}
               </span>
             </div>
           </div>
 
-          {/* Card Bottom: Name, Mobile, Validity, and Balance */}
-          <div style={{ marginTop: '20px', paddingTop: '12px', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '12px' }}>
+          {/* Card Bottom: Smart Card Real Alignment (Cardholder & Valid Thru) */}
+          <div style={{ position: 'relative', zIndex: 1, marginTop: '18px', paddingTop: '12px', borderTop: '1px solid rgba(255, 255, 255, 0.12)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '14px' }}>
               <div>
-                <div style={{ fontSize: '14px', fontWeight: 600, color: '#ffffff' }}>
+                <div style={{
+                  fontSize: '8.5px',
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  fontWeight: 600,
+                  color: 'rgba(255, 255, 255, 0.55)',
+                  marginBottom: '2px'
+                }}>
+                  CARD HOLDER
+                </div>
+                <div style={{ fontSize: '15px', fontWeight: 700, color: '#ffffff', letterSpacing: '0.01em', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
                   {member.full_name}
                 </div>
-                <div className="tnum" style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.7)', marginTop: '2px' }}>
+                <div className="tnum" style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'rgba(255, 255, 255, 0.72)', marginTop: '2px' }}>
                   {member.phone ? `+91 ${member.phone}` : 'No phone linked'}
                 </div>
               </div>
 
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '9px', textTransform: 'uppercase', color: 'rgba(255, 255, 255, 0.6)', letterSpacing: '0.05em' }}>
-                  Valid Till
+                <div style={{
+                  fontSize: '8.5px',
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  fontWeight: 600,
+                  color: 'rgba(255, 255, 255, 0.55)',
+                  marginBottom: '2px'
+                }}>
+                  VALID THRU
                 </div>
-                <div className="tnum" style={{ fontSize: '11px', fontWeight: 500, color: '#fef08a' }}>
+                <div className="tnum" style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  color: '#fef08a',
+                  letterSpacing: '0.04em',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.4)'
+                }}>
                   {formattedExpiry}
                 </div>
               </div>
             </div>
 
-            {/* Card Action footer: Toggle Personal QR Code */}
-            <div style={{ marginTop: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            {/* Card Action footer: Balance Status & Toggle Personal QR */}
+            <div style={{ marginTop: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
               <span className="tnum" style={{
-                fontSize: '12px',
+                fontSize: '11.5px',
                 fontWeight: 600,
                 color: '#6ee7b7',
-                backgroundColor: 'rgba(110, 231, 183, 0.12)',
-                padding: '2px 8px',
-                borderRadius: '6px'
+                backgroundColor: 'rgba(16, 185, 129, 0.14)',
+                border: '1px solid rgba(52, 211, 153, 0.28)',
+                padding: '3px 9px',
+                borderRadius: '7px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
               }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#34d399' }} />
                 {remainingMeals} / {totalMeals} Meals Left
               </span>
 
@@ -649,15 +761,22 @@ export const MemberView: React.FC<MemberViewProps> = ({
                 type="button"
                 onClick={() => setShowPersonalQr(!showPersonalQr)}
                 style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'rgba(255, 255, 255, 0.85)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: showPersonalQr ? 'rgba(255, 255, 255, 0.22)' : 'rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(255, 255, 255, 0.22)',
+                  borderRadius: '7px',
+                  padding: '4px 10px',
+                  color: '#ffffff',
                   fontSize: '11px',
+                  fontWeight: 600,
                   cursor: 'pointer',
-                  textDecoration: 'underline'
+                  transition: 'all 0.15s ease'
                 }}
               >
-                {showPersonalQr ? 'Hide Personal QR' : 'Show Personal QR'}
+                <QrCode size={12} style={{ color: '#93c5fd' }} />
+                <span>{showPersonalQr ? 'Hide Personal QR' : 'Show Personal QR'}</span>
               </button>
             </div>
           </div>
@@ -665,18 +784,21 @@ export const MemberView: React.FC<MemberViewProps> = ({
           {/* Expandable Personal QR Canvas (Fallback for counter staff scanner) */}
           {showPersonalQr && (
             <div style={{
+              position: 'relative',
+              zIndex: 2,
               marginTop: '16px',
-              padding: '12px',
+              padding: '14px',
               backgroundColor: '#ffffff',
-              borderRadius: 'var(--radius-md)',
+              borderRadius: '12px',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
               animation: 'fadeIn 0.2s ease-out'
             }}>
               <canvas ref={canvasRef} />
-              <span style={{ fontSize: '11px', color: 'var(--color-ink-mute)', marginTop: '4px' }}>
-                Show this if staff uses barcode scanner
+              <span style={{ fontSize: '11px', color: 'var(--color-ink-mute)', marginTop: '6px', fontWeight: 500 }}>
+                Show this if staff uses counter barcode scanner
               </span>
             </div>
           )}
