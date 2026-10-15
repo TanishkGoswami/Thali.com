@@ -66,9 +66,8 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
     m.phone?.includes(searchQuery)
   );
 
-
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 20px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+    <div style={{ maxWidth: '1160px', margin: '0 auto', padding: '36px 20px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
       
       {/* Top Banner */}
       <div style={{
@@ -81,18 +80,18 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
         paddingBottom: '20px'
       }}>
         <div>
-          <span className="eyebrow" style={{ color: 'var(--color-stone)' }}>Reception Terminal</span>
-          <h1 style={{ fontSize: '36px', marginTop: '4px' }}>
+          <span className="eyebrow">Frontdesk Operations</span>
+          <h1 style={{ fontSize: '32px', marginTop: '4px' }}>
             Meal Check-In Operator
           </h1>
-          <p style={{ color: 'var(--color-ash)', fontSize: '15px' }}>
-            Current Meal Slot: <strong style={{ color: 'var(--color-ink)', textTransform: 'capitalize' }}>{activeMealPeriod}</strong> • Preserves legacy paper-book numbers
+          <p style={{ color: 'var(--color-ink-mute)', fontSize: '14px', marginTop: '2px' }}>
+            Active Slot: <strong style={{ color: 'var(--color-ink)', textTransform: 'capitalize' }}>{activeMealPeriod} Service</strong> • Fast pass validation & deduplication
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span className="badge" style={{ backgroundColor: '#224228', color: '#fff' }}>
-            ● Service Online
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span className="badge badge-active">
+            ● Terminal Online
           </span>
         </div>
       </div>
@@ -100,41 +99,42 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
       {/* Result Alert Feedback Banner */}
       {lastResult && (
         <div className="animate-fade-in" style={{
-          padding: '24px',
+          padding: '18px 22px',
           borderRadius: 'var(--radius-lg)',
-          border: `1px solid ${lastResult.success ? '#c2e2c8' : '#f1cfc4'}`,
-          backgroundColor: lastResult.success ? '#e9f5ec' : '#fdf2f0',
+          border: `1px solid ${lastResult.success ? 'var(--color-success-border)' : 'var(--color-error-border)'}`,
+          backgroundColor: lastResult.success ? 'var(--color-success-bg)' : 'var(--color-error-bg)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '20px',
-          boxShadow: 'var(--shadow-card)'
+          gap: '16px',
+          boxShadow: 'var(--shadow-level-1)'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             {lastResult.success ? (
-              <CheckCircle size={36} color="var(--color-forest)" />
+              <CheckCircle size={28} color="var(--color-success)" />
             ) : (
-              <XCircle size={36} color="var(--color-error)" />
+              <XCircle size={28} color="var(--color-error)" />
             )}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <h3 style={{
-                  fontSize: '20px',
+                  fontSize: '16px',
                   fontWeight: 600,
-                  color: lastResult.success ? 'var(--color-forest)' : 'var(--color-error)'
+                  color: lastResult.success ? 'var(--color-success)' : 'var(--color-error)'
                 }}>
                   {lastResult.message}
                 </h3>
                 <span className="badge" style={{
-                  backgroundColor: lastResult.success ? '#224228' : '#e33a22',
-                  color: '#fff',
-                  fontSize: '11px'
+                  backgroundColor: '#ffffff',
+                  border: '1px solid currentColor',
+                  color: lastResult.success ? 'var(--color-success)' : 'var(--color-error)',
+                  fontSize: '10px'
                 }}>
                   {lastResult.code}
                 </span>
               </div>
               {lastResult.member_name && (
-                <p style={{ fontSize: '14px', color: 'var(--color-ink)', marginTop: '4px' }}>
+                <p className="tnum" style={{ fontSize: '13px', color: 'var(--color-ink)', marginTop: '2px' }}>
                   Member: <strong>{lastResult.member_name}</strong> ({lastResult.member_number}) • Balance Remaining: <strong>{lastResult.remaining_meals} meals</strong>
                 </p>
               )}
@@ -142,9 +142,10 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
           </div>
 
           <button
+            type="button"
             onClick={() => setLastResult(null)}
-            className="btn btn-outline btn-pill"
-            style={{ fontSize: '12px' }}
+            className="btn btn-secondary btn-pill"
+            style={{ fontSize: '12px', padding: '4px 12px' }}
           >
             Dismiss
           </button>
@@ -152,20 +153,20 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
       )}
 
       {/* Two Column Layout: Scanner / Fast Search & Recent Checkins */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '20px' }}>
         
         {/* Left Column: Fast Scanner & Search */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
-          {/* Card: Instant QR Scanner Simulation / Input */}
+          {/* Card: Instant QR Scanner Input */}
           <div className="card">
-            <span className="eyebrow" style={{ color: 'var(--color-gold)' }}>Fast Barcode / QR Scan</span>
-            <h2 style={{ fontSize: '24px', marginTop: '4px' }}>Scan Member Pass</h2>
-            <p style={{ color: 'var(--color-ash)', fontSize: '13px', marginTop: '4px', marginBottom: '16px' }}>
-              Aim handheld USB/Bluetooth scanner or enter token to immediately deduct 1 meal.
+            <span className="eyebrow">Instant Scan</span>
+            <h2 style={{ fontSize: '20px', marginTop: '2px' }}>Scan Member Pass</h2>
+            <p style={{ color: 'var(--color-ink-mute)', fontSize: '13px', marginTop: '2px', marginBottom: '14px' }}>
+              Aim handheld USB scanner or enter token to deduct 1 meal.
             </p>
 
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <div style={{ display: 'flex', gap: '8px' }}>
               <input
                 type="text"
                 placeholder="Scan or paste QR token..."
@@ -180,13 +181,13 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
                 className="form-input"
               />
               <button
+                type="button"
                 disabled={checkingIn || !manualToken.trim()}
                 onClick={() => {
                   handleCheckIn(manualToken.trim());
                   setManualToken('');
                 }}
                 className="btn btn-primary"
-                style={{ whiteSpace: 'nowrap' }}
               >
                 {checkingIn ? 'Checking...' : 'Check-in'}
               </button>
@@ -197,53 +198,53 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
               alignItems: 'center',
               margin: '14px 0 10px',
               gap: '12px',
-              color: 'var(--color-ash)',
+              color: 'var(--color-ink-mute)',
               fontSize: '11px',
               textTransform: 'uppercase',
-              letterSpacing: '0.05em'
+              letterSpacing: '0.06em'
             }}>
               <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--color-hairline)' }} />
-              <span>OR USE OPTICAL CAMERA</span>
+              <span>OR OPTICAL CAMERA</span>
               <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--color-hairline)' }} />
             </div>
 
             <button
+              type="button"
               onClick={() => setShowCameraScanner(true)}
               className="btn btn-secondary btn-pill"
-              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              style={{ width: '100%', gap: '8px' }}
             >
-              <Camera size={16} /> Open Device Camera Scanner
+              <Camera size={15} /> Open Device Camera Scanner
             </button>
           </div>
 
-
           {/* Card: Member Lookup & Instant Fallback Check-in */}
           <div className="card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
               <div>
-                <span className="eyebrow" style={{ color: 'var(--color-stone)' }}>Member Register</span>
-                <h2 style={{ fontSize: '24px', marginTop: '4px' }}>Quick Member Search</h2>
+                <span className="eyebrow">Directory Register</span>
+                <h2 style={{ fontSize: '20px', marginTop: '2px' }}>Member Search</h2>
               </div>
-              <span className="badge" style={{ backgroundColor: 'var(--color-canvas)', color: 'var(--color-stone)' }}>
+              <span className="badge tnum" style={{ backgroundColor: 'var(--color-canvas-soft)', color: 'var(--color-ink-mute)', border: '1px solid var(--color-hairline)' }}>
                 {filteredMembers.length} Members
               </span>
             </div>
 
             {/* Search Input */}
-            <div style={{ position: 'relative', marginBottom: '16px' }}>
-              <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-ash)' }} />
+            <div style={{ position: 'relative', marginBottom: '14px' }}>
+              <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-ink-mute)' }} />
               <input
                 type="text"
                 placeholder="Search member # (e.g. M-101), name or phone..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="form-input"
-                style={{ paddingLeft: '42px' }}
+                style={{ paddingLeft: '34px' }}
               />
             </div>
 
             {/* Members List */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '380px', overflowY: 'auto' }}>
               {filteredMembers.map((m) => (
                 <div
                   key={m.id}
@@ -251,44 +252,41 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    padding: '14px 16px',
-                    borderRadius: 'var(--radius-md)',
+                    padding: '10px 14px',
+                    borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--color-hairline)',
-                    backgroundColor: 'var(--color-canvas)',
-                    transition: 'background var(--transition-fast)'
+                    backgroundColor: 'var(--color-canvas-soft)'
                   }}
                 >
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: '12px',
-                        fontWeight: 700,
-                        backgroundColor: 'var(--color-surface)',
-                        padding: '2px 8px',
-                        borderRadius: 'var(--radius-xs)',
+                      <span className="tnum" style={{
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        backgroundColor: '#ffffff',
+                        padding: '1px 6px',
+                        borderRadius: '4px',
                         border: '1px solid var(--color-hairline)',
                         color: 'var(--color-ink)'
                       }}>
                         {m.member_number}
                       </span>
-                      <strong style={{ fontSize: '15px', color: 'var(--color-ink)' }}>{m.full_name}</strong>
+                      <strong style={{ fontSize: '14px', color: 'var(--color-ink)', fontWeight: 500 }}>{m.full_name}</strong>
                     </div>
-                    <div style={{ display: 'flex', gap: '12px', fontSize: '12px', color: 'var(--color-ash)', marginTop: '4px' }}>
+                    <div className="tnum" style={{ display: 'flex', gap: '12px', fontSize: '12px', color: 'var(--color-ink-mute)', marginTop: '2px' }}>
                       <span>Remaining: <strong style={{ color: (m.remaining_meals ?? 0) <= 5 ? 'var(--color-error)' : 'var(--color-ink)' }}>{m.remaining_meals ?? 0}</strong> meals</span>
                       <span>Status: <span style={{ textTransform: 'capitalize' }}>{m.subscription_status}</span></span>
                     </div>
                   </div>
 
                   <button
+                    type="button"
                     disabled={checkingIn}
                     onClick={() => handleCheckIn(m.qr_token)}
-                    className="btn btn-pill"
+                    className="btn btn-secondary btn-pill"
                     style={{
-                      backgroundColor: 'var(--color-stone)',
-                      color: '#fff',
                       fontSize: '12px',
-                      padding: '8px 16px'
+                      padding: '5px 12px'
                     }}
                   >
                     Check-in
@@ -301,17 +299,17 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
 
         {/* Right Column: Live Meal Check-in Feed */}
         <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
             <div>
-              <span className="eyebrow" style={{ color: 'var(--color-forest)' }}>Live Operational Log</span>
-              <h2 style={{ fontSize: '24px', marginTop: '4px' }}>Today's Check-ins</h2>
+              <span className="eyebrow">Real-Time Audit</span>
+              <h2 style={{ fontSize: '20px', marginTop: '2px' }}>Today's Check-ins</h2>
             </div>
-            <span className="badge badge-active">
-              {recentTransactions.length} Total Today
+            <span className="badge badge-active tnum">
+              {recentTransactions.length} Logged
             </span>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', overflowY: 'auto', maxHeight: '560px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', maxHeight: '520px' }}>
             {recentTransactions.length > 0 ? (
               recentTransactions.map((tx) => (
                 <div
@@ -320,47 +318,47 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    padding: '12px 16px',
-                    borderRadius: 'var(--radius-md)',
+                    padding: '10px 14px',
+                    borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--color-hairline)',
-                    backgroundColor: '#fff'
+                    backgroundColor: '#ffffff'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{
-                      width: '32px',
-                      height: '32px',
+                      width: '28px',
+                      height: '28px',
                       borderRadius: '50%',
-                      backgroundColor: '#e9f5ec',
+                      backgroundColor: 'var(--color-success-bg)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: 'var(--color-forest)'
+                      color: 'var(--color-success)'
                     }}>
-                      <CheckCircle size={16} />
+                      <CheckCircle size={15} />
                     </div>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontWeight: 600, fontSize: '14px' }}>
+                        <span style={{ fontWeight: 500, fontSize: '13px', color: 'var(--color-ink)' }}>
                           {tx.member_name || 'Member'}
                         </span>
-                        <span style={{ fontSize: '11px', color: 'var(--color-ash)', fontFamily: 'var(--font-mono)' }}>
+                        <span className="tnum" style={{ fontSize: '11px', color: 'var(--color-ink-mute)' }}>
                           ({tx.member_number})
                         </span>
                       </div>
-                      <span style={{ fontSize: '12px', color: 'var(--color-ash)' }}>
+                      <span className="tnum" style={{ fontSize: '11px', color: 'var(--color-ink-mute)' }}>
                         {new Date(tx.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {tx.meal_period}
                       </span>
                     </div>
                   </div>
 
-                  <span className="badge" style={{ backgroundColor: '#fbeee8', color: 'var(--color-clay)', fontSize: '11px' }}>
+                  <span className="badge badge-error tnum" style={{ fontSize: '11px' }}>
                     -1 Meal
                   </span>
                 </div>
               ))
             ) : (
-              <p style={{ color: 'var(--color-ash)', fontSize: '14px', textAlign: 'center', padding: '32px 0' }}>
+              <p style={{ color: 'var(--color-ink-mute)', fontSize: '13px', textAlign: 'center', padding: '36px 0' }}>
                 No check-ins recorded yet for today's session.
               </p>
             )}
@@ -383,4 +381,3 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
     </div>
   );
 };
-

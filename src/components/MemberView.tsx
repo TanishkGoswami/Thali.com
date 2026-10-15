@@ -32,10 +32,10 @@ export const MemberView: React.FC<MemberViewProps> = ({
   useEffect(() => {
     if (canvasRef.current && member?.qr_token) {
       QRCode.toCanvas(canvasRef.current, member.qr_token, {
-        width: 190,
+        width: 180,
         margin: 1,
         color: {
-          dark: '#1c1b1a',
+          dark: '#0d253d',
           light: '#ffffff'
         }
       }, (error) => {
@@ -65,7 +65,7 @@ export const MemberView: React.FC<MemberViewProps> = ({
   const todayMenu = menus.find(m => m.meal_period === activeMealPeriod) || menus[0];
 
   return (
-    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '32px 20px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
+    <div style={{ maxWidth: '1060px', margin: '0 auto', padding: '36px 20px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
       
       {/* Top Banner / Welcome */}
       <div style={{
@@ -78,21 +78,31 @@ export const MemberView: React.FC<MemberViewProps> = ({
         paddingBottom: '20px'
       }}>
         <div>
-          <span className="eyebrow" style={{ color: 'var(--color-stone)' }}>Member Portal</span>
-          <h1 style={{ fontSize: '36px', marginTop: '4px' }}>
+          <span className="eyebrow">Member Portal</span>
+          <h1 style={{ fontSize: '32px', marginTop: '4px' }}>
             Namaste, {member.full_name.split(' ')[0]}
           </h1>
-          <p style={{ color: 'var(--color-ash)', fontSize: '15px' }}>
-            Unique Member ID: <strong style={{ color: 'var(--color-ink)' }}>{member.member_number}</strong>
+          <p style={{ color: 'var(--color-ink-mute)', fontSize: '14px', marginTop: '2px' }}>
+            Member Pass ID: <strong className="tnum" style={{ color: 'var(--color-ink)' }}>{member.member_number}</strong>
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          <button onClick={loadMemberHistory} className="btn btn-outline btn-pill" title="View Meal Passbook">
-            <History size={14} /> Meal Passbook
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={loadMemberHistory}
+            className="btn btn-secondary btn-pill"
+            title="View Meal Passbook Ledger"
+          >
+            <History size={13} /> Meal Passbook
           </button>
-          <button onClick={onRefresh} className="btn btn-outline btn-pill" title="Refresh Live Data">
-            <RefreshCw size={14} /> Refresh
+          <button
+            type="button"
+            onClick={onRefresh}
+            className="btn btn-secondary btn-pill"
+            title="Refresh Live Data"
+          >
+            <RefreshCw size={13} /> Refresh
           </button>
           <span className={`badge badge-${member.subscription_status === 'active' ? 'active' : 'pending'}`}>
             {member.subscription_status === 'active' ? '● Active Subscription' : 'Pending Payment'}
@@ -107,32 +117,32 @@ export const MemberView: React.FC<MemberViewProps> = ({
           alignItems: 'center',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
-          gap: '12px',
+          gap: '14px',
           padding: '16px 20px',
-          backgroundColor: 'rgba(212, 160, 23, 0.08)',
-          border: '1.5px solid var(--color-gold)',
+          backgroundColor: 'var(--color-warning-bg)',
+          border: '1px solid var(--color-warning-border)',
           borderRadius: 'var(--radius-lg)'
         }}>
           <div>
-            <div style={{ fontWeight: 600, fontSize: '15px', color: 'var(--color-ink)' }}>
+            <div className="tnum" style={{ fontWeight: 600, fontSize: '14px', color: 'var(--color-ink)' }}>
               ⚡ Plan Activation Pending — ₹2,800 / 54 Meals
             </div>
-            <p style={{ fontSize: '13px', color: 'var(--color-stone)', marginTop: '2px' }}>
-              Verify your mobile phone via SMS OTP to confirm your contact and activate your digital QR meal pass.
+            <p style={{ fontSize: '13px', color: 'var(--color-ink-secondary)', marginTop: '2px' }}>
+              Verify your mobile number via SMS to confirm your contact and activate your digital QR meal pass.
             </p>
           </div>
           <button
+            type="button"
             onClick={() => setShowPaymentActivationModal(true)}
-            className="btn btn-primary"
-            style={{ padding: '8px 18px', fontSize: '13px', borderRadius: 'var(--radius-full)' }}
+            className="btn btn-primary btn-pill"
           >
-            <PhoneCall size={14} /> Verify Phone & Activate Pass
+            <PhoneCall size={13} /> Verify Phone & Activate Pass
           </button>
         </div>
       )}
 
       {/* Grid: QR Pass & Balance Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
         
         {/* Card 1: Digital QR Meal Pass */}
         <div className="card" style={{
@@ -140,60 +150,47 @@ export const MemberView: React.FC<MemberViewProps> = ({
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          background: 'linear-gradient(180deg, #ffffff 0%, var(--color-canvas) 100%)',
-          position: 'relative',
-          overflow: 'hidden'
+          position: 'relative'
         }}>
-          <div style={{
+          <div className="tnum" style={{
             position: 'absolute',
             top: '16px',
             right: '16px',
-            backgroundColor: 'var(--color-surface)',
+            backgroundColor: 'var(--color-canvas-soft)',
             border: '1px solid var(--color-hairline)',
-            padding: '4px 10px',
-            borderRadius: 'var(--radius-full)',
+            padding: '3px 8px',
+            borderRadius: 'var(--radius-pill)',
             fontSize: '11px',
-            fontWeight: 700,
-            color: 'var(--color-stone)'
+            fontWeight: 600,
+            color: 'var(--color-ink-mute)'
           }}>
             PASS #{member.member_number}
           </div>
 
-          <span className="eyebrow" style={{ color: 'var(--color-stone)', marginTop: '8px' }}>
-            Official Mess Check-in Pass
+          <span className="eyebrow" style={{ marginTop: '4px' }}>
+            Digital Venue Pass
           </span>
 
           <div style={{
-            padding: '16px',
+            padding: '12px',
             backgroundColor: '#ffffff',
-            borderRadius: 'var(--radius-lg)',
-            boxShadow: 'var(--shadow-card)',
-            margin: '20px 0',
+            borderRadius: 'var(--radius-md)',
+            boxShadow: 'var(--shadow-level-1)',
+            margin: '18px 0',
             border: '1px solid var(--color-hairline)'
           }}>
             <canvas ref={canvasRef} />
           </div>
 
-          <h3 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--color-ink)' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--color-ink)' }}>
             {member.full_name}
           </h3>
-          <p style={{ fontSize: '13px', color: 'var(--color-ash)', marginTop: '4px', maxWidth: '260px' }}>
-            Show this QR code to the receptionist or scan venue QR at meal time.
+          <p style={{ fontSize: '13px', color: 'var(--color-ink-mute)', marginTop: '3px', maxWidth: '260px' }}>
+            Show this QR code at reception scanner during meal service.
           </p>
 
-          <div style={{
-            marginTop: '20px',
-            padding: '8px 16px',
-            borderRadius: 'var(--radius-full)',
-            backgroundColor: '#eef4fc',
-            border: '1px solid #bfd9f8',
-            fontSize: '12px',
-            color: 'var(--color-primary)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px'
-          }}>
-            <ShieldCheck size={14} /> Server Verified Token
+          <div className="badge badge-indigo" style={{ marginTop: '16px', gap: '5px' }}>
+            <ShieldCheck size={13} /> Server Verified Token
           </div>
         </div>
 
@@ -202,105 +199,106 @@ export const MemberView: React.FC<MemberViewProps> = ({
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <span className="eyebrow" style={{ color: 'var(--color-gold)' }}>Subscription & Meals</span>
-                <h2 style={{ fontSize: '28px', marginTop: '4px' }}>Meal Balance</h2>
+                <span className="eyebrow">Subscription Status</span>
+                <h2 style={{ fontSize: '24px', marginTop: '2px' }}>Meal Balance</h2>
               </div>
-              <span className="badge badge-active">₹2,800 Plan</span>
+              <span className="badge badge-active tnum">₹2,800 Plan</span>
             </div>
 
-            {/* Circular Progress & Large Counter */}
+            {/* Circular Progress & Tabular Counter */}
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '24px',
-              margin: '28px 0',
-              padding: '20px',
-              backgroundColor: 'var(--color-canvas)',
+              gap: '20px',
+              margin: '24px 0',
+              padding: '18px',
+              backgroundColor: 'var(--color-canvas-soft)',
               borderRadius: 'var(--radius-lg)',
               border: '1px solid var(--color-hairline)'
             }}>
               <div style={{
-                width: '90px',
-                height: '90px',
+                width: '80px',
+                height: '80px',
                 borderRadius: '50%',
-                background: `conic-gradient(var(--color-primary) ${percentage * 3.6}deg, #e1dcd3 0deg)`,
+                background: `conic-gradient(var(--color-primary) ${percentage * 3.6}deg, #e3e8ee 0deg)`,
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                flexShrink: 0
               }}>
                 <div style={{
-                  width: '74px',
-                  height: '74px',
+                  width: '66px',
+                  height: '66px',
                   borderRadius: '50%',
-                  backgroundColor: 'var(--color-surface)',
+                  backgroundColor: '#ffffff',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  flexDirection: 'column'
+                  justifyContent: 'center'
                 }}>
-                  <span style={{ fontSize: '22px', fontWeight: 700, color: 'var(--color-ink)' }}>{percentage}%</span>
+                  <span className="tnum" style={{ fontSize: '18px', fontWeight: 600, color: 'var(--color-ink)' }}>{percentage}%</span>
                 </div>
               </div>
 
               <div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-                  <span style={{
-                    fontFamily: 'var(--font-display)',
-                    fontSize: '48px',
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                  <span className="tnum" style={{
+                    fontSize: '42px',
                     fontWeight: 300,
                     lineHeight: 1,
+                    letterSpacing: '-1px',
                     color: remainingMeals <= 5 ? 'var(--color-error)' : 'var(--color-ink)'
                   }}>
                     {remainingMeals}
                   </span>
-                  <span style={{ fontSize: '18px', color: 'var(--color-ash)', fontWeight: 500 }}>
+                  <span className="tnum" style={{ fontSize: '16px', color: 'var(--color-ink-mute)', fontWeight: 400 }}>
                     / {totalMeals} Meals
                   </span>
                 </div>
-                <p style={{ fontSize: '13px', color: 'var(--color-stone)', marginTop: '6px' }}>
-                  Shared seamlessly across Lunch & Dinner
+                <p style={{ fontSize: '13px', color: 'var(--color-ink-mute)', marginTop: '4px' }}>
+                  Shared across Lunch & Dinner services
                 </p>
               </div>
             </div>
 
             {/* Expiry Details */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', borderBottom: '1px dashed var(--color-hairline)', paddingBottom: '8px' }}>
-                <span style={{ color: 'var(--color-ash)' }}>Validity Period</span>
-                <span style={{ fontWeight: 600 }}>30 Days from Activation</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', borderBottom: '1px solid var(--color-hairline)', paddingBottom: '8px' }}>
+                <span style={{ color: 'var(--color-ink-mute)' }}>Validity Window</span>
+                <span className="tnum" style={{ fontWeight: 500 }}>30 Days from Activation</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', borderBottom: '1px dashed var(--color-hairline)', paddingBottom: '8px' }}>
-                <span style={{ color: 'var(--color-ash)' }}>Total Meals Consumed</span>
-                <span style={{ fontWeight: 600 }}>{consumedMeals} meals</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', borderBottom: '1px solid var(--color-hairline)', paddingBottom: '8px' }}>
+                <span style={{ color: 'var(--color-ink-mute)' }}>Meals Consumed</span>
+                <span className="tnum" style={{ fontWeight: 500 }}>{consumedMeals} meals</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-                <span style={{ color: 'var(--color-ash)' }}>Expiry Policy</span>
-                <span style={{ color: 'var(--color-clay)', fontWeight: 500 }}>Unused meals expire after 30d</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                <span style={{ color: 'var(--color-ink-mute)' }}>Renewal Policy</span>
+                <span style={{ color: 'var(--color-ink-secondary)', fontWeight: 400 }}>Unused meals expire after 30d</span>
               </div>
             </div>
           </div>
 
-          {/* Action Blue CTA */}
+          {/* Action Button */}
           <button
+            type="button"
             onClick={() => setShowPaymentActivationModal(true)}
             className="btn btn-primary"
-            style={{ width: '100%', marginTop: '24px' }}
+            style={{ width: '100%', marginTop: '20px' }}
           >
-            <Sparkles size={16} /> {member.subscription_status === 'active' ? 'Renew Subscription (₹2,800)' : 'Verify Phone & Activate (₹2,800)'}
+            <Sparkles size={15} /> {member.subscription_status === 'active' ? 'Renew Subscription (₹2,800)' : 'Verify Phone & Activate (₹2,800)'}
           </button>
         </div>
       </div>
 
       {/* Today's Menu Section */}
       <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
           <div>
-            <span className="eyebrow" style={{ color: 'var(--color-gold)' }}>Daily Mess Specials</span>
-            <h2 style={{ fontSize: '26px', marginTop: '2px' }}>
-              Today's {activeMealPeriod === 'lunch' ? '🌞 Lunch Menu' : '🌙 Dinner Menu'}
+            <span className="eyebrow">Dining Menu</span>
+            <h2 style={{ fontSize: '22px', marginTop: '2px' }}>
+              Today's {activeMealPeriod === 'lunch' ? 'Lunch Specials' : 'Dinner Specials'}
             </h2>
           </div>
-          <span style={{ fontSize: '13px', color: 'var(--color-stone)', backgroundColor: 'var(--color-canvas)', padding: '6px 14px', borderRadius: 'var(--radius-full)', border: '1px solid var(--color-hairline)' }}>
+          <span style={{ fontSize: '12px', color: 'var(--color-ink-mute)', backgroundColor: 'var(--color-canvas-soft)', padding: '4px 12px', borderRadius: 'var(--radius-pill)', border: '1px solid var(--color-hairline)' }}>
             Freshly prepared with pure Desi Ghee
           </span>
         </div>
@@ -308,40 +306,41 @@ export const MemberView: React.FC<MemberViewProps> = ({
         {todayMenu?.items && todayMenu.items.length > 0 ? (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-            gap: '16px'
+            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+            gap: '12px'
           }}>
             {todayMenu.items.map((item, idx) => (
               <div
                 key={item.id || idx}
                 style={{
-                  padding: '16px',
-                  backgroundColor: 'var(--color-canvas)',
+                  padding: '12px 14px',
+                  backgroundColor: 'var(--color-canvas-soft)',
                   borderRadius: 'var(--radius-md)',
                   border: '1px solid var(--color-hairline)',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px'
+                  gap: '10px'
                 }}
               >
                 <div style={{
-                  width: '32px',
-                  height: '32px',
+                  width: '28px',
+                  height: '28px',
                   borderRadius: '50%',
-                  backgroundColor: 'var(--color-surface)',
+                  backgroundColor: '#ffffff',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: 'var(--color-gold)',
-                  border: '1px solid var(--color-hairline)'
+                  color: 'var(--color-primary)',
+                  border: '1px solid var(--color-hairline)',
+                  flexShrink: 0
                 }}>
-                  <UtensilsCrossed size={16} />
+                  <UtensilsCrossed size={14} />
                 </div>
                 <div>
-                  <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-ink)' }}>
+                  <h4 style={{ fontSize: '14px', fontWeight: 500, color: 'var(--color-ink)' }}>
                     {item.name}
                   </h4>
-                  <span style={{ fontSize: '12px', color: 'var(--color-ash)' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--color-ink-mute)' }}>
                     {item.category || 'Special Dish'}
                   </span>
                 </div>
@@ -349,7 +348,7 @@ export const MemberView: React.FC<MemberViewProps> = ({
             ))}
           </div>
         ) : (
-          <p style={{ color: 'var(--color-ash)', fontSize: '14px' }}>Menu is being updated by the kitchen.</p>
+          <p style={{ color: 'var(--color-ink-mute)', fontSize: '13px' }}>Menu is being updated by the kitchen.</p>
         )}
       </div>
 
@@ -361,71 +360,72 @@ export const MemberView: React.FC<MemberViewProps> = ({
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(28, 27, 26, 0.6)',
-          backdropFilter: 'blur(4px)',
+          backgroundColor: 'rgba(13, 37, 61, 0.45)',
+          backdropFilter: 'blur(6px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 100,
           padding: '20px'
         }}>
-          <div className="card" style={{ maxWidth: '480px', width: '100%', padding: '32px', boxShadow: 'var(--shadow-floating)' }}>
-            <span className="eyebrow" style={{ color: 'var(--color-gold)' }}>Early Renewal</span>
-            <h2 style={{ fontSize: '26px', marginTop: '4px' }}>Renew Subscription</h2>
-            <p style={{ color: 'var(--color-ash)', fontSize: '14px', marginTop: '6px' }}>
-              Renewing now will automatically <strong>queue</strong> your 54 meals to start seamlessly when your current plan ends.
+          <div className="card" style={{ maxWidth: '440px', width: '100%', padding: '28px', boxShadow: 'var(--shadow-modal)' }}>
+            <span className="eyebrow">Early Renewal</span>
+            <h2 style={{ fontSize: '22px', marginTop: '2px' }}>Renew Subscription</h2>
+            <p style={{ color: 'var(--color-ink-mute)', fontSize: '13px', marginTop: '4px' }}>
+              Renewing now queues 54 meals to start when current quota finishes.
             </p>
 
             <div style={{
-              margin: '20px 0',
-              padding: '16px',
-              backgroundColor: 'var(--color-canvas)',
-              borderRadius: 'var(--radius-md)',
+              margin: '18px 0',
+              padding: '14px',
+              backgroundColor: 'var(--color-canvas-soft)',
+              borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--color-hairline)'
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span>Plan: <strong>Monthly Mess Thali</strong></span>
-                <span>54 Meals / 30 Days</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '13px' }}>
+                <span>Monthly Mess Thali</span>
+                <span className="tnum">54 Meals / 30 Days</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px', fontWeight: 700, color: 'var(--color-ink)' }}>
+              <div className="tnum" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px', fontWeight: 600, color: 'var(--color-ink)' }}>
                 <span>Amount:</span>
                 <span>₹2,800</span>
               </div>
             </div>
 
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-stone)', display: 'block', marginBottom: '8px' }}>
-                Select Payment Method:
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', display: 'block', marginBottom: '8px' }}>
+                Payment Method:
               </label>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', padding: '10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-hairline)', cursor: 'pointer', backgroundColor: paymentMethod === 'upi_direct' ? '#eef4fc' : '#fff' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', padding: '8px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-hairline)', cursor: 'pointer', backgroundColor: paymentMethod === 'upi_direct' ? 'var(--color-primary-subdued)' : '#ffffff' }}>
                   <input type="radio" checked={paymentMethod === 'upi_direct'} onChange={() => setPaymentMethod('upi_direct')} />
-                  <span>Direct UPI / QR (Instant Verification)</span>
+                  <span>Direct UPI / QR (Instant Activation)</span>
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', padding: '10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-hairline)', cursor: 'pointer', backgroundColor: paymentMethod === 'cash' ? '#eef4fc' : '#fff' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', padding: '8px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-hairline)', cursor: 'pointer', backgroundColor: paymentMethod === 'cash' ? 'var(--color-primary-subdued)' : '#ffffff' }}>
                   <input type="radio" checked={paymentMethod === 'cash'} onChange={() => setPaymentMethod('cash')} />
-                  <span>Cash at Counter (Requires Receptionist Approval)</span>
+                  <span>Cash at Counter (Requires Approval)</span>
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', padding: '10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-hairline)', cursor: 'pointer', backgroundColor: paymentMethod === 'gateway' ? '#eef4fc' : '#fff' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', padding: '8px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-hairline)', cursor: 'pointer', backgroundColor: paymentMethod === 'gateway' ? 'var(--color-primary-subdued)' : '#ffffff' }}>
                   <input type="radio" checked={paymentMethod === 'gateway'} onChange={() => setPaymentMethod('gateway')} />
-                  <span>Online Payment Gateway (Cards / Netbanking)</span>
+                  <span>Online Cards / Netbanking</span>
                 </label>
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ display: 'flex', gap: '10px' }}>
               <button
+                type="button"
                 onClick={() => setShowRenewModal(false)}
-                className="btn btn-outline"
+                className="btn btn-secondary btn-pill"
                 style={{ flex: 1 }}
               >
                 Cancel
               </button>
               <button
+                type="button"
                 disabled={renewing}
                 onClick={async () => {
                   setRenewing(true);
-                  // Simulate queued renewal
                   setTimeout(() => {
                     setRenewing(false);
                     setShowRenewModal(false);
@@ -444,7 +444,6 @@ export const MemberView: React.FC<MemberViewProps> = ({
       )}
 
       {/* Meal Passbook Modal */}
-
       {showHistoryModal && (
         <div style={{
           position: 'fixed',
@@ -452,34 +451,39 @@ export const MemberView: React.FC<MemberViewProps> = ({
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(28, 27, 26, 0.75)',
-          backdropFilter: 'blur(5px)',
+          backgroundColor: 'rgba(13, 37, 61, 0.45)',
+          backdropFilter: 'blur(6px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 110,
           padding: '20px'
         }}>
-          <div className="card" style={{ maxWidth: '560px', width: '100%', padding: '32px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', gap: '20px', backgroundColor: '#ffffff' }}>
+          <div className="card" style={{ maxWidth: '520px', width: '100%', padding: '28px', maxHeight: '85vh', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: 'var(--shadow-modal)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <span className="eyebrow" style={{ color: 'var(--color-gold)' }}>Member Audit Ledger</span>
-                <h2 style={{ fontSize: '24px', marginTop: '2px' }}>Meal Passbook & Attendance</h2>
-                <p style={{ fontSize: '13px', color: 'var(--color-ash)', marginTop: '2px' }}>
-                  Auditable record of all meals consumed and balance adjustments.
+                <span className="eyebrow">Audit Ledger</span>
+                <h3 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--color-ink)' }}>Meal Passbook</h3>
+                <p style={{ fontSize: '13px', color: 'var(--color-ink-mute)', marginTop: '2px' }}>
+                  Auditable record of all meals consumed and balance updates.
                 </p>
               </div>
-              <button onClick={() => setShowHistoryModal(false)} className="btn btn-outline btn-pill" style={{ padding: '8px' }}>
+              <button
+                type="button"
+                onClick={() => setShowHistoryModal(false)}
+                className="btn btn-outline btn-pill"
+                style={{ padding: '6px', border: 'none', color: 'var(--color-ink-mute)' }}
+              >
                 <X size={18} />
               </button>
             </div>
 
             {loadingHistory ? (
-              <div style={{ padding: '40px', textAlign: 'center', color: 'var(--color-ash)' }}>
+              <div style={{ padding: '36px', textAlign: 'center', color: 'var(--color-ink-mute)', fontSize: '13px' }}>
                 Loading meal passbook records...
               </div>
             ) : historyList.length > 0 ? (
-              <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '4px' }}>
+              <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', paddingRight: '2px' }}>
                 {historyList.map(tx => (
                   <div
                     key={tx.id}
@@ -487,39 +491,38 @@ export const MemberView: React.FC<MemberViewProps> = ({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      padding: '12px 16px',
-                      backgroundColor: 'var(--color-canvas)',
-                      borderRadius: 'var(--radius-md)',
+                      padding: '10px 14px',
+                      backgroundColor: 'var(--color-canvas-soft)',
+                      borderRadius: 'var(--radius-sm)',
                       border: '1px solid var(--color-hairline)'
                     }}
                   >
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '14px', fontWeight: 600, textTransform: 'capitalize' }}>
-                          {tx.meal_period === 'lunch' ? '🌞 Lunch Session' : tx.meal_period === 'dinner' ? '🌙 Dinner Session' : '⚙️ Balance Adjustment'}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '13px', fontWeight: 500, textTransform: 'capitalize' }}>
+                          {tx.meal_period === 'lunch' ? 'Lunch Session' : tx.meal_period === 'dinner' ? 'Dinner Session' : 'Balance Adjustment'}
                         </span>
-                        <span className="badge badge-active" style={{ fontSize: '10px' }}>
+                        <span className="badge badge-active" style={{ fontSize: '10px', padding: '1px 6px' }}>
                           {tx.status}
                         </span>
                       </div>
-                      <div style={{ fontSize: '12px', color: 'var(--color-ash)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <Clock size={12} />
+                      <div className="tnum" style={{ fontSize: '11px', color: 'var(--color-ink-mute)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <Clock size={11} />
                         {new Date(tx.created_at).toLocaleDateString('en-IN', {
                           day: 'numeric',
                           month: 'short',
-                          year: 'numeric',
                           hour: '2-digit',
                           minute: '2-digit'
                         })}
-                        {tx.reason && <span>• Reason: {tx.reason}</span>}
+                        {tx.reason && <span>• {tx.reason}</span>}
                       </div>
                     </div>
 
                     <div style={{ textAlign: 'right' }}>
-                      <span style={{
-                        fontWeight: 700,
-                        fontSize: '15px',
-                        color: tx.meal_delta < 0 ? 'var(--color-error)' : 'var(--color-forest)'
+                      <span className="tnum" style={{
+                        fontWeight: 600,
+                        fontSize: '14px',
+                        color: tx.meal_delta < 0 ? 'var(--color-error)' : 'var(--color-success)'
                       }}>
                         {tx.meal_delta < 0 ? `${tx.meal_delta} Meal` : `+${tx.meal_delta} Meals`}
                       </span>
@@ -528,12 +531,13 @@ export const MemberView: React.FC<MemberViewProps> = ({
                 ))}
               </div>
             ) : (
-              <div style={{ padding: '40px', textAlign: 'center', color: 'var(--color-ash)', backgroundColor: 'var(--color-canvas)', borderRadius: 'var(--radius-md)' }}>
+              <div style={{ padding: '32px', textAlign: 'center', color: 'var(--color-ink-mute)', backgroundColor: 'var(--color-canvas-soft)', borderRadius: 'var(--radius-sm)', fontSize: '13px' }}>
                 No meal transactions recorded yet on your current subscription.
               </div>
             )}
 
             <button
+              type="button"
               onClick={() => setShowHistoryModal(false)}
               className="btn btn-secondary btn-pill"
               style={{ width: '100%' }}
@@ -554,4 +558,3 @@ export const MemberView: React.FC<MemberViewProps> = ({
     </div>
   );
 };
-

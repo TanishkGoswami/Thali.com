@@ -1,4 +1,5 @@
-import { Utensils, QrCode, Shield, User, LogOut, LogIn } from 'lucide-react';
+import React from 'react';
+import { Utensils, QrCode, Shield, User, LogOut, LogIn, Sun, Moon } from 'lucide-react';
 import type { Role, Profile } from '../types';
 
 interface NavbarProps {
@@ -22,56 +23,52 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   return (
     <header style={{
-      backgroundColor: 'var(--color-canvas)',
+      backgroundColor: 'rgba(255, 255, 255, 0.88)',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
       borderBottom: '1px solid var(--color-hairline)',
       position: 'sticky',
       top: 0,
       zIndex: 50,
-      backdropFilter: 'blur(10px)',
-      padding: '12px 24px'
+      transition: 'background-color var(--transition-fast)'
     }}>
       <div style={{
-        maxWidth: '1280px',
+        maxWidth: '1240px',
         margin: '0 auto',
+        padding: '12px 20px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
-        gap: '16px'
+        gap: '12px'
       }}>
-        {/* Brand Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Brand Logo & Identity */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: 'var(--radius-full)',
-            backgroundColor: 'var(--color-stone)',
+            width: '34px',
+            height: '34px',
+            borderRadius: '9px',
+            backgroundColor: 'var(--color-primary)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#fff',
-            boxShadow: 'var(--shadow-subtle)'
+            color: '#ffffff',
+            boxShadow: '0 2px 8px rgba(83, 58, 253, 0.28)'
           }}>
-            <Utensils size={20} />
+            <Utensils size={18} />
           </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: '24px',
-                fontWeight: 400,
-                letterSpacing: '-0.02em',
-                color: 'var(--color-ink)'
-              }}>
-                Thali<span style={{ color: 'var(--color-gold)' }}>.com</span>
-              </span>
-              <span className="badge" style={{ backgroundColor: '#fff', border: '1px solid var(--color-hairline)', fontSize: '10px' }}>
-                Mess System
-              </span>
-            </div>
-            <p style={{ fontSize: '12px', color: 'var(--color-ash)', marginTop: '-2px' }}>
-              400+ Members • Pure Veg Mess
-            </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{
+              fontSize: '18px',
+              fontWeight: 600,
+              letterSpacing: '-0.4px',
+              color: 'var(--color-ink)'
+            }}>
+              Thali<span style={{ color: 'var(--color-primary)' }}>.com</span>
+            </span>
+            <span className="badge badge-indigo" style={{ fontSize: '10px', padding: '2px 7px' }}>
+              Mess Pass
+            </span>
           </div>
         </div>
 
@@ -79,40 +76,48 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
-          backgroundColor: 'var(--color-surface)',
-          padding: '4px',
-          borderRadius: 'var(--radius-full)',
+          gap: '2px',
+          backgroundColor: 'var(--color-canvas-soft)',
+          padding: '3px',
+          borderRadius: 'var(--radius-pill)',
           border: '1px solid var(--color-hairline)'
         }}>
           <button
+            type="button"
             onClick={() => onMealPeriodChange('lunch')}
             className="btn btn-pill"
             style={{
-              backgroundColor: activeMealPeriod === 'lunch' ? 'var(--color-stone)' : 'transparent',
-              color: activeMealPeriod === 'lunch' ? '#fff' : 'var(--color-ink)',
-              padding: '6px 14px',
-              fontSize: '13px'
+              backgroundColor: activeMealPeriod === 'lunch' ? '#ffffff' : 'transparent',
+              color: activeMealPeriod === 'lunch' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+              boxShadow: activeMealPeriod === 'lunch' ? 'var(--shadow-level-1)' : 'none',
+              padding: '5px 12px',
+              fontSize: '12px',
+              fontWeight: activeMealPeriod === 'lunch' ? 500 : 400
             }}
           >
-            🌞 Lunch Service
+            <Sun size={13} color={activeMealPeriod === 'lunch' ? '#ea580c' : 'currentColor'} />
+            Lunch Session
           </button>
           <button
+            type="button"
             onClick={() => onMealPeriodChange('dinner')}
             className="btn btn-pill"
             style={{
-              backgroundColor: activeMealPeriod === 'dinner' ? 'var(--color-stone)' : 'transparent',
-              color: activeMealPeriod === 'dinner' ? '#fff' : 'var(--color-ink)',
-              padding: '6px 14px',
-              fontSize: '13px'
+              backgroundColor: activeMealPeriod === 'dinner' ? '#ffffff' : 'transparent',
+              color: activeMealPeriod === 'dinner' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+              boxShadow: activeMealPeriod === 'dinner' ? 'var(--shadow-level-1)' : 'none',
+              padding: '5px 12px',
+              fontSize: '12px',
+              fontWeight: activeMealPeriod === 'dinner' ? 500 : 400
             }}
           >
-            🌙 Dinner Service
+            <Moon size={13} color={activeMealPeriod === 'dinner' ? '#6366f1' : 'currentColor'} />
+            Dinner Session
           </button>
         </div>
 
         {/* Right Section: User & Strict RBAC Navigation */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {currentUser ? (
             <>
               {/* If user is owner_admin, allow supervising views */}
@@ -120,112 +125,122 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  backgroundColor: 'var(--color-surface)',
+                  gap: '2px',
+                  backgroundColor: 'var(--color-canvas-soft)',
                   padding: '3px',
-                  borderRadius: 'var(--radius-full)',
+                  borderRadius: 'var(--radius-pill)',
                   border: '1px solid var(--color-hairline)'
                 }}>
                   <button
+                    type="button"
                     onClick={() => onRoleChange('owner_admin')}
                     className="btn btn-pill"
                     style={{
-                      backgroundColor: currentRole === 'owner_admin' ? 'var(--color-stone)' : 'transparent',
-                      color: currentRole === 'owner_admin' ? '#fff' : 'var(--color-ink)',
+                      backgroundColor: currentRole === 'owner_admin' ? '#ffffff' : 'transparent',
+                      color: currentRole === 'owner_admin' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+                      boxShadow: currentRole === 'owner_admin' ? 'var(--shadow-level-1)' : 'none',
                       gap: '5px',
-                      padding: '5px 10px',
-                      fontSize: '12px'
+                      padding: '4px 10px',
+                      fontSize: '12px',
+                      fontWeight: currentRole === 'owner_admin' ? 500 : 400
                     }}
                   >
-                    <Shield size={13} /> Admin
+                    <Shield size={12} /> Admin
                   </button>
                   <button
+                    type="button"
                     onClick={() => onRoleChange('receptionist')}
                     className="btn btn-pill"
                     style={{
-                      backgroundColor: currentRole === 'receptionist' ? 'var(--color-stone)' : 'transparent',
-                      color: currentRole === 'receptionist' ? '#fff' : 'var(--color-ink)',
+                      backgroundColor: currentRole === 'receptionist' ? '#ffffff' : 'transparent',
+                      color: currentRole === 'receptionist' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+                      boxShadow: currentRole === 'receptionist' ? 'var(--shadow-level-1)' : 'none',
                       gap: '5px',
-                      padding: '5px 10px',
-                      fontSize: '12px'
+                      padding: '4px 10px',
+                      fontSize: '12px',
+                      fontWeight: currentRole === 'receptionist' ? 500 : 400
                     }}
                   >
-                    <QrCode size={13} /> Scanner
+                    <QrCode size={12} /> Scanner
                   </button>
                   <button
+                    type="button"
                     onClick={() => onRoleChange('member')}
                     className="btn btn-pill"
                     style={{
-                      backgroundColor: currentRole === 'member' ? 'var(--color-stone)' : 'transparent',
-                      color: currentRole === 'member' ? '#fff' : 'var(--color-ink)',
+                      backgroundColor: currentRole === 'member' ? '#ffffff' : 'transparent',
+                      color: currentRole === 'member' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+                      boxShadow: currentRole === 'member' ? 'var(--shadow-level-1)' : 'none',
                       gap: '5px',
-                      padding: '5px 10px',
-                      fontSize: '12px'
+                      padding: '4px 10px',
+                      fontSize: '12px',
+                      fontWeight: currentRole === 'member' ? 500 : 400
                     }}
                   >
-                    <User size={13} /> Pass
+                    <User size={12} /> Pass
                   </button>
                 </div>
               )}
 
-              {/* User Profile Capsule */}
+              {/* Minimal User Profile Capsule */}
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '10px',
-                padding: '4px 6px 4px 12px',
-                borderRadius: 'var(--radius-full)',
-                backgroundColor: '#FFFFFF',
+                gap: '8px',
+                padding: '3px 4px 3px 10px',
+                borderRadius: 'var(--radius-pill)',
+                backgroundColor: '#ffffff',
                 border: '1px solid var(--color-hairline)',
-                boxShadow: 'var(--shadow-subtle)'
+                boxShadow: 'var(--shadow-level-1)'
               }}>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)' }}>
+                  <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)' }}>
                     {currentUser.full_name}
                   </div>
                   <div style={{ fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
                     {currentUser.role === 'owner_admin' ? (
-                      <span style={{ color: 'var(--color-gold)', fontWeight: 600 }}>👑 Owner Admin</span>
+                      <span style={{ color: 'var(--color-primary)', fontWeight: 500 }}>Admin Console</span>
                     ) : currentUser.role === 'receptionist' ? (
-                      <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>Staff Reception</span>
+                      <span style={{ color: 'var(--color-ink-mute)', fontWeight: 500 }}>Reception Staff</span>
                     ) : (
-                      <span style={{ color: 'var(--color-moss)', fontWeight: 600 }}>Member • {currentUser.member_number}</span>
+                      <span className="tnum" style={{ color: 'var(--color-ink-mute)', fontWeight: 500 }}>
+                        {currentUser.member_number}
+                      </span>
                     )}
                   </div>
                 </div>
 
                 <button
+                  type="button"
                   onClick={onLogout}
-                  title="Sign out or switch user"
-                  className="btn"
+                  title="Sign out of account"
+                  className="btn btn-outline btn-pill"
                   style={{
-                    backgroundColor: 'var(--color-surface)',
-                    border: '1px solid var(--color-hairline)',
-                    padding: '6px',
-                    borderRadius: 'var(--radius-full)',
-                    cursor: 'pointer',
-                    color: 'var(--color-ash)',
+                    padding: '5px',
+                    borderRadius: 'var(--radius-pill)',
+                    color: 'var(--color-ink-mute)',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center'
+                    justifyContent: 'center',
+                    border: '1px solid var(--color-hairline)'
                   }}
                 >
-                  <LogOut size={14} />
+                  <LogOut size={13} />
                 </button>
               </div>
             </>
           ) : (
             <button
+              type="button"
               onClick={onOpenLogin}
               className="btn btn-primary"
               style={{
-                gap: '8px',
-                padding: '8px 18px',
-                fontSize: '13px',
-                fontWeight: 600,
-                borderRadius: 'var(--radius-full)'
+                gap: '6px',
+                padding: '7px 16px',
+                fontSize: '13px'
               }}
             >
-              <LogIn size={15} /> Sign In with Phone
+              <LogIn size={14} /> Sign In
             </button>
           )}
         </div>

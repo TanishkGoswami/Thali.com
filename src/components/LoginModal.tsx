@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Lock, Mail, User, ArrowRight, RefreshCw, AlertCircle, X, KeyRound } from 'lucide-react';
+import { Lock, Mail, User, ArrowRight, RefreshCw, AlertCircle, X, KeyRound, Utensils } from 'lucide-react';
 import { loginWithEmailOrIdAndPin, registerNewMember, getTestProfileByNumber, saveLocalSession } from '../lib/auth';
 import type { Profile } from '../types';
 
@@ -70,7 +70,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     }
   };
 
-  // Handle Quick Test Login (for instant testing)
+  // Handle Quick Test Login (for instant evaluation)
   const handleQuickTestLogin = async (memberNumber: string) => {
     setLoading(true);
     setErrorMsg(null);
@@ -92,18 +92,18 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
   const cardContent = (
     <div style={{
-      backgroundColor: '#FFFFFF',
+      backgroundColor: '#ffffff',
       borderRadius: 'var(--radius-xl)',
       width: '100%',
-      maxWidth: '440px',
-      boxShadow: 'var(--shadow-elevation)',
+      maxWidth: '430px',
+      boxShadow: 'var(--shadow-modal)',
       border: '1px solid var(--color-hairline)',
       overflow: 'hidden',
-      animation: 'fadeIn 0.2s ease-out'
+      animation: 'fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
     }}>
       {/* Brand Header */}
       <div style={{
-        padding: '24px 24px 16px',
+        padding: '28px 24px 20px',
         borderBottom: '1px solid var(--color-hairline)',
         display: 'flex',
         justifyContent: 'space-between',
@@ -111,97 +111,106 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{
+              width: '28px',
+              height: '28px',
+              borderRadius: '7px',
+              backgroundColor: 'var(--color-primary)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#ffffff'
+            }}>
+              <Utensils size={15} />
+            </div>
             <span style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: '26px',
-              fontWeight: 500,
+              fontSize: '20px',
+              fontWeight: 600,
+              letterSpacing: '-0.4px',
               color: 'var(--color-ink)'
             }}>
-              Thali<span style={{ color: 'var(--color-gold)' }}>.com</span>
+              Thali<span style={{ color: 'var(--color-primary)' }}>.com</span>
             </span>
-            <span className="badge" style={{ backgroundColor: 'var(--color-surface)', fontSize: '11px' }}>
-              Mess Portal
-            </span>
-          </div>
-          <p style={{ fontSize: '13px', color: 'var(--color-ash)', marginTop: '4px' }}>
-            {tab === 'signin'
-              ? 'Sign in with your Email & secret Access PIN'
-              : 'Register for a digital meal pass & 54-meal quota'}
-          </p>
+            </div>
+        
         </div>
 
         {allowClose && onClose && !embedded && (
           <button
+            type="button"
             onClick={onClose}
+            className="btn btn-outline btn-pill"
             style={{
-              background: 'transparent',
+              padding: '6px',
+              color: 'var(--color-ink-mute)',
               border: 'none',
-              cursor: 'pointer',
-              color: 'var(--color-ash)',
-              padding: '4px'
+              cursor: 'pointer'
             }}
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         )}
       </div>
 
-      {/* Tabs */}
+      {/* Segmented Pill Tabs */}
       <div style={{
-        display: 'flex',
-        borderBottom: '1px solid var(--color-hairline)',
-        backgroundColor: 'var(--color-canvas)'
+        padding: '12px 24px 0',
+        backgroundColor: '#ffffff'
       }}>
-        <button
-          type="button"
-          onClick={() => { setTab('signin'); setErrorMsg(null); }}
-          style={{
-            flex: 1,
-            padding: '12px',
-            border: 'none',
-            background: tab === 'signin' ? '#FFFFFF' : 'transparent',
-            fontWeight: 600,
-            fontSize: '13px',
-            color: tab === 'signin' ? 'var(--color-ink)' : 'var(--color-ash)',
-            borderBottom: tab === 'signin' ? '2px solid var(--color-stone)' : 'none',
-            cursor: 'pointer'
-          }}
-        >
-          Sign In (Everyday Access)
-        </button>
-        <button
-          type="button"
-          onClick={() => { setTab('register'); setErrorMsg(null); }}
-          style={{
-            flex: 1,
-            padding: '12px',
-            border: 'none',
-            background: tab === 'register' ? '#FFFFFF' : 'transparent',
-            fontWeight: 600,
-            fontSize: '13px',
-            color: tab === 'register' ? 'var(--color-ink)' : 'var(--color-ash)',
-            borderBottom: tab === 'register' ? '2px solid var(--color-stone)' : 'none',
-            cursor: 'pointer'
-          }}
-        >
-          New Member Sign-Up
-        </button>
+        <div style={{
+          display: 'flex',
+          backgroundColor: 'var(--color-canvas-soft)',
+          padding: '3px',
+          borderRadius: 'var(--radius-pill)',
+          border: '1px solid var(--color-hairline)'
+        }}>
+          <button
+            type="button"
+            onClick={() => { setTab('signin'); setErrorMsg(null); }}
+            className="btn btn-pill"
+            style={{
+              flex: 1,
+              backgroundColor: tab === 'signin' ? '#ffffff' : 'transparent',
+              color: tab === 'signin' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+              boxShadow: tab === 'signin' ? 'var(--shadow-level-1)' : 'none',
+              fontSize: '13px',
+              fontWeight: tab === 'signin' ? 500 : 400
+            }}
+          >
+            Sign In
+          </button>
+          <button
+            type="button"
+            onClick={() => { setTab('register'); setErrorMsg(null); }}
+            className="btn btn-pill"
+            style={{
+              flex: 1,
+              backgroundColor: tab === 'register' ? '#ffffff' : 'transparent',
+              color: tab === 'register' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+              boxShadow: tab === 'register' ? 'var(--shadow-level-1)' : 'none',
+              fontSize: '13px',
+              fontWeight: tab === 'register' ? 500 : 400
+            }}
+          >
+            New Member
+          </button>
+        </div>
       </div>
 
-      {/* Content Body */}
-      <div style={{ padding: '24px' }}>
+      {/* Content Form Body */}
+      <div style={{ padding: '20px 24px 28px' }}>
         {errorMsg && (
           <div style={{
             display: 'flex',
             alignItems: 'flex-start',
-            gap: '10px',
-            padding: '12px 14px',
-            backgroundColor: 'rgba(217, 83, 79, 0.08)',
-            border: '1px solid rgba(217, 83, 79, 0.3)',
-            borderRadius: 'var(--radius-md)',
-            marginBottom: '18px',
+            gap: '8px',
+            padding: '10px 12px',
+            backgroundColor: 'var(--color-error-bg)',
+            border: '1px solid var(--color-error-border)',
+            borderRadius: 'var(--radius-sm)',
+            marginBottom: '16px',
             fontSize: '13px',
-            color: '#d9534f'
+            color: 'var(--color-error)'
           }}>
             <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
             <div>{errorMsg}</div>
@@ -212,16 +221,16 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           <form onSubmit={handleSignIn} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {/* Email or Member ID */}
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)', marginBottom: '8px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '6px' }}>
                 Email Address or Member ID
               </label>
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                border: '1.5px solid var(--color-hairline)',
-                borderRadius: 'var(--radius-lg)',
-                padding: '2px 12px',
-                backgroundColor: '#FFFFFF'
+                border: '1px solid var(--color-hairline-input)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '2px 10px',
+                backgroundColor: '#ffffff'
               }}>
                 <input
                   type="text"
@@ -234,30 +243,31 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     flex: 1,
                     border: 'none',
                     outline: 'none',
-                    padding: '10px 4px',
+                    padding: '8px 2px',
                     fontSize: '14px',
-                    color: 'var(--color-ink)'
+                    color: 'var(--color-ink)',
+                    backgroundColor: 'transparent'
                   }}
                 />
-                <Mail size={18} color="var(--color-ash)" />
+                <Mail size={16} color="var(--color-ink-mute)" />
               </div>
             </div>
 
             {/* Secret PIN / Access Code */}
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <label style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)' }}>
                   Secret PIN / Access Code
                 </label>
-                <span style={{ fontSize: '11px', color: 'var(--color-ash)' }}>Default: 1234</span>
+                <span className="tnum" style={{ fontSize: '11px', color: 'var(--color-ink-mute)' }}>Default: 1234</span>
               </div>
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                border: '1.5px solid var(--color-hairline)',
-                borderRadius: 'var(--radius-lg)',
-                padding: '2px 12px',
-                backgroundColor: '#FFFFFF'
+                border: '1px solid var(--color-hairline-input)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '2px 10px',
+                backgroundColor: '#ffffff'
               }}>
                 <input
                   type="password"
@@ -270,14 +280,15 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     flex: 1,
                     border: 'none',
                     outline: 'none',
-                    padding: '10px 4px',
-                    fontSize: '16px',
+                    padding: '8px 2px',
+                    fontSize: '15px',
                     fontFamily: 'var(--font-mono)',
-                    letterSpacing: '0.2em',
-                    color: 'var(--color-ink)'
+                    letterSpacing: '0.15em',
+                    color: 'var(--color-ink)',
+                    backgroundColor: 'transparent'
                   }}
                 />
-                <Lock size={18} color="var(--color-ash)" />
+                <Lock size={16} color="var(--color-ink-mute)" />
               </div>
             </div>
 
@@ -287,11 +298,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               className="btn btn-primary"
               style={{
                 width: '100%',
-                padding: '12px',
-                fontSize: '15px',
-                fontWeight: 600,
+                padding: '10px',
+                fontSize: '14px',
                 marginTop: '6px',
-                borderRadius: 'var(--radius-lg)',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
@@ -300,11 +309,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             >
               {loading ? (
                 <>
-                  <RefreshCw size={16} className="animate-spin" /> Signing In...
+                  <RefreshCw size={15} className="animate-spin" /> Signing In...
                 </>
               ) : (
                 <>
-                  Access Meal Pass <ArrowRight size={16} />
+                  Access Meal Pass <ArrowRight size={15} />
                 </>
               )}
             </button>
@@ -313,16 +322,16 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {/* Full Name */}
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)', marginBottom: '8px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '6px' }}>
                 Full Name
               </label>
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                border: '1.5px solid var(--color-hairline)',
-                borderRadius: 'var(--radius-lg)',
-                padding: '2px 12px',
-                backgroundColor: '#FFFFFF'
+                border: '1px solid var(--color-hairline-input)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '2px 10px',
+                backgroundColor: '#ffffff'
               }}>
                 <input
                   type="text"
@@ -335,27 +344,28 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     flex: 1,
                     border: 'none',
                     outline: 'none',
-                    padding: '10px 4px',
+                    padding: '8px 2px',
                     fontSize: '14px',
-                    color: 'var(--color-ink)'
+                    color: 'var(--color-ink)',
+                    backgroundColor: 'transparent'
                   }}
                 />
-                <User size={18} color="var(--color-ash)" />
+                <User size={16} color="var(--color-ink-mute)" />
               </div>
             </div>
 
             {/* Email Address */}
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)', marginBottom: '8px' }}>
-                Email Address (used for everyday login)
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '6px' }}>
+                Email Address
               </label>
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                border: '1.5px solid var(--color-hairline)',
-                borderRadius: 'var(--radius-lg)',
-                padding: '2px 12px',
-                backgroundColor: '#FFFFFF'
+                border: '1px solid var(--color-hairline-input)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '2px 10px',
+                backgroundColor: '#ffffff'
               }}>
                 <input
                   type="email"
@@ -367,27 +377,28 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     flex: 1,
                     border: 'none',
                     outline: 'none',
-                    padding: '10px 4px',
+                    padding: '8px 2px',
                     fontSize: '14px',
-                    color: 'var(--color-ink)'
+                    color: 'var(--color-ink)',
+                    backgroundColor: 'transparent'
                   }}
                 />
-                <Mail size={18} color="var(--color-ash)" />
+                <Mail size={16} color="var(--color-ink-mute)" />
               </div>
             </div>
 
             {/* Create PIN */}
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)', marginBottom: '8px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '6px' }}>
                 Create 4-Digit Secret PIN
               </label>
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                border: '1.5px solid var(--color-hairline)',
-                borderRadius: 'var(--radius-lg)',
-                padding: '2px 12px',
-                backgroundColor: '#FFFFFF'
+                border: '1px solid var(--color-hairline-input)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '2px 10px',
+                backgroundColor: '#ffffff'
               }}>
                 <input
                   type="password"
@@ -400,17 +411,18 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     flex: 1,
                     border: 'none',
                     outline: 'none',
-                    padding: '10px 4px',
-                    fontSize: '16px',
+                    padding: '8px 2px',
+                    fontSize: '15px',
                     fontFamily: 'var(--font-mono)',
-                    letterSpacing: '0.2em',
-                    color: 'var(--color-ink)'
+                    letterSpacing: '0.15em',
+                    color: 'var(--color-ink)',
+                    backgroundColor: 'transparent'
                   }}
                 />
-                <KeyRound size={18} color="var(--color-ash)" />
+                <KeyRound size={16} color="var(--color-ink-mute)" />
               </div>
-              <p style={{ fontSize: '11px', color: 'var(--color-ash)', marginTop: '4px' }}>
-                You will use this PIN with your email to log in every day without needing an SMS.
+              <p style={{ fontSize: '11px', color: 'var(--color-ink-mute)', marginTop: '4px' }}>
+                Use this PIN to login without SMS.
               </p>
             </div>
 
@@ -420,11 +432,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               className="btn btn-primary"
               style={{
                 width: '100%',
-                padding: '12px',
-                fontSize: '15px',
-                fontWeight: 600,
+                padding: '10px',
+                fontSize: '14px',
                 marginTop: '6px',
-                borderRadius: 'var(--radius-lg)',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
@@ -433,11 +443,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             >
               {loading ? (
                 <>
-                  <RefreshCw size={16} className="animate-spin" /> Creating Pass...
+                  <RefreshCw size={15} className="animate-spin" /> Creating Pass...
                 </>
               ) : (
                 <>
-                  Create Account & Get Pass <ArrowRight size={16} />
+                  Create Account & Get Pass <ArrowRight size={15} />
                 </>
               )}
             </button>
@@ -456,8 +466,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             justifyContent: 'space-between',
             marginBottom: '10px'
           }}>
-            <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-ash)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Staff & Pre-Seeded Quick Access
+            <span className="eyebrow" style={{ fontSize: '10px' }}>
+              Quick Evaluation Access
             </span>
           </div>
 
@@ -466,34 +476,32 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               type="button"
               onClick={() => handleQuickTestLogin('REC-01')}
               disabled={loading}
+              className="btn btn-secondary"
               style={{
                 padding: '8px 10px',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--color-hairline)',
-                backgroundColor: 'var(--color-canvas)',
-                cursor: 'pointer',
-                textAlign: 'left'
+                borderRadius: 'var(--radius-sm)',
+                textAlign: 'left',
+                display: 'block'
               }}
             >
-              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-ink)' }}>Ramesh Patel</div>
-              <div style={{ fontSize: '10px', color: 'var(--color-ash)' }}>Receptionist • PIN: 1234</div>
+              <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-ink)' }}>Ramesh Patel</div>
+              <div className="tnum" style={{ fontSize: '11px', color: 'var(--color-ink-mute)' }}>Reception Staff • 1234</div>
             </button>
 
             <button
               type="button"
               onClick={() => handleQuickTestLogin('ADMIN-01')}
               disabled={loading}
+              className="btn btn-secondary"
               style={{
                 padding: '8px 10px',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--color-hairline)',
-                backgroundColor: 'var(--color-canvas)',
-                cursor: 'pointer',
-                textAlign: 'left'
+                borderRadius: 'var(--radius-sm)',
+                textAlign: 'left',
+                display: 'block'
               }}
             >
-              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-ink)' }}>Mess Owner</div>
-              <div style={{ fontSize: '10px', color: 'var(--color-gold)' }}>Admin Console • PIN: 1234</div>
+              <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-ink)' }}>Mess Owner</div>
+              <div className="tnum" style={{ fontSize: '11px', color: 'var(--color-primary)' }}>Admin Console • 1234</div>
             </button>
           </div>
         </div>
@@ -522,8 +530,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(17, 19, 18, 0.75)',
-      backdropFilter: 'blur(8px)',
+      backgroundColor: 'rgba(13, 37, 61, 0.45)',
+      backdropFilter: 'blur(6px)',
+      WebkitBackdropFilter: 'blur(6px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',

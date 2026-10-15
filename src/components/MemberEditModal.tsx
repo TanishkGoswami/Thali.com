@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { X, Save, Plus, Minus } from 'lucide-react';
-
 import type { Profile } from '../types';
 import { api } from '../services/api';
 import { supabase } from '../lib/supabase';
-
 
 interface MemberEditModalProps {
   member: Profile & { remaining_meals?: number; subscription_status?: string };
@@ -59,10 +57,7 @@ export const MemberEditModal: React.FC<MemberEditModalProps> = ({
           return;
         }
 
-        // We need the subscription ID. In our schema, we can look it up or let adjustMemberBalance handle it
-        // Let's fetch active subscription or query it
         const { data: sub } = await supabase
-
           .from('subscriptions')
           .select('id')
           .eq('member_id', member.id)
@@ -74,7 +69,6 @@ export const MemberEditModal: React.FC<MemberEditModalProps> = ({
         if (sub?.id) {
           await api.adjustMemberBalance(member.id, sub.id, adjustDelta, adjustReason);
         } else {
-          // If no active subscription, look for any subscription
           const { data: anySub } = await supabase
             .from('subscriptions')
             .select('id')
@@ -105,8 +99,9 @@ export const MemberEditModal: React.FC<MemberEditModalProps> = ({
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(28, 27, 26, 0.75)',
-      backdropFilter: 'blur(5px)',
+      backgroundColor: 'rgba(13, 37, 61, 0.45)',
+      backdropFilter: 'blur(6px)',
+      WebkitBackdropFilter: 'blur(6px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -114,25 +109,23 @@ export const MemberEditModal: React.FC<MemberEditModalProps> = ({
       padding: '20px'
     }}>
       <div className="card" style={{
-        maxWidth: '520px',
+        maxWidth: '480px',
         width: '100%',
-        padding: '32px',
+        padding: '28px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '20px',
-        backgroundColor: '#ffffff',
+        gap: '16px',
         boxShadow: 'var(--shadow-modal)'
       }}>
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span className="eyebrow" style={{ color: 'var(--color-clay)' }}>Member Record</span>
-              <span style={{
-                fontFamily: 'var(--font-mono)',
+              <span className="eyebrow">Member Record</span>
+              <span className="tnum" style={{
                 fontSize: '11px',
-                fontWeight: 700,
-                backgroundColor: 'var(--color-canvas)',
+                fontWeight: 600,
+                backgroundColor: 'var(--color-canvas-soft)',
                 padding: '2px 6px',
                 borderRadius: '4px',
                 border: '1px solid var(--color-hairline)'
@@ -140,19 +133,24 @@ export const MemberEditModal: React.FC<MemberEditModalProps> = ({
                 {member.member_number}
               </span>
             </div>
-            <h3 style={{ fontSize: '24px', marginTop: '2px' }}>Edit & Adjust Member</h3>
+            <h3 style={{ fontSize: '20px', fontWeight: 600, marginTop: '2px' }}>Edit & Adjust Member</h3>
           </div>
-          <button onClick={onClose} className="btn btn-outline btn-pill" style={{ padding: '8px' }}>
+          <button
+            type="button"
+            onClick={onClose}
+            className="btn btn-outline btn-pill"
+            style={{ padding: '6px', border: 'none', color: 'var(--color-ink-mute)' }}
+          >
             <X size={18} />
           </button>
         </div>
 
         {errorMsg && (
           <div style={{
-            padding: '12px 16px',
-            backgroundColor: '#fff4f2',
-            border: '1px solid #f1cfc4',
-            borderRadius: 'var(--radius-md)',
+            padding: '10px 12px',
+            backgroundColor: 'var(--color-error-bg)',
+            border: '1px solid var(--color-error-border)',
+            borderRadius: 'var(--radius-sm)',
             color: 'var(--color-error)',
             fontSize: '13px'
           }}>
@@ -160,11 +158,11 @@ export const MemberEditModal: React.FC<MemberEditModalProps> = ({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           
           {/* Profile Details */}
           <div>
-            <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-stone)', display: 'block', marginBottom: '4px' }}>
+            <label style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', display: 'block', marginBottom: '4px' }}>
               Full Name:
             </label>
             <input
@@ -178,7 +176,7 @@ export const MemberEditModal: React.FC<MemberEditModalProps> = ({
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <div>
-              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-stone)', display: 'block', marginBottom: '4px' }}>
+              <label style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', display: 'block', marginBottom: '4px' }}>
                 Phone Number:
               </label>
               <input
@@ -190,7 +188,7 @@ export const MemberEditModal: React.FC<MemberEditModalProps> = ({
               />
             </div>
             <div>
-              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-stone)', display: 'block', marginBottom: '4px' }}>
+              <label style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', display: 'block', marginBottom: '4px' }}>
                 Account Status:
               </label>
               <select
@@ -207,46 +205,45 @@ export const MemberEditModal: React.FC<MemberEditModalProps> = ({
 
           {/* Meal Balance Adjustment Section */}
           <div style={{
-            backgroundColor: 'var(--color-canvas)',
-            padding: '16px',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--color-hairline)',
-            marginTop: '4px'
+            backgroundColor: 'var(--color-canvas-soft)',
+            padding: '14px',
+            borderRadius: 'var(--radius-sm)',
+            border: '1px solid var(--color-hairline)'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)' }}>
                 Meal Balance Adjustment
               </span>
-              <span style={{ fontSize: '12px', color: 'var(--color-ash)' }}>
+              <span className="tnum" style={{ fontSize: '12px', color: 'var(--color-ink-mute)' }}>
                 Current: <strong style={{ color: 'var(--color-ink)' }}>{currentBalance} meals</strong>
               </span>
             </div>
 
             {/* Quick Action Buttons */}
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '10px' }}>
               <button
                 type="button"
                 onClick={() => setAdjustDelta(prev => prev + 1)}
-                className="btn btn-outline btn-pill"
-                style={{ fontSize: '12px', padding: '6px 12px' }}
+                className="btn btn-secondary btn-pill"
+                style={{ fontSize: '11px', padding: '4px 10px' }}
               >
-                <Plus size={12} /> +1 Meal
+                <Plus size={11} /> +1 Meal
               </button>
               <button
                 type="button"
                 onClick={() => setAdjustDelta(prev => prev + 5)}
-                className="btn btn-outline btn-pill"
-                style={{ fontSize: '12px', padding: '6px 12px' }}
+                className="btn btn-secondary btn-pill"
+                style={{ fontSize: '11px', padding: '4px 10px' }}
               >
-                <Plus size={12} /> +5 Meals
+                <Plus size={11} /> +5 Meals
               </button>
               <button
                 type="button"
                 onClick={() => setAdjustDelta(prev => prev - 1)}
-                className="btn btn-outline btn-pill"
-                style={{ fontSize: '12px', padding: '6px 12px' }}
+                className="btn btn-secondary btn-pill"
+                style={{ fontSize: '11px', padding: '4px 10px' }}
               >
-                <Minus size={12} /> -1 Meal
+                <Minus size={11} /> -1 Meal
               </button>
               {adjustDelta !== 0 && (
                 <button
@@ -256,7 +253,7 @@ export const MemberEditModal: React.FC<MemberEditModalProps> = ({
                     setAdjustReason('');
                   }}
                   className="btn btn-outline btn-pill"
-                  style={{ fontSize: '12px', padding: '6px 12px', color: 'var(--color-error)' }}
+                  style={{ fontSize: '11px', padding: '4px 10px', color: 'var(--color-error)' }}
                 >
                   Reset
                 </button>
@@ -265,9 +262,9 @@ export const MemberEditModal: React.FC<MemberEditModalProps> = ({
 
             {adjustDelta !== 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
                   <span>Simulated New Balance:</span>
-                  <strong style={{ color: simulatedNewBalance < 0 ? 'var(--color-error)' : 'var(--color-forest)', fontSize: '15px' }}>
+                  <strong className="tnum" style={{ color: simulatedNewBalance < 0 ? 'var(--color-error)' : 'var(--color-success)', fontSize: '14px' }}>
                     {simulatedNewBalance} meals ({adjustDelta > 0 ? `+${adjustDelta}` : adjustDelta})
                   </strong>
                 </div>
@@ -275,7 +272,7 @@ export const MemberEditModal: React.FC<MemberEditModalProps> = ({
                 <input
                   type="text"
                   required
-                  placeholder="Audit Reason (e.g. Rollover from cash register, Guest lunch)"
+                  placeholder="Audit Reason (e.g. Cash rollover, guest pass adjustment)"
                   value={adjustReason}
                   onChange={(e) => setAdjustReason(e.target.value)}
                   className="form-input"
@@ -286,11 +283,11 @@ export const MemberEditModal: React.FC<MemberEditModalProps> = ({
           </div>
 
           {/* Action Buttons */}
-          <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
             <button
               type="button"
               onClick={onClose}
-              className="btn btn-outline"
+              className="btn btn-secondary btn-pill"
               style={{ flex: 1 }}
             >
               Cancel
@@ -299,9 +296,9 @@ export const MemberEditModal: React.FC<MemberEditModalProps> = ({
               type="submit"
               disabled={isSubmitting}
               className="btn btn-primary"
-              style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              style={{ flex: 2, gap: '6px' }}
             >
-              <Save size={16} /> {isSubmitting ? 'Saving...' : 'Save & Update'}
+              <Save size={14} /> {isSubmitting ? 'Saving...' : 'Save & Update'}
             </button>
           </div>
 

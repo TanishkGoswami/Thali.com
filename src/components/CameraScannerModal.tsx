@@ -39,17 +39,16 @@ export const CameraScannerModal: React.FC<CameraScannerModalProps> = ({
       const devices = await Html5Qrcode.getCameras();
       if (devices && devices.length > 0) {
         setCameras(devices);
-        // Prefer back camera ("environment") if available
         const backCam = devices.find(d => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('environment'));
         const defaultId = backCam ? backCam.id : devices[0].id;
         setSelectedCameraId(defaultId);
         startScannerWithCamera(defaultId);
       } else {
-        setCameraError('No video camera devices found on this device.');
+        setCameraError('No camera devices detected on this device.');
       }
     } catch (err: any) {
       console.error('Camera initialization error:', err);
-      setCameraError('Camera access was denied or not supported in this browser. Please enable camera permissions.');
+      setCameraError('Camera access was denied or not supported in this browser. Please grant camera permissions.');
     }
   };
 
@@ -68,12 +67,11 @@ export const CameraScannerModal: React.FC<CameraScannerModalProps> = ({
         cameraId,
         {
           fps: 12,
-          qrbox: { width: 260, height: 260 },
+          qrbox: { width: 250, height: 250 },
           aspectRatio: 1.0
         },
         (decodedText) => {
           const now = Date.now();
-          // Debounce rapid re-scans of identical text within 2.5 seconds
           if (decodedText === lastScanned && now - lastScannedTime < 2500) {
             return;
           }
@@ -82,9 +80,7 @@ export const CameraScannerModal: React.FC<CameraScannerModalProps> = ({
 
           onScanSuccess(decodedText);
         },
-        () => {
-          // Frame parse error ignored
-        }
+        () => {}
       );
 
       if (isMountedRef.current) {
@@ -131,8 +127,9 @@ export const CameraScannerModal: React.FC<CameraScannerModalProps> = ({
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(28, 27, 26, 0.75)',
+      backgroundColor: 'rgba(13, 37, 61, 0.45)',
       backdropFilter: 'blur(6px)',
+      WebkitBackdropFilter: 'blur(6px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -140,32 +137,32 @@ export const CameraScannerModal: React.FC<CameraScannerModalProps> = ({
       padding: '20px'
     }}>
       <div className="card" style={{
-        maxWidth: '480px',
+        maxWidth: '440px',
         width: '100%',
-        padding: '28px',
+        padding: '24px',
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
-        gap: '20px',
-        backgroundColor: '#ffffff',
-        boxShadow: '0 24px 60px rgba(0, 0, 0, 0.25)'
+        gap: '16px',
+        boxShadow: 'var(--shadow-modal)'
       }}>
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <span className="eyebrow" style={{ color: 'var(--color-gold)' }}>Live Optical Scan</span>
-            <h3 style={{ fontSize: '22px', marginTop: '2px' }}>Camera QR Scanner</h3>
-            <p style={{ fontSize: '12px', color: 'var(--color-ash)', marginTop: '2px' }}>
-              Active slot: <strong style={{ textTransform: 'capitalize', color: 'var(--color-ink)' }}>{mealPeriod}</strong> • Point at member's phone pass
+            <span className="eyebrow">Optical Validation</span>
+            <h3 style={{ fontSize: '18px', fontWeight: 600, marginTop: '2px' }}>Camera QR Scanner</h3>
+            <p style={{ fontSize: '12px', color: 'var(--color-ink-mute)', marginTop: '2px' }}>
+              Active slot: <strong style={{ textTransform: 'capitalize', color: 'var(--color-ink)' }}>{mealPeriod}</strong> • Point at member's pass
             </p>
           </div>
           <button
+            type="button"
             onClick={() => {
               stopScanner();
               onClose();
             }}
             className="btn btn-outline btn-pill"
-            style={{ padding: '8px' }}
+            style={{ padding: '6px', border: 'none', color: 'var(--color-ink-mute)' }}
             title="Close Camera"
           >
             <X size={18} />
@@ -174,13 +171,13 @@ export const CameraScannerModal: React.FC<CameraScannerModalProps> = ({
 
         {/* Camera Selector */}
         {cameras.length > 1 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
-            <Camera size={16} color="var(--color-stone)" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
+            <Camera size={14} color="var(--color-ink-mute)" />
             <select
               value={selectedCameraId}
               onChange={handleCameraChange}
               className="form-input"
-              style={{ padding: '6px 12px', fontSize: '12px' }}
+              style={{ padding: '5px 8px', fontSize: '12px' }}
             >
               {cameras.map(cam => (
                 <option key={cam.id} value={cam.id}>
@@ -195,8 +192,8 @@ export const CameraScannerModal: React.FC<CameraScannerModalProps> = ({
         <div style={{
           position: 'relative',
           width: '100%',
-          minHeight: '300px',
-          backgroundColor: '#0d0d0d',
+          minHeight: '280px',
+          backgroundColor: '#0d253d',
           borderRadius: 'var(--radius-lg)',
           overflow: 'hidden',
           display: 'flex',
@@ -211,24 +208,25 @@ export const CameraScannerModal: React.FC<CameraScannerModalProps> = ({
             <div style={{
               position: 'absolute',
               inset: 0,
-              padding: '24px',
-              backgroundColor: '#fff4f2',
+              padding: '20px',
+              backgroundColor: 'var(--color-error-bg)',
               color: 'var(--color-error)',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
               textAlign: 'center',
-              gap: '12px'
+              gap: '10px'
             }}>
-              <AlertCircle size={32} />
-              <p style={{ fontSize: '14px', lineHeight: 1.4 }}>{cameraError}</p>
+              <AlertCircle size={28} />
+              <p style={{ fontSize: '13px', lineHeight: 1.4 }}>{cameraError}</p>
               <button
+                type="button"
                 onClick={initCameras}
-                className="btn btn-outline btn-pill"
-                style={{ fontSize: '12px' }}
+                className="btn btn-secondary btn-pill"
+                style={{ fontSize: '11px', padding: '3px 10px' }}
               >
-                <RefreshCw size={14} /> Retry Camera
+                <RefreshCw size={12} /> Retry Camera
               </button>
             </div>
           )}
@@ -236,16 +234,17 @@ export const CameraScannerModal: React.FC<CameraScannerModalProps> = ({
 
         {/* Help tip & Dismiss */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '12px', color: 'var(--color-ash)' }}>
+          <span style={{ fontSize: '11px', color: 'var(--color-ink-mute)' }}>
             {isScanning ? '● Camera active — hold steady' : 'Connecting to camera...'}
           </span>
           <button
+            type="button"
             onClick={() => {
               stopScanner();
               onClose();
             }}
             className="btn btn-secondary btn-pill"
-            style={{ fontSize: '13px' }}
+            style={{ fontSize: '12px' }}
           >
             Close Scanner
           </button>

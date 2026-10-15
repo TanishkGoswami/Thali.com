@@ -76,7 +76,7 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
       setTimeout(() => {
         onSuccess();
         onClose();
-      }, 2000);
+      }, 1800);
     } catch (err: any) {
       console.error('Activation error:', err);
       setErrorMsg(err.message || 'Invalid or expired OTP code.');
@@ -92,8 +92,9 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(17, 19, 18, 0.75)',
-      backdropFilter: 'blur(8px)',
+      backgroundColor: 'rgba(13, 37, 61, 0.45)',
+      backdropFilter: 'blur(6px)',
+      WebkitBackdropFilter: 'blur(6px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -101,14 +102,14 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
       padding: '16px'
     }}>
       <div style={{
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#ffffff',
         borderRadius: 'var(--radius-xl)',
         width: '100%',
-        maxWidth: '460px',
-        boxShadow: 'var(--shadow-elevation)',
+        maxWidth: '440px',
+        boxShadow: 'var(--shadow-modal)',
         border: '1px solid var(--color-hairline)',
         overflow: 'hidden',
-        animation: 'fadeIn 0.2s ease-out'
+        animation: 'fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
       }}>
         {/* Header */}
         <div style={{
@@ -120,34 +121,30 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
         }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{
-                fontFamily: 'var(--font-display)',
-                fontSize: '22px',
-                fontWeight: 600,
-                color: 'var(--color-ink)'
-              }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--color-ink)' }}>
                 Activate Monthly Pass
-              </span>
-              <span className="badge" style={{ backgroundColor: 'var(--color-moss)', color: '#FFFFFF', fontSize: '11px' }}>
+              </h3>
+              <span className="badge badge-active tnum" style={{ fontSize: '11px' }}>
                 ₹2,800 • 54 Meals
               </span>
             </div>
-            <p style={{ fontSize: '13px', color: 'var(--color-ash)', marginTop: '4px' }}>
-              Verify your official phone number via SMS to activate your meal quota
+            <p style={{ fontSize: '13px', color: 'var(--color-ink-mute)', marginTop: '4px' }}>
+              Verify mobile number once to authorize your digital pass
             </p>
           </div>
 
           <button
+            type="button"
             onClick={onClose}
+            className="btn btn-outline btn-pill"
             style={{
-              background: 'transparent',
+              padding: '6px',
               border: 'none',
-              cursor: 'pointer',
-              color: 'var(--color-ash)',
-              padding: '4px'
+              color: 'var(--color-ink-mute)',
+              cursor: 'pointer'
             }}
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
@@ -157,14 +154,14 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
             <div style={{
               display: 'flex',
               alignItems: 'flex-start',
-              gap: '10px',
-              padding: '12px 14px',
-              backgroundColor: 'rgba(217, 83, 79, 0.08)',
-              border: '1px solid rgba(217, 83, 79, 0.3)',
-              borderRadius: 'var(--radius-md)',
-              marginBottom: '18px',
+              gap: '8px',
+              padding: '10px 12px',
+              backgroundColor: 'var(--color-error-bg)',
+              border: '1px solid var(--color-error-border)',
+              borderRadius: 'var(--radius-sm)',
+              marginBottom: '16px',
               fontSize: '13px',
-              color: '#d9534f'
+              color: 'var(--color-error)'
             }}>
               <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
               <div>{errorMsg}</div>
@@ -175,38 +172,39 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
             <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{
                 padding: '12px 14px',
-                backgroundColor: 'var(--color-canvas)',
-                borderRadius: 'var(--radius-md)',
+                backgroundColor: 'var(--color-canvas-soft)',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--color-hairline)',
                 fontSize: '13px',
-                color: 'var(--color-stone)',
-                lineHeight: 1.4
+                color: 'var(--color-ink-secondary)',
+                lineHeight: 1.45
               }}>
-                ℹ️ <strong>One-Time Phone Verification:</strong> We send an OTP SMS only once during subscription activation so the mess has your verified contact for renewals.
+                <strong>One-Time Verification:</strong> We only send an SMS OTP during subscription activation to verify your contact for pass renewals.
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)', marginBottom: '8px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '6px' }}>
                   Mobile Phone Number
                 </label>
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  border: '1.5px solid var(--color-hairline)',
-                  borderRadius: 'var(--radius-lg)',
-                  padding: '2px 12px',
-                  backgroundColor: '#FFFFFF'
+                  border: '1px solid var(--color-hairline-input)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '2px 10px',
+                  backgroundColor: '#ffffff'
                 }}>
-                  <div style={{
+                  <div className="tnum" style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '6px',
-                    paddingRight: '10px',
+                    gap: '4px',
+                    paddingRight: '8px',
                     borderRight: '1px solid var(--color-hairline)',
-                    color: 'var(--color-stone)',
-                    fontSize: '14px',
-                    fontWeight: 600
+                    color: 'var(--color-ink-mute)',
+                    fontSize: '13px',
+                    fontWeight: 500
                   }}>
-                    <span>🇮🇳</span> +91
+                    +91
                   </div>
                   <input
                     type="tel"
@@ -220,13 +218,14 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
                       flex: 1,
                       border: 'none',
                       outline: 'none',
-                      padding: '10px 12px',
-                      fontSize: '16px',
+                      padding: '8px 10px',
+                      fontSize: '15px',
                       fontFamily: 'var(--font-mono)',
-                      color: 'var(--color-ink)'
+                      color: 'var(--color-ink)',
+                      backgroundColor: 'transparent'
                     }}
                   />
-                  <Phone size={18} color="var(--color-ash)" />
+                  <Phone size={16} color="var(--color-ink-mute)" />
                 </div>
               </div>
 
@@ -236,10 +235,8 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
                 className="btn btn-primary"
                 style={{
                   width: '100%',
-                  padding: '12px',
-                  fontSize: '15px',
-                  fontWeight: 600,
-                  borderRadius: 'var(--radius-lg)',
+                  padding: '10px',
+                  fontSize: '14px',
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
@@ -248,11 +245,11 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
               >
                 {loading ? (
                   <>
-                    <RefreshCw size={16} className="animate-spin" /> Sending SMS OTP...
+                    <RefreshCw size={15} className="animate-spin" /> Sending SMS OTP...
                   </>
                 ) : (
                   <>
-                    Send OTP to Phone <ArrowRight size={16} />
+                    Send OTP to Phone <ArrowRight size={15} />
                   </>
                 )}
               </button>
@@ -263,27 +260,27 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
             <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {simulatedCode && (
                 <div style={{
-                  padding: '10px 12px',
-                  backgroundColor: 'rgba(212, 160, 23, 0.1)',
-                  border: '1px solid rgba(212, 160, 23, 0.3)',
-                  borderRadius: 'var(--radius-md)',
+                  padding: '8px 12px',
+                  backgroundColor: 'var(--color-warning-bg)',
+                  border: '1px solid var(--color-warning-border)',
+                  borderRadius: 'var(--radius-sm)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   gap: '8px'
                 }}>
-                  <div style={{ fontSize: '12px', color: 'var(--color-ink)' }}>
-                    ⚡ <strong>OTP Code:</strong> <strong>{simulatedCode}</strong>
+                  <div className="tnum" style={{ fontSize: '12px', color: 'var(--color-ink)' }}>
+                    OTP Code: <strong>{simulatedCode}</strong>
                   </div>
                   <button
                     type="button"
                     onClick={() => setOtp(simulatedCode)}
                     className="btn btn-pill"
                     style={{
-                      backgroundColor: 'var(--color-gold)',
-                      color: '#FFFFFF',
+                      backgroundColor: 'var(--color-warning)',
+                      color: '#ffffff',
                       fontSize: '11px',
-                      padding: '3px 8px'
+                      padding: '2px 8px'
                     }}
                   >
                     Auto-fill
@@ -292,7 +289,7 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
               )}
 
               <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)', marginBottom: '8px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '6px' }}>
                   Enter 6-Digit OTP received on +91 {phone.replace(/\D/g, '').slice(-10)}
                 </label>
                 <input
@@ -305,16 +302,16 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
                   maxLength={6}
                   style={{
                     width: '100%',
-                    padding: '14px 16px',
-                    fontSize: '24px',
+                    padding: '12px 16px',
+                    fontSize: '22px',
                     textAlign: 'center',
                     fontFamily: 'var(--font-mono)',
-                    letterSpacing: '0.4em',
-                    borderRadius: 'var(--radius-lg)',
-                    border: '1.5px solid var(--color-hairline)',
+                    letterSpacing: '0.3em',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--color-hairline-input)',
                     outline: 'none',
                     color: 'var(--color-ink)',
-                    backgroundColor: '#FAFAF8'
+                    backgroundColor: 'var(--color-canvas-soft)'
                   }}
                 />
               </div>
@@ -323,14 +320,14 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
                 <button
                   type="button"
                   onClick={() => { setStep('phone'); setOtp(''); }}
-                  style={{ background: 'none', border: 'none', color: 'var(--color-stone)', cursor: 'pointer', textDecoration: 'underline' }}
+                  style={{ background: 'none', border: 'none', color: 'var(--color-ink-mute)', cursor: 'pointer', textDecoration: 'underline' }}
                 >
                   Change Number
                 </button>
                 <button
                   type="button"
                   onClick={handleSendOtp}
-                  style={{ background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer', fontWeight: 600 }}
+                  style={{ background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer', fontWeight: 500 }}
                 >
                   Resend OTP
                 </button>
@@ -342,24 +339,22 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
                 className="btn btn-primary"
                 style={{
                   width: '100%',
-                  padding: '12px',
-                  fontSize: '15px',
-                  fontWeight: 600,
-                  borderRadius: 'var(--radius-lg)',
+                  padding: '10px',
+                  fontSize: '14px',
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
                   gap: '8px',
-                  marginTop: '8px'
+                  marginTop: '6px'
                 }}
               >
                 {loading ? (
                   <>
-                    <RefreshCw size={16} className="animate-spin" /> Verifying & Activating...
+                    <RefreshCw size={15} className="animate-spin" /> Verifying...
                   </>
                 ) : (
                   <>
-                    <CheckCircle2 size={16} /> Verify Phone & Activate Plan
+                    <CheckCircle2 size={15} /> Verify Phone & Activate Plan
                   </>
                 )}
               </button>
@@ -369,23 +364,23 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
           {step === 'success' && (
             <div style={{ textAlign: 'center', padding: '24px 8px' }}>
               <div style={{
-                width: '64px',
-                height: '64px',
-                borderRadius: 'var(--radius-full)',
-                backgroundColor: 'rgba(74, 93, 79, 0.12)',
-                color: 'var(--color-moss)',
+                width: '56px',
+                height: '56px',
+                borderRadius: 'var(--radius-pill)',
+                backgroundColor: 'var(--color-success-bg)',
+                color: 'var(--color-success)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 16px'
               }}>
-                <ShieldCheck size={36} />
+                <ShieldCheck size={32} />
               </div>
-              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '24px', color: 'var(--color-ink)', marginBottom: '8px' }}>
-                Plan Successfully Activated!
+              <h3 style={{ fontSize: '20px', fontWeight: 600, color: 'var(--color-ink)', marginBottom: '6px' }}>
+                Pass Activated!
               </h3>
-              <p style={{ fontSize: '14px', color: 'var(--color-ash)', marginBottom: '16px' }}>
-                Phone verified & 54 Meals granted for 30 days. Your digital QR pass is now ready to scan!
+              <p style={{ fontSize: '13px', color: 'var(--color-ink-mute)', marginBottom: '16px' }}>
+                Phone verified & 54 Meals granted for 30 days. Your digital QR pass is ready to scan.
               </p>
             </div>
           )}

@@ -91,7 +91,6 @@ export function App() {
 
   // Handle successful login from LoginModal
   const handleLoginSuccess = (profile: Profile) => {
-    // Find enriched member data if present
     const enriched = members.find(m => m.id === profile.id || m.member_number === profile.member_number) || profile;
     setCurrentUser(enriched);
     setCurrentRole(profile.role);
@@ -191,7 +190,17 @@ export function App() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-canvas)', display: 'flex', flexDirection: 'column' }}>
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: 'var(--color-canvas)',
+      display: 'flex',
+      flexDirection: 'column',
+      position: 'relative',
+      overflowX: 'hidden'
+    }}>
+      {/* Signature Atmospheric Gradient Mesh Hero Backdrop */}
+      <div className="gradient-mesh-hero" />
+
       {/* Top Header & Strict RBAC Navigation */}
       <Navbar
         currentUser={currentUser}
@@ -204,11 +213,11 @@ export function App() {
       />
 
       {/* Main Content Area */}
-      <main style={{ flex: 1 }}>
+      <main style={{ flex: 1, position: 'relative', zIndex: 1 }}>
         {loading ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', flexDirection: 'column', gap: '12px' }}>
-            <Loader2 size={36} className="animate-spin" color="var(--color-stone)" />
-            <p style={{ color: 'var(--color-ash)', fontSize: '15px' }}>Connecting to Thali.com Database...</p>
+            <Loader2 size={32} className="animate-spin" color="var(--color-primary)" />
+            <p style={{ color: 'var(--color-ink-mute)', fontSize: '14px' }}>Connecting to Thali.com Network...</p>
           </div>
         ) : (
           renderRoleGuardedContent()
@@ -225,16 +234,18 @@ export function App() {
         />
       )}
 
-      {/* Footer styled with Oura's Ink Band Soft */}
+      {/* Stripe-style Footer: Clean light canvas with hairline divider */}
       <footer style={{
-        backgroundColor: 'var(--color-ink-band-soft)',
-        color: 'var(--color-on-dark)',
+        backgroundColor: '#ffffff',
+        color: 'var(--color-ink-mute)',
         padding: '32px 24px',
         marginTop: 'auto',
-        borderTop: '1px solid rgba(255, 255, 255, 0.1)'
+        borderTop: '1px solid var(--color-hairline)',
+        position: 'relative',
+        zIndex: 1
       }}>
         <div style={{
-          maxWidth: '1280px',
+          maxWidth: '1240px',
           margin: '0 auto',
           display: 'flex',
           justifyContent: 'space-between',
@@ -243,17 +254,17 @@ export function App() {
           gap: '16px'
         }}>
           <div>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: 300 }}>
-              Thali.com
+            <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-ink)', letterSpacing: '-0.2px' }}>
+              Thali<span style={{ color: 'var(--color-primary)' }}>.com</span>
             </div>
-            <p style={{ fontSize: '13px', color: 'var(--color-mute)', marginTop: '4px' }}>
-              Digital Mess Management & Meal Pass System • Built for 400+ Members
+            <p style={{ fontSize: '13px', color: 'var(--color-ink-mute)', marginTop: '2px' }}>
+              Digital Mess Infrastructure & Meal Pass Verification
             </p>
           </div>
-          <div style={{ display: 'flex', gap: '24px', fontSize: '13px', color: 'var(--color-mute)' }}>
+          <div className="tnum" style={{ display: 'flex', gap: '20px', fontSize: '12px', color: 'var(--color-ink-mute-2)', flexWrap: 'wrap' }}>
             <span>Timezone: Asia/Kolkata</span>
             <span>Plan: ₹2,800 / 54 Meals</span>
-            <span>Duplicate Rule: 1 Lunch + 1 Dinner / day</span>
+            <span>Anti-Duplicate: 1 Lunch + 1 Dinner / day</span>
           </div>
         </div>
       </footer>

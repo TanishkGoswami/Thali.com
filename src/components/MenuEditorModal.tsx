@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { X, Plus, Trash2, Save } from 'lucide-react';
-
 import type { DailyMenu } from '../types';
 import { api } from '../services/api';
 
@@ -93,8 +92,9 @@ export const MenuEditorModal: React.FC<MenuEditorModalProps> = ({
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(28, 27, 26, 0.75)',
-      backdropFilter: 'blur(5px)',
+      backgroundColor: 'rgba(13, 37, 61, 0.45)',
+      backdropFilter: 'blur(6px)',
+      WebkitBackdropFilter: 'blur(6px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -102,30 +102,41 @@ export const MenuEditorModal: React.FC<MenuEditorModalProps> = ({
       padding: '20px'
     }}>
       <div className="card" style={{
-        maxWidth: '540px',
+        maxWidth: '500px',
         width: '100%',
-        padding: '32px',
+        padding: '28px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '20px',
+        gap: '16px',
         maxHeight: '90vh',
         overflowY: 'auto',
-        backgroundColor: '#ffffff'
+        boxShadow: 'var(--shadow-modal)'
       }}>
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <span className="eyebrow" style={{ color: 'var(--color-clay)' }}>Kitchen & Dining Operations</span>
-            <h3 style={{ fontSize: '24px', marginTop: '2px' }}>Publish Daily Menu</h3>
+            <span className="eyebrow">Dining Operations</span>
+            <h3 style={{ fontSize: '20px', fontWeight: 600, marginTop: '2px' }}>Publish Daily Menu</h3>
           </div>
-          <button onClick={onClose} className="btn btn-outline btn-pill" style={{ padding: '8px' }}>
+          <button
+            type="button"
+            onClick={onClose}
+            className="btn btn-outline btn-pill"
+            style={{ padding: '6px', border: 'none', color: 'var(--color-ink-mute)' }}
+          >
             <X size={18} />
           </button>
         </div>
 
-        <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Meal Period Selector */}
-          <div style={{ display: 'flex', gap: '12px' }}>
+        <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          {/* Meal Period Segmented Toggle */}
+          <div style={{
+            display: 'flex',
+            backgroundColor: 'var(--color-canvas-soft)',
+            padding: '3px',
+            borderRadius: 'var(--radius-pill)',
+            border: '1px solid var(--color-hairline)'
+          }}>
             <button
               type="button"
               onClick={() => {
@@ -135,11 +146,14 @@ export const MenuEditorModal: React.FC<MenuEditorModalProps> = ({
               className="btn btn-pill"
               style={{
                 flex: 1,
-                backgroundColor: mealPeriod === 'lunch' ? 'var(--color-stone)' : 'var(--color-canvas)',
-                color: mealPeriod === 'lunch' ? '#fff' : 'var(--color-stone)'
+                backgroundColor: mealPeriod === 'lunch' ? '#ffffff' : 'transparent',
+                color: mealPeriod === 'lunch' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+                boxShadow: mealPeriod === 'lunch' ? 'var(--shadow-level-1)' : 'none',
+                fontSize: '12px',
+                fontWeight: mealPeriod === 'lunch' ? 500 : 400
               }}
             >
-              🌞 Lunch Menu
+              Lunch Service
             </button>
             <button
               type="button"
@@ -150,16 +164,19 @@ export const MenuEditorModal: React.FC<MenuEditorModalProps> = ({
               className="btn btn-pill"
               style={{
                 flex: 1,
-                backgroundColor: mealPeriod === 'dinner' ? 'var(--color-stone)' : 'var(--color-canvas)',
-                color: mealPeriod === 'dinner' ? '#fff' : 'var(--color-stone)'
+                backgroundColor: mealPeriod === 'dinner' ? '#ffffff' : 'transparent',
+                color: mealPeriod === 'dinner' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+                boxShadow: mealPeriod === 'dinner' ? 'var(--shadow-level-1)' : 'none',
+                fontSize: '12px',
+                fontWeight: mealPeriod === 'dinner' ? 500 : 400
               }}
             >
-              🌙 Dinner Menu
+              Dinner Service
             </button>
           </div>
 
           <div>
-            <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-stone)', display: 'block', marginBottom: '4px' }}>
+            <label style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', display: 'block', marginBottom: '4px' }}>
               Menu Title / Theme:
             </label>
             <input
@@ -172,7 +189,7 @@ export const MenuEditorModal: React.FC<MenuEditorModalProps> = ({
           </div>
 
           <div>
-            <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-stone)', display: 'block', marginBottom: '4px' }}>
+            <label style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', display: 'block', marginBottom: '4px' }}>
               Chef Notes & Refill Rules:
             </label>
             <input
@@ -186,22 +203,23 @@ export const MenuEditorModal: React.FC<MenuEditorModalProps> = ({
 
           {/* Dishes List */}
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-stone)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <label style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)' }}>
                 Menu Dishes ({items.length})
               </label>
-              <span style={{ fontSize: '12px', color: 'var(--color-ash)' }}>Shown on all member passes</span>
+              <span style={{ fontSize: '11px', color: 'var(--color-ink-mute)' }}>Shown on all digital passes</span>
             </div>
 
             <div style={{
               display: 'flex',
               flexDirection: 'column',
               gap: '6px',
-              backgroundColor: 'var(--color-canvas)',
-              padding: '12px',
-              borderRadius: 'var(--radius-md)',
-              maxHeight: '220px',
-              overflowY: 'auto'
+              backgroundColor: 'var(--color-canvas-soft)',
+              padding: '10px',
+              borderRadius: 'var(--radius-sm)',
+              maxHeight: '200px',
+              overflowY: 'auto',
+              border: '1px solid var(--color-hairline)'
             }}>
               {items.map((it, idx) => (
                 <div
@@ -210,7 +228,7 @@ export const MenuEditorModal: React.FC<MenuEditorModalProps> = ({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    padding: '8px 12px',
+                    padding: '6px 10px',
                     backgroundColor: '#ffffff',
                     borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--color-hairline)',
@@ -218,30 +236,30 @@ export const MenuEditorModal: React.FC<MenuEditorModalProps> = ({
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span className="badge" style={{ fontSize: '10px', backgroundColor: 'var(--color-canvas)', color: 'var(--color-stone)' }}>
+                    <span className="badge badge-indigo" style={{ fontSize: '10px', padding: '1px 6px' }}>
                       {it.category}
                     </span>
-                    <strong style={{ color: 'var(--color-ink)' }}>{it.name}</strong>
+                    <strong style={{ color: 'var(--color-ink)', fontWeight: 500 }}>{it.name}</strong>
                   </div>
                   <button
                     type="button"
                     onClick={() => handleRemoveItem(idx)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-ash)', padding: '4px' }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-ink-mute)', padding: '2px' }}
                     title="Remove item"
                   >
-                    <Trash2 size={14} />
+                    <Trash2 size={13} />
                   </button>
                 </div>
               ))}
             </div>
 
             {/* Add new dish input row */}
-            <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+            <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
               <select
                 value={newItemCat}
                 onChange={(e) => setNewItemCat(e.target.value as any)}
                 className="form-input"
-                style={{ width: '120px', fontSize: '13px', padding: '8px' }}
+                style={{ width: '100px', fontSize: '12px', padding: '6px' }}
               >
                 {CATEGORIES.map(c => (
                   <option key={c} value={c}>{c}</option>
@@ -264,20 +282,20 @@ export const MenuEditorModal: React.FC<MenuEditorModalProps> = ({
               <button
                 type="button"
                 onClick={handleAddItem}
-                className="btn btn-secondary"
-                style={{ padding: '8px 14px' }}
+                className="btn btn-secondary btn-pill"
+                style={{ padding: '6px 12px', fontSize: '12px' }}
               >
-                <Plus size={16} /> Add
+                <Plus size={13} /> Add
               </button>
             </div>
           </div>
 
           {/* Action buttons */}
-          <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
             <button
               type="button"
               onClick={onClose}
-              className="btn btn-outline"
+              className="btn btn-secondary btn-pill"
               style={{ flex: 1 }}
             >
               Cancel
@@ -286,9 +304,9 @@ export const MenuEditorModal: React.FC<MenuEditorModalProps> = ({
               type="submit"
               disabled={isSaving}
               className="btn btn-primary"
-              style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              style={{ flex: 2, gap: '6px' }}
             >
-              <Save size={16} /> {isSaving ? 'Publishing...' : 'Publish Today\'s Menu'}
+              <Save size={14} /> {isSaving ? 'Publishing...' : 'Publish Today\'s Menu'}
             </button>
           </div>
         </form>

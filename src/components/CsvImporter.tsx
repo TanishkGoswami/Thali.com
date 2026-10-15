@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Upload, FileSpreadsheet, CheckCircle, AlertTriangle, Play, RefreshCw } from 'lucide-react';
-
 import { api } from '../services/api';
 
 interface CsvImporterProps {
@@ -144,39 +143,39 @@ export const CsvImporter: React.FC<CsvImporterProps> = ({ onSuccess, existingMem
   const invalidCount = parsedRows.length - validCount;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       
       {/* Upload & Drop Zone */}
       <div className="card">
-        <span className="eyebrow" style={{ color: 'var(--color-clay)' }}>Legacy Member Migration</span>
-        <h2 style={{ fontSize: '24px', marginTop: '4px' }}>Import Existing 400+ Members</h2>
-        <p style={{ color: 'var(--color-ash)', fontSize: '14px', marginTop: '6px' }}>
-          Upload your existing paper-register spreadsheet. Preserves your original member numbers (e.g. <code>M-101</code>, <code>405</code>), sets initial meal counts, and generates secure digital passes.
+        <span className="eyebrow">Legacy Migration</span>
+        <h2 style={{ fontSize: '20px', marginTop: '2px' }}>Import Existing 400+ Members</h2>
+        <p style={{ color: 'var(--color-ink-mute)', fontSize: '13px', marginTop: '4px' }}>
+          Upload spreadsheet data to preserve member numbers (e.g. <code className="tnum">M-101</code>, <code className="tnum">405</code>) and assign initial meal balances.
         </p>
 
         <div style={{
-          border: '2px dashed var(--color-hairline)',
+          border: '1px dashed var(--color-hairline-input)',
           borderRadius: 'var(--radius-lg)',
-          padding: '36px 20px',
+          padding: '28px 20px',
           textAlign: 'center',
-          backgroundColor: 'var(--color-canvas)',
-          margin: '20px 0',
+          backgroundColor: 'var(--color-canvas-soft)',
+          margin: '18px 0',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: '12px'
+          gap: '10px'
         }}>
-          <FileSpreadsheet size={48} color="var(--color-stone)" />
+          <FileSpreadsheet size={36} color="var(--color-primary)" />
           <div>
-            <h4 style={{ fontSize: '17px', fontWeight: 600 }}>Choose CSV file from your computer</h4>
-            <p style={{ fontSize: '13px', color: 'var(--color-ash)', marginTop: '4px' }}>
-              Standard CSV with columns: <code>member_number, full_name, phone, remaining_meals</code>
+            <h4 style={{ fontSize: '15px', fontWeight: 500 }}>Select CSV file from your computer</h4>
+            <p style={{ fontSize: '12px', color: 'var(--color-ink-mute)', marginTop: '2px' }}>
+              Headers: <code>member_number, full_name, phone, remaining_meals</code>
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '4px' }}>
             <label className="btn btn-primary btn-pill" style={{ cursor: 'pointer' }}>
-              <Upload size={16} /> Select CSV File
+              <Upload size={14} /> Select CSV File
               <input
                 type="file"
                 accept=".csv,text/csv"
@@ -186,20 +185,21 @@ export const CsvImporter: React.FC<CsvImporterProps> = ({ onSuccess, existingMem
             </label>
 
             <button
+              type="button"
               onClick={loadSampleData}
               className="btn btn-secondary btn-pill"
             >
-              Load Sample 5 Members Template
+              Load 5 Sample Members
             </button>
           </div>
         </div>
 
         {/* Or Paste Raw Text */}
-        <details style={{ marginTop: '8px' }}>
-          <summary style={{ cursor: 'pointer', fontSize: '13px', color: 'var(--color-stone)', fontWeight: 600 }}>
+        <details style={{ marginTop: '4px' }}>
+          <summary style={{ cursor: 'pointer', fontSize: '12px', color: 'var(--color-primary)', fontWeight: 500 }}>
             Or paste raw CSV text directly...
           </summary>
-          <div style={{ marginTop: '12px' }}>
+          <div style={{ marginTop: '10px' }}>
             <textarea
               rows={4}
               value={csvText}
@@ -209,7 +209,7 @@ export const CsvImporter: React.FC<CsvImporterProps> = ({ onSuccess, existingMem
               }}
               placeholder="member_number,full_name,phone,remaining_meals&#10;M-201,Rajesh Patel,9823456789,54"
               className="form-input"
-              style={{ fontFamily: 'var(--font-mono)', fontSize: '13px' }}
+              style={{ fontFamily: 'var(--font-mono)', fontSize: '12px' }}
             />
           </div>
         </details>
@@ -218,21 +218,21 @@ export const CsvImporter: React.FC<CsvImporterProps> = ({ onSuccess, existingMem
       {/* Import Result Notification */}
       {importResult && (
         <div className="card" style={{
-          backgroundColor: importResult.success > 0 ? '#e9f5ec' : '#fdf2f0',
-          border: `1px solid ${importResult.success > 0 ? '#c2e2c8' : '#f1cfc4'}`
+          backgroundColor: importResult.success > 0 ? 'var(--color-success-bg)' : 'var(--color-error-bg)',
+          border: `1px solid ${importResult.success > 0 ? 'var(--color-success-border)' : 'var(--color-error-border)'}`
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             {importResult.success > 0 ? (
-              <CheckCircle size={24} color="var(--color-forest)" />
+              <CheckCircle size={22} color="var(--color-success)" />
             ) : (
-              <AlertTriangle size={24} color="var(--color-error)" />
+              <AlertTriangle size={22} color="var(--color-error)" />
             )}
             <div>
-              <h4 style={{ fontWeight: 600, color: importResult.success > 0 ? 'var(--color-forest)' : 'var(--color-error)' }}>
+              <h4 style={{ fontWeight: 500, color: importResult.success > 0 ? 'var(--color-success)' : 'var(--color-error)' }}>
                 Import Completed: {importResult.success} successfully added ({importResult.failed} failed)
               </h4>
               {importResult.errors.length > 0 && (
-                <ul style={{ fontSize: '12px', color: 'var(--color-ink)', marginTop: '6px', paddingLeft: '18px' }}>
+                <ul style={{ fontSize: '12px', color: 'var(--color-ink)', marginTop: '4px', paddingLeft: '16px' }}>
                   {importResult.errors.slice(0, 5).map((err, idx) => (
                     <li key={idx}>{err}</li>
                   ))}
@@ -246,13 +246,13 @@ export const CsvImporter: React.FC<CsvImporterProps> = ({ onSuccess, existingMem
       {/* Preview Table & Confirmation */}
       {parsedRows.length > 0 && (
         <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '14px' }}>
             <div>
-              <h3 style={{ fontSize: '20px' }}>CSV Data Preview ({parsedRows.length} Rows)</h3>
-              <p style={{ fontSize: '13px', color: 'var(--color-ash)', marginTop: '2px' }}>
-                <strong style={{ color: 'var(--color-forest)' }}>{validCount} ready to import</strong>
+              <h3 style={{ fontSize: '18px', fontWeight: 600 }}>CSV Data Preview ({parsedRows.length} Rows)</h3>
+              <p className="tnum" style={{ fontSize: '12px', color: 'var(--color-ink-mute)', marginTop: '2px' }}>
+                <strong style={{ color: 'var(--color-success)' }}>{validCount} ready to import</strong>
                 {invalidCount > 0 && (
-                  <span style={{ color: 'var(--color-error)', marginLeft: '12px' }}>
+                  <span style={{ color: 'var(--color-error)', marginLeft: '10px' }}>
                     • {invalidCount} rows require attention
                   </span>
                 )}
@@ -260,32 +260,33 @@ export const CsvImporter: React.FC<CsvImporterProps> = ({ onSuccess, existingMem
             </div>
 
             <button
+              type="button"
               disabled={isImporting || validCount === 0}
               onClick={handleExecuteImport}
               className="btn btn-primary"
-              style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+              style={{ gap: '6px' }}
             >
               {isImporting ? (
                 <>
-                  <RefreshCw size={16} className="animate-spin" /> Importing {validCount} Members...
+                  <RefreshCw size={14} className="animate-spin" /> Importing...
                 </>
               ) : (
                 <>
-                  <Play size={16} /> Confirm & Import {validCount} Members
+                  <Play size={14} /> Confirm & Import {validCount} Members
                 </>
               )}
             </button>
           </div>
 
-          <div style={{ overflowX: 'auto', maxHeight: '380px' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+          <div style={{ overflowX: 'auto', maxHeight: '340px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--color-hairline)', textAlign: 'left', color: 'var(--color-stone)' }}>
-                  <th style={{ padding: '8px 12px' }}>Status</th>
-                  <th style={{ padding: '8px 12px' }}>Member #</th>
-                  <th style={{ padding: '8px 12px' }}>Full Name</th>
-                  <th style={{ padding: '8px 12px' }}>Phone</th>
-                  <th style={{ padding: '8px 12px' }}>Initial Balance</th>
+                <tr style={{ borderBottom: '1px solid var(--color-hairline)', textAlign: 'left', color: 'var(--color-ink-mute)' }}>
+                  <th style={{ padding: '8px 10px', fontWeight: 500 }}>Status</th>
+                  <th style={{ padding: '8px 10px', fontWeight: 500 }}>Member #</th>
+                  <th style={{ padding: '8px 10px', fontWeight: 500 }}>Full Name</th>
+                  <th style={{ padding: '8px 10px', fontWeight: 500 }}>Phone</th>
+                  <th style={{ padding: '8px 10px', fontWeight: 500 }}>Initial Balance</th>
                 </tr>
               </thead>
               <tbody>
@@ -294,22 +295,22 @@ export const CsvImporter: React.FC<CsvImporterProps> = ({ onSuccess, existingMem
                     key={idx}
                     style={{
                       borderBottom: '1px solid var(--color-hairline)',
-                      backgroundColor: r.isValid ? 'transparent' : 'rgba(227, 58, 34, 0.05)'
+                      backgroundColor: r.isValid ? 'transparent' : 'var(--color-error-bg)'
                     }}
                   >
-                    <td style={{ padding: '10px 12px' }}>
+                    <td style={{ padding: '8px 10px' }}>
                       {r.isValid ? (
-                        <span className="badge badge-active" style={{ fontSize: '10px' }}>Valid</span>
+                        <span className="badge badge-active" style={{ fontSize: '10px', padding: '1px 6px' }}>Valid</span>
                       ) : (
-                        <span className="badge badge-error" style={{ fontSize: '10px' }}>{r.error}</span>
+                        <span className="badge badge-error" style={{ fontSize: '10px', padding: '1px 6px' }}>{r.error}</span>
                       )}
                     </td>
-                    <td style={{ padding: '10px 12px', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
+                    <td className="tnum" style={{ padding: '8px 10px', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
                       {r.member_number}
                     </td>
-                    <td style={{ padding: '10px 12px' }}>{r.full_name}</td>
-                    <td style={{ padding: '10px 12px', color: 'var(--color-ash)' }}>{r.phone || '—'}</td>
-                    <td style={{ padding: '10px 12px', fontWeight: 600 }}>{r.remaining_meals} meals</td>
+                    <td style={{ padding: '8px 10px' }}>{r.full_name}</td>
+                    <td className="tnum" style={{ padding: '8px 10px', color: 'var(--color-ink-mute)' }}>{r.phone || '—'}</td>
+                    <td className="tnum" style={{ padding: '8px 10px', fontWeight: 500 }}>{r.remaining_meals} meals</td>
                   </tr>
                 ))}
               </tbody>
