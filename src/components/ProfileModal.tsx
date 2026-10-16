@@ -32,7 +32,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   const [fullName, setFullName] = useState(currentUser.full_name || '');
   const [email, setEmail] = useState(currentUser.email || '');
   const [phone, setPhone] = useState(currentUser.phone || '');
-  const [pinCode, setPinCode] = useState((currentUser as any).pin_code || '1234');
+  const [pinCode, setPinCode] = useState((currentUser as any).pin_code || '');
   const [showPin, setShowPin] = useState(false);
 
   const [saving, setSaving] = useState(false);

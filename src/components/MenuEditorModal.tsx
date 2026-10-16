@@ -41,13 +41,7 @@ export const MenuEditorModal: React.FC<MenuEditorModalProps> = ({
   const [items, setItems] = useState<MenuItemDraft[]>(
     existingMenu?.items && existingMenu.items.length > 0
       ? existingMenu.items.map(it => ({ name: it.name, category: it.category }))
-      : [
-          { name: 'Paneer Butter Masala', category: 'Sabzi' },
-          { name: 'Yellow Dal Tadka', category: 'Dal' },
-          { name: 'Phulka Roti (Desi Ghee)', category: 'Roti' },
-          { name: 'Jeera Rice', category: 'Rice' },
-          { name: 'Gulab Jamun', category: 'Sweet' }
-        ]
+      : []
   );
 
   const [newItemName, setNewItemName] = useState('');
@@ -111,7 +105,7 @@ export const MenuEditorModal: React.FC<MenuEditorModalProps> = ({
       <div className="card" style={{
         maxWidth: '500px',
         width: '100%',
-        padding: '28px',
+        padding: '22px 18px',
         display: 'flex',
         flexDirection: 'column',
         gap: '16px',
@@ -250,36 +244,42 @@ export const MenuEditorModal: React.FC<MenuEditorModalProps> = ({
               overflowY: 'auto',
               border: '1px solid var(--color-hairline)'
             }}>
-              {items.map((it, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '6px 10px',
-                    backgroundColor: '#ffffff',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--color-hairline)',
-                    fontSize: '13px'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span className="badge badge-indigo" style={{ fontSize: '10px', padding: '1px 6px' }}>
-                      {it.category}
-                    </span>
-                    <strong style={{ color: 'var(--color-ink)', fontWeight: 500 }}>{it.name}</strong>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveItem(idx)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-ink-mute)', padding: '2px' }}
-                    title="Remove item"
-                  >
-                    <Trash2 size={13} />
-                  </button>
+              {items.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '16px 8px', color: 'var(--color-ink-mute)', fontSize: '12px' }}>
+                  No dishes added yet. Enter dish name below and click Add.
                 </div>
-              ))}
+              ) : (
+                items.map((it, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '6px 10px',
+                      backgroundColor: '#ffffff',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--color-hairline)',
+                      fontSize: '13px'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span className="badge badge-indigo" style={{ fontSize: '10px', padding: '1px 6px' }}>
+                        {it.category}
+                      </span>
+                      <strong style={{ color: 'var(--color-ink)', fontWeight: 500 }}>{it.name}</strong>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveItem(idx)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-ink-mute)', padding: '2px' }}
+                      title="Remove item"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
 
             {/* Add new dish input row */}

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { Users, CreditCard, Utensils, Plus, Search, Edit3, FileSpreadsheet, X, QrCode, Trash2, Camera, Printer, CheckCircle2, ChefHat, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Users, CreditCard, Utensils, Plus, Search, Edit3, FileSpreadsheet, X, QrCode, Trash2, Camera, Printer, CheckCircle2, ChefHat, RefreshCw, MessageSquare, Zap, Check } from 'lucide-react';
 
 import type { Profile, DailyMenu, MealPeriod } from '../types';
 import { MEAL_PLAN_CONFIG } from '../types';
 import { api } from '../services/api';
+import { settingsService } from '../services/settings';
 import { CsvImporter } from './CsvImporter';
 import { MemberEditModal } from './MemberEditModal';
 import { MenuEditorModal } from './MenuEditorModal';
@@ -51,6 +52,39 @@ export const AdminView: React.FC<AdminViewProps> = ({
       console.error('Admin refresh error:', e);
     } finally {
       setIsRefreshing(false);
+    }
+  };
+
+  // Fast2SMS OTP Toggle state
+  const [otpEnabled, setOtpEnabled] = useState<boolean>(settingsService.getInstantOtpEnabled());
+  const [isTogglingOtp, setIsTogglingOtp] = useState(false);
+  const [otpToast, setOtpToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    settingsService.isOtpEnabled().then(setOtpEnabled);
+    const unsubscribe = settingsService.subscribeToOtpSetting(setOtpEnabled);
+    return unsubscribe;
+  }, []);
+
+  const handleToggleOtp = async () => {
+    if (isTogglingOtp) return;
+    const nextVal = !otpEnabled;
+    setIsTogglingOtp(true);
+    setOtpEnabled(nextVal); // Optimistic update
+
+    try {
+      await settingsService.setOtpEnabled(nextVal);
+      setOtpToast(
+        nextVal
+          ? '🔒 Fast2SMS OTP Enabled: Phone verification via SMS OTP is now required.'
+          : '⚡ Fast2SMS OTP Disabled: Members can now verify phone directly without SMS OTP.'
+      );
+      setTimeout(() => setOtpToast(null), 3500);
+    } catch (err) {
+      console.error('Error toggling OTP setting:', err);
+      setOtpEnabled(!nextVal); // Rollback on failure
+    } finally {
+      setIsTogglingOtp(false);
     }
   };
 
@@ -152,11 +186,116 @@ export const AdminView: React.FC<AdminViewProps> = ({
             Owner & Admin Dashboard
           </h1>
           <p style={{ color: 'var(--color-ink-mute)', fontSize: '13px', marginTop: '2px' }}>
-            Manage 400+ members, subscriptions, audit passbooks, and menus.
+            Manage {members.length} registered members, subscriptions, audit passbooks, and menus.
           </p>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          {/* Fast2SMS OTP On/Off Toggle Button */}
+          <div
+            onClick={handleToggleOtp}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleToggleOtp(); } }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '5px 12px 5px 10px',
+              backgroundColor: otpEnabled ? '#f0fdf4' : '#fffbeb',
+              border: `1.5px solid ${otpEnabled ? '#86efac' : '#fde68a'}`,
+              borderRadius: 'var(--radius-pill)',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+              cursor: isTogglingOtp ? 'wait' : 'pointer',
+              userSelect: 'none',
+              transition: 'all 0.2s ease'
+            }}
+            title={otpEnabled ? 'Fast2SMS OTP is ON: Click to turn OFF (bypasses SMS OTP for direct phone verification)' : 'Fast2SMS OTP is OFF: Click to turn ON (requires SMS OTP for verification)'}
+          >
+            <div style={{
+              width: '24px',
+              height: '24px',
+              borderRadius: '50%',
+              backgroundColor: otpEnabled ? '#dcfce7' : '#fef3c7',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: otpEnabled ? '#16a34a' : '#d97706',
+              flexShrink: 0
+            }}>
+              {otpEnabled ? <MessageSquare size={13} /> : <Zap size={13} />}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <span style={{
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  color: otpEnabled ? '#15803d' : '#b45309',
+                  letterSpacing: '0.02em',
+                  lineHeight: 1.2
+                }}>
+                  OTP: {otpEnabled ? 'ON' : 'OFF'}
+                </span>
+                <span style={{
+                  fontSize: '9px',
+                  fontWeight: 600,
+                  padding: '0.5px 5px',
+                  borderRadius: '8px',
+                  backgroundColor: otpEnabled ? '#bbf7d0' : '#fed7aa',
+                  color: otpEnabled ? '#14532d' : '#9a3412',
+                  lineHeight: 1.2
+                }}>
+                  {otpEnabled ? 'Fast2SMS' : 'Direct'}
+                </span>
+              </div>
+              <span style={{ fontSize: '10px', color: 'var(--color-ink-mute)', lineHeight: 1 }}>
+                {otpEnabled ? 'SMS Required' : 'Zero SMS Cost'}
+              </span>
+            </div>
+
+            {/* Visual Toggle Pill */}
+            <div
+              role="switch"
+              aria-checked={otpEnabled}
+              style={{
+                position: 'relative',
+                width: '36px',
+                height: '20px',
+                borderRadius: '20px',
+                backgroundColor: otpEnabled ? '#16a34a' : '#cbd5e1',
+                transition: 'background-color 0.25s ease',
+                marginLeft: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                padding: '2px'
+              }}
+            >
+              <div
+                style={{
+                  width: '16px',
+                  height: '16px',
+                  borderRadius: '50%',
+                  backgroundColor: '#ffffff',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                  transform: otpEnabled ? 'translateX(16px)' : 'translateX(0px)',
+                  transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                {isTogglingOtp ? (
+                  <RefreshCw size={8} className="animate-spin" color="var(--color-ink-mute)" />
+                ) : otpEnabled ? (
+                  <Check size={9} color="#16a34a" strokeWidth={3} />
+                ) : (
+                  <X size={9} color="#94a3b8" strokeWidth={3} />
+                )}
+              </div>
+            </div>
+          </div>
+
           <button
             type="button"
             onClick={() => setShowCameraScanner(true)}
@@ -184,6 +323,71 @@ export const AdminView: React.FC<AdminViewProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Toast Alert for OTP Toggle Action */}
+      {otpToast && (
+        <div style={{
+          padding: '10px 16px',
+          backgroundColor: otpEnabled ? '#f0fdf4' : '#fffbeb',
+          border: `1px solid ${otpEnabled ? '#86efac' : '#fde68a'}`,
+          borderRadius: 'var(--radius-md)',
+          color: otpEnabled ? '#15803d' : '#92400e',
+          fontSize: '13px',
+          fontWeight: 500,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          boxShadow: 'var(--shadow-level-1)',
+          animation: 'fadeIn 0.2s ease-out'
+        }}>
+          {otpEnabled ? <CheckCircle2 size={16} /> : <Zap size={16} />}
+          <span>{otpToast}</span>
+        </div>
+      )}
+
+      {/* Prominent Warning Banner when OTP is OFF */}
+      {!otpEnabled && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '12px 16px',
+          backgroundColor: '#fffbeb',
+          border: '1px solid #fde68a',
+          borderRadius: 'var(--radius-md)',
+          color: '#92400e',
+          fontSize: '13px',
+          flexWrap: 'wrap',
+          gap: '10px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Zap size={18} style={{ color: '#d97706', flexShrink: 0 }} />
+            <div>
+              <strong>Fast2SMS OTP Verification is OFF:</strong> SMS OTP sending is bypassed. Members can link their phone number and activate their pass directly by entering their mobile number without OTP.
+              <span style={{ display: 'block', fontSize: '11px', color: '#b45309', marginTop: '2px' }}>
+                Useful when Fast2SMS balance is exhausted. Fast2SMS recharge hone ke baad aap upar toggle se OTP wapas ON kar sakte hain.
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleToggleOtp}
+            disabled={isTogglingOtp}
+            className="btn btn-secondary btn-pill"
+            style={{
+              fontSize: '12px',
+              padding: '6px 14px',
+              backgroundColor: '#ffffff',
+              borderColor: '#fcd34d',
+              color: '#b45309',
+              fontWeight: 600,
+              gap: '6px'
+            }}
+          >
+            <MessageSquare size={13} /> Turn OTP Back ON
+          </button>
+        </div>
+      )}
 
       {/* Prominent Mess Counter Standee Banner Card */}
       <div style={{
@@ -272,7 +476,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
           <div className="tnum" style={{ fontSize: '26px', fontWeight: 300, letterSpacing: '-0.5px', marginTop: '2px', color: 'var(--color-ink)' }}>
             {members.length}
           </div>
-          <span style={{ fontSize: '11px', color: 'var(--color-ink-mute)' }}>Paper-card records</span>
+          <span style={{ fontSize: '11px', color: 'var(--color-ink-mute)' }}>Registered accounts</span>
         </div>
 
         <div className="card" style={{ padding: '14px' }}>
@@ -587,7 +791,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
                           </span>
                         ) : !m.phone_verified ? (
                           <span className="badge badge-indigo" style={{ fontSize: '10px', padding: '2px 8px' }}>
-                            {m.payment_method === 'cash' ? '💵 Cash' : '📱 Online'} • OTP Pending
+                            {m.payment_method === 'cash' ? '💵 Cash' : '📱 Online'} • {otpEnabled ? 'OTP Pending' : 'Phone Link Pending'}
                           </span>
                         ) : (
                           <span className="badge badge-active" style={{ fontSize: '10px', padding: '2px 8px' }}>
@@ -713,7 +917,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
                       </span>
                     ) : !m.phone_verified ? (
                       <span className="badge badge-indigo" style={{ fontSize: '10px', padding: '2px 6px' }}>
-                        {m.payment_method === 'cash' ? '💵 Cash' : '📱 Online'} • OTP
+                        {m.payment_method === 'cash' ? '💵 Cash' : '📱 Online'} • {otpEnabled ? 'OTP' : 'Link Phone'}
                       </span>
                     ) : (
                       <span className="badge badge-active" style={{ fontSize: '10px', padding: '2px 6px' }}>
@@ -1128,7 +1332,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
           zIndex: 100,
           padding: '16px'
         }}>
-          <div className="card" style={{ maxWidth: '420px', width: '100%', padding: '20px 16px', boxShadow: 'var(--shadow-modal)' }}>
+          <div className="card" style={{ maxWidth: '420px', width: '100%', padding: '20px 16px', maxHeight: '90vh', overflowY: 'auto', boxShadow: 'var(--shadow-modal)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
               <div>
                 <h3 style={{ fontSize: '17px', fontWeight: 600 }}>Register New Member</h3>

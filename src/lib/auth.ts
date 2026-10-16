@@ -354,23 +354,143 @@ export async function verifyPaymentPhoneAndActivate(
 }
 
 /**
+ * Direct Phone Verification & Plan Activation (used when Admin has turned Fast2SMS OTP OFF)
+ * Allows member to verify their phone and activate their pass without requiring SMS OTP.
+ */
+export async function activatePaymentPhoneDirectly(
+  memberId: string,
+  rawPhone: string,
+  mealPlanType: MealPlanType = 'lunch_dinner',
+  paymentMethod: 'cash' | 'upi_direct' = 'upi_direct'
+): Promise<{ profile: Profile; subscription: any }> {
+  const clean10 = rawPhone.replace(/\D/g, '').slice(-10);
+
+  if (clean10.length !== 10) {
+    throw new Error('Please enter a valid 10-digit Indian mobile number.');
+  }
+
+  // Cost & Security Guard: Block pass activation if member payment is not confirmed by admin!
+  if (memberId) {
+    const { data: sub } = await supabase
+      .from('subscriptions')
+      .select('id, status')
+      .eq('member_id', memberId)
+      .eq('status', 'active')
+      .limit(1)
+      .maybeSingle();
+
+    if (!sub) {
+      throw new Error(
+        'Payment not confirmed by Mess Admin. Pass can only be activated after the admin marks your payment (Cash or UPI) as received at the counter.'
+      );
+    }
+  }
+
+  // 1. Update Profile: link verified phone and selected 2-meal plan
+  const { data: updatedProfile, error: profErr } = await supabase
+    .from('profiles')
+    .update({
+      phone: clean10,
+      phone_verified: true,
+      meal_plan_type: mealPlanType,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', memberId)
+    .select('*')
+    .single();
+
+  if (profErr || !updatedProfile) {
+    throw new Error(profErr?.message || 'Failed to update verified phone in profile.');
+  }
+
+  // 2. Activate or Create 54-Meal Subscription with chosen 2-meal plan
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 30);
+
+  const planIdMap: Record<MealPlanType, string> = {
+    lunch_dinner: '00000000-0000-0000-0000-000000000001',
+    breakfast_lunch: '00000000-0000-0000-0000-000000000002',
+    breakfast_dinner: '00000000-0000-0000-0000-000000000003',
+    any_two: '00000000-0000-0000-0000-000000000004'
+  };
+  const planId = planIdMap[mealPlanType] || '00000000-0000-0000-0000-000000000001';
+
+  // Check existing pending subscription
+  const { data: existingSub } = await supabase
+    .from('subscriptions')
+    .select('*')
+    .eq('member_id', memberId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  let subData;
+  if (existingSub) {
+    const { data: activatedSub } = await supabase
+      .from('subscriptions')
+      .update({
+        status: 'active',
+        plan_id: planId,
+        meal_plan_type: mealPlanType,
+        starts_at: new Date().toISOString(),
+        expires_at: expiresAt.toISOString(),
+        meals_granted: 54,
+        activated_at: new Date().toISOString()
+      })
+      .eq('id', existingSub.id)
+      .select('*')
+      .single();
+    subData = activatedSub;
+  } else {
+    const { data: newSub } = await supabase
+      .from('subscriptions')
+      .insert([
+        {
+          member_id: memberId,
+          plan_id: planId,
+          meal_plan_type: mealPlanType,
+          status: 'active',
+          starts_at: new Date().toISOString(),
+          expires_at: expiresAt.toISOString(),
+          meals_granted: 54,
+          activated_at: new Date().toISOString()
+        }
+      ])
+      .select('*')
+      .single();
+    subData = newSub;
+  }
+
+  // 3. Record Payment in payments table if not already recorded
+  if (subData) {
+    const { data: existingPayment } = await supabase
+      .from('payments')
+      .select('id')
+      .eq('member_id', memberId)
+      .limit(1)
+      .maybeSingle();
+
+    if (!existingPayment) {
+      await supabase.from('payments').insert([
+        {
+          member_id: memberId,
+          subscription_id: subData.id,
+          amount_paise: 280000,
+          method: paymentMethod,
+          status: 'verified',
+          received_at: new Date().toISOString()
+        }
+      ]);
+    }
+  }
+
+  return { profile: updatedProfile as Profile, subscription: subData };
+}
+
+/**
  * Signs out current user
  */
 export async function signOutUser() {
   clearLocalSession();
   await supabase.auth.signOut();
-}
-
-/**
- * Quick Test Account Switcher
- */
-export async function getTestProfileByNumber(memberNumber: string): Promise<Profile | null> {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('member_number', memberNumber)
-    .maybeSingle();
-
-  if (error || !data) return null;
-  return data as Profile;
 }

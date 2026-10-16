@@ -143,10 +143,12 @@ export const MemberEditModal: React.FC<MemberEditModalProps> = ({
       <div className="card" style={{
         maxWidth: '480px',
         width: '100%',
-        padding: '28px',
+        padding: '22px 18px',
         display: 'flex',
         flexDirection: 'column',
         gap: '16px',
+        maxHeight: '90vh',
+        overflowY: 'auto',
         boxShadow: 'var(--shadow-modal)'
       }}>
         {/* Header */}

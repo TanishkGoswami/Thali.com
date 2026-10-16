@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { Phone, CheckCircle2, AlertCircle, X, RefreshCw, ArrowRight, ShieldCheck, Utensils, Clock } from 'lucide-react';
-import { sendPaymentVerificationOtp, verifyPaymentPhoneAndActivate } from '../lib/auth';
+import { useState, useEffect } from 'react';
+import { Phone, CheckCircle2, AlertCircle, X, RefreshCw, ArrowRight, ShieldCheck, Utensils, Clock, Zap } from 'lucide-react';
+import { sendPaymentVerificationOtp, verifyPaymentPhoneAndActivate, activatePaymentPhoneDirectly } from '../lib/auth';
+import { settingsService } from '../services/settings';
 import type { Profile, MealPlanType } from '../types';
 import { MEAL_PLAN_CONFIG } from '../types';
 import confetti from 'canvas-confetti';
@@ -25,8 +26,52 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [simulatedCode, setSimulatedCode] = useState<string | null>(null);
+  const [otpEnabled, setOtpEnabled] = useState<boolean>(settingsService.getInstantOtpEnabled());
+
+  useEffect(() => {
+    settingsService.isOtpEnabled().then(setOtpEnabled);
+    const unsubscribe = settingsService.subscribeToOtpSetting(setOtpEnabled);
+    return unsubscribe;
+  }, []);
 
   if (!isOpen) return null;
+
+  // Handle Direct Phone Activation (When Admin turned OTP OFF)
+  const handleDirectActivate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg(null);
+
+    if (member.subscription_status !== 'active') {
+      setErrorMsg('Payment not verified by Mess Admin. Please pay ₹2,800 at the counter first. Admin will activate your pass to unlock phone linking.');
+      return;
+    }
+
+    const clean = phone.replace(/\D/g, '').slice(-10);
+    if (clean.length < 10) {
+      setErrorMsg('Please enter a valid 10-digit Indian mobile number.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await activatePaymentPhoneDirectly(member.id, clean, selectedMealPlan);
+      setStep('success');
+      confetti({
+        particleCount: 80,
+        spread: 60,
+        origin: { y: 0.6 }
+      });
+      setTimeout(() => {
+        onSuccess();
+        onClose();
+      }, 1800);
+    } catch (err: any) {
+      console.error('Direct activation error:', err);
+      setErrorMsg(err.message || 'Failed to activate pass.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Handle Send Fast2SMS OTP
   const handleSendOtp = async (e: React.FormEvent) => {
@@ -113,9 +158,10 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
         borderRadius: 'var(--radius-xl)',
         width: '100%',
         maxWidth: '440px',
+        maxHeight: '90vh',
+        overflowY: 'auto',
         boxShadow: 'var(--shadow-modal)',
         border: '1px solid var(--color-hairline)',
-        overflow: 'hidden',
         animation: 'fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
       }}>
         {/* Header */}
@@ -202,7 +248,7 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <form onSubmit={otpEnabled ? handleSendOtp : handleDirectActivate} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div style={{
                   padding: '12px 14px',
                   backgroundColor: 'var(--color-success-bg)',
@@ -217,9 +263,29 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
                 }}>
                   <ShieldCheck size={18} style={{ flexShrink: 0 }} />
                   <div>
-                    <strong>Payment Confirmed ({member.payment_method === 'cash' ? '💵 Cash' : '📱 Online / UPI'}):</strong> Select your 2-meal daily timing & verify phone via OTP.
+                    <strong>Payment Confirmed ({member.payment_method === 'cash' ? '💵 Cash' : '📱 Online / UPI'}):</strong> Select your 2-meal daily timing & {otpEnabled ? 'verify phone via OTP.' : 'activate pass directly.'}
                   </div>
                 </div>
+
+                {!otpEnabled && (
+                  <div style={{
+                    padding: '10px 12px',
+                    backgroundColor: '#eff6ff',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid #bfdbfe',
+                    fontSize: '12px',
+                    color: '#1d4ed8',
+                    lineHeight: 1.45,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <Zap size={16} style={{ flexShrink: 0, color: '#2563eb' }} />
+                    <div>
+                      <strong>Direct Phone Verification (OTP OFF):</strong> Mess Admin ne OTP bypass enable kiya hai. Fast2SMS OTP ki zarurat nahi hai, sirf mobile number add karke apna pass turant start karein.
+                    </div>
+                  </div>
+                )}
 
                 {/* Step 1: 2-Meal Timing Selection */}
                 <div>
@@ -288,7 +354,12 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
 
                 <div>
                   <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)', marginBottom: '6px' }}>
-                    2. Mobile Phone Number for OTP: <span style={{ color: 'var(--color-error)' }}>*</span>
+                    2. Mobile Phone Number: <span style={{ color: 'var(--color-error)' }}>*</span>
+                    {!otpEnabled && (
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#16a34a', marginLeft: '6px' }}>
+                        (Direct Verify • No OTP)
+                      </span>
+                    )}
                   </label>
                 <div style={{
                   display: 'flex',
@@ -339,21 +410,27 @@ export const PaymentActivationModal: React.FC<PaymentActivationModalProps> = ({
                 className="btn btn-primary"
                 style={{
                   width: '100%',
-                  padding: '10px',
+                  padding: '11px',
                   fontSize: '14px',
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
-                  gap: '8px'
+                  gap: '8px',
+                  backgroundColor: !otpEnabled ? '#16a34a' : undefined,
+                  borderColor: !otpEnabled ? '#15803d' : undefined
                 }}
               >
                 {loading ? (
                   <>
-                    <RefreshCw size={15} className="animate-spin" /> Sending SMS OTP...
+                    <RefreshCw size={15} className="animate-spin" /> {otpEnabled ? 'Sending SMS OTP...' : 'Activating 54 Meals...'}
+                  </>
+                ) : otpEnabled ? (
+                  <>
+                    Send OTP to Phone <ArrowRight size={15} />
                   </>
                 ) : (
                   <>
-                    Send OTP to Phone <ArrowRight size={15} />
+                    <CheckCircle2 size={16} /> Link Phone & Activate 54 Meals (No OTP)
                   </>
                 )}
               </button>

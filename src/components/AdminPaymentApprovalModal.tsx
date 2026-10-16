@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { X, CheckCircle2, AlertCircle, Banknote, Smartphone, ShieldCheck, Loader2, Utensils, Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, CheckCircle2, AlertCircle, Banknote, Smartphone, ShieldCheck, Loader2, Utensils, Clock, Zap } from 'lucide-react';
 import type { Profile, MealPlanType } from '../types';
 import { MEAL_PLAN_CONFIG } from '../types';
 import { api } from '../services/api';
+import { settingsService } from '../services/settings';
 
 interface AdminPaymentApprovalModalProps {
   isOpen: boolean;
@@ -22,6 +23,13 @@ export const AdminPaymentApprovalModal: React.FC<AdminPaymentApprovalModalProps>
   const [referenceNotes, setReferenceNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [otpEnabled, setOtpEnabled] = useState<boolean>(settingsService.getInstantOtpEnabled());
+
+  useEffect(() => {
+    settingsService.isOtpEnabled().then(setOtpEnabled);
+    const unsubscribe = settingsService.subscribeToOtpSetting(setOtpEnabled);
+    return unsubscribe;
+  }, []);
 
   if (!isOpen || !member) return null;
 
@@ -74,9 +82,10 @@ export const AdminPaymentApprovalModal: React.FC<AdminPaymentApprovalModalProps>
         borderRadius: 'var(--radius-xl)',
         width: '100%',
         maxWidth: '460px',
+        maxHeight: '90vh',
+        overflowY: 'auto',
         boxShadow: 'var(--shadow-modal)',
         border: '1px solid var(--color-hairline)',
-        overflow: 'hidden',
         animation: 'fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
       }}>
         {/* Header */}
@@ -314,16 +323,28 @@ export const AdminPaymentApprovalModal: React.FC<AdminPaymentApprovalModalProps>
             alignItems: 'flex-start',
             gap: '8px',
             padding: '10px 12px',
-            backgroundColor: '#eff6ff',
-            border: '1px solid #bfdbfe',
+            backgroundColor: otpEnabled ? '#eff6ff' : '#f0fdf4',
+            border: `1px solid ${otpEnabled ? '#bfdbfe' : '#bbf7d0'}`,
             borderRadius: 'var(--radius-sm)',
             fontSize: '11px',
-            color: '#1e40af',
+            color: otpEnabled ? '#1e40af' : '#15803d',
             lineHeight: 1.4
           }}>
-            <ShieldCheck size={16} style={{ flexShrink: 0, marginTop: '2px', color: '#2563eb' }} />
+            {otpEnabled ? (
+              <ShieldCheck size={16} style={{ flexShrink: 0, marginTop: '2px', color: '#2563eb' }} />
+            ) : (
+              <Zap size={16} style={{ flexShrink: 0, marginTop: '2px', color: '#16a34a' }} />
+            )}
             <div>
-              <strong>SMS OTP Protection:</strong> Once activated, this member will be authorized to request 1 SMS OTP to verify their phone number. Zero SMS will be wasted on unpaid accounts.
+              {otpEnabled ? (
+                <>
+                  <strong>SMS OTP Protection (Active):</strong> Once activated, this member will be authorized to request 1 SMS OTP via Fast2SMS to verify their phone number. Zero SMS will be wasted on unpaid accounts.
+                </>
+              ) : (
+                <>
+                  <strong>Direct Verification Mode (OTP OFF):</strong> Admin has currently turned Fast2SMS OTP off. Once activated, member will directly link their phone number to activate dining pass without requiring SMS OTP.
+                </>
+              )}
             </div>
           </div>
 

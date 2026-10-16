@@ -15,12 +15,14 @@ import {
   Printer,
   QrCode,
   User,
-  Lock
+  Lock,
+  Zap
 } from 'lucide-react';
 import type { Profile, DailyMenu, MealTransaction, CheckInResult, MealPeriod, MealPlanType, MealSkip } from '../types';
 import { MEAL_PLAN_CONFIG } from '../types';
 import { api, COUNTER_STANDEE_QR } from '../services/api';
 import { sound } from '../lib/audio';
+import { settingsService } from '../services/settings';
 import { PaymentActivationModal } from './PaymentActivationModal';
 import { CameraScannerModal } from './CameraScannerModal';
 import { CounterQrModal } from './CounterQrModal';
@@ -55,6 +57,13 @@ export const MemberView: React.FC<MemberViewProps> = ({
   const [selfCheckInReceipt, setSelfCheckInReceipt] = useState<CheckInResult | null>(null);
   const [showAdminCounterStandee, setShowAdminCounterStandee] = useState(false);
   const [selectedMenuTab, setSelectedMenuTab] = useState<MealPeriod>(activeMealPeriod);
+  const [otpEnabled, setOtpEnabled] = useState<boolean>(settingsService.getInstantOtpEnabled());
+
+  useEffect(() => {
+    settingsService.isOtpEnabled().then(setOtpEnabled);
+    const unsubscribe = settingsService.subscribeToOtpSetting(setOtpEnabled);
+    return unsubscribe;
+  }, []);
 
   // Derive member's 2-meal plan config & slot permission
   const planType: MealPlanType = member.meal_plan_type || 'lunch_dinner';
@@ -151,7 +160,9 @@ export const MemberView: React.FC<MemberViewProps> = ({
         setSelfCheckInReceipt({
           success: false,
           code: 'PHONE_NOT_VERIFIED',
-          message: 'Phone Verification Required: Please verify your mobile number via OTP before dining.'
+          message: otpEnabled
+            ? 'Phone Verification Required: Please verify your mobile number via OTP before dining.'
+            : 'Phone Number Required: Please link your mobile number before dining.'
         });
         return;
       }
@@ -201,9 +212,9 @@ export const MemberView: React.FC<MemberViewProps> = ({
   };
 
   const totalMeals = 54;
-  const remainingMeals = member.remaining_meals ?? 41;
+  const remainingMeals = member.remaining_meals ?? 0;
   const consumedMeals = totalMeals - remainingMeals;
-  const percentage = Math.round((remainingMeals / totalMeals) * 100);
+  const percentage = totalMeals > 0 ? Math.round((remainingMeals / totalMeals) * 100) : 0;
 
   const formattedExpiry = member.expires_at
     ? new Date(member.expires_at).toLocaleDateString('en-IN', {
@@ -431,7 +442,9 @@ export const MemberView: React.FC<MemberViewProps> = ({
                 </span>
               </div>
               <p style={{ fontSize: '13px', color: 'var(--color-ink-secondary)', marginTop: '6px', lineHeight: 1.45 }}>
-                Admin ne aapka payment confirm kar diya hai! Ab apna 10-digit mobile number 1-time OTP se verify karke dining pass start karein.
+                {otpEnabled
+                  ? 'Admin ne aapka payment confirm kar diya hai! Ab apna 10-digit mobile number 1-time OTP se verify karke dining pass start karein.'
+                  : 'Admin ne aapka payment confirm kar diya hai! Apna 10-digit mobile number link karke bina OTP ke turant dining pass start karein.'}
               </p>
             </div>
 
@@ -444,10 +457,20 @@ export const MemberView: React.FC<MemberViewProps> = ({
                 padding: '9px 18px',
                 fontSize: '13px',
                 fontWeight: 600,
-                boxShadow: '0 2px 8px rgba(83, 58, 253, 0.25)'
+                backgroundColor: !otpEnabled ? '#16a34a' : undefined,
+                borderColor: !otpEnabled ? '#15803d' : undefined,
+                boxShadow: !otpEnabled ? '0 2px 8px rgba(22, 163, 74, 0.25)' : '0 2px 8px rgba(83, 58, 253, 0.25)'
               }}
             >
-              <PhoneCall size={14} /> Verify Phone via OTP
+              {!otpEnabled ? (
+                <>
+                  <Zap size={14} /> Link Phone & Activate Pass
+                </>
+              ) : (
+                <>
+                  <PhoneCall size={14} /> Verify Phone via OTP
+                </>
+              )}
             </button>
           </div>
         )
@@ -769,7 +792,7 @@ export const MemberView: React.FC<MemberViewProps> = ({
             className="btn btn-primary"
             style={{ width: '100%', marginTop: '16px' }}
           >
-            <Sparkles size={14} /> {member.subscription_status === 'active' ? 'Renew Subscription (₹2,800)' : 'Verify Phone & Activate (₹2,800)'}
+            <Sparkles size={14} /> {member.subscription_status === 'active' ? 'Renew Subscription (₹2,800)' : (otpEnabled ? 'Verify Phone & Activate (₹2,800)' : 'Link Phone & Activate Pass (₹2,800)')}
           </button>
         </div>
       </div>
@@ -918,9 +941,11 @@ export const MemberView: React.FC<MemberViewProps> = ({
           <div className="card animate-fade-in" style={{
             maxWidth: '420px',
             width: '100%',
-            padding: '24px',
+            padding: '24px 20px',
             boxShadow: 'var(--shadow-modal)',
-            textAlign: 'center'
+            textAlign: 'center',
+            maxHeight: '90vh',
+            overflowY: 'auto'
           }}>
             <div style={{
               width: '64px',

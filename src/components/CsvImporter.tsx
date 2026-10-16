@@ -148,7 +148,7 @@ export const CsvImporter: React.FC<CsvImporterProps> = ({ onSuccess, existingMem
       {/* Upload & Drop Zone */}
       <div className="card">
         <span className="eyebrow">Legacy Migration</span>
-        <h2 style={{ fontSize: '20px', marginTop: '2px' }}>Import Existing 400+ Members</h2>
+        <h2 style={{ fontSize: '20px', marginTop: '2px' }}>Import Existing Members (CSV)</h2>
         <p style={{ color: 'var(--color-ink-mute)', fontSize: '13px', marginTop: '4px' }}>
           Upload spreadsheet data to preserve member numbers (e.g. <code className="tnum">M-101</code>, <code className="tnum">405</code>) and assign initial meal balances.
         </p>

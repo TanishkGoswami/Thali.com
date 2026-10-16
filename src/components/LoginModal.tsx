@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Lock, Mail, User, ArrowRight, RefreshCw, AlertCircle, X, KeyRound } from 'lucide-react';
-import { loginWithEmailOrIdAndPin, registerNewMember, getTestProfileByNumber, saveLocalSession } from '../lib/auth';
+import { loginWithEmailOrIdAndPin, registerNewMember } from '../lib/auth';
 import type { Profile } from '../types';
 
 interface LoginModalProps {
@@ -70,35 +70,16 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     }
   };
 
-  // Handle Quick Test Login (for instant evaluation)
-  const handleQuickTestLogin = async (memberNumber: string) => {
-    setLoading(true);
-    setErrorMsg(null);
-    try {
-      const profile = await getTestProfileByNumber(memberNumber);
-      if (profile) {
-        saveLocalSession(profile.id);
-        onLoginSuccess(profile);
-        if (onClose) onClose();
-      } else {
-        setErrorMsg(`Test account ${memberNumber} not found.`);
-      }
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Error loading test account.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const cardContent = (
     <div style={{
       backgroundColor: '#ffffff',
       borderRadius: 'var(--radius-xl)',
       width: '100%',
       maxWidth: '430px',
+      maxHeight: '90vh',
+      overflowY: 'auto',
       boxShadow: 'var(--shadow-modal)',
       border: '1px solid var(--color-hairline)',
-      overflow: 'hidden',
       animation: 'fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
     }}>
       {/* Top Bar with Segmented Pill Tabs & optional Close Button */}
@@ -231,7 +212,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 <label style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)' }}>
                   Secret PIN / Access Code
                 </label>
-                <span className="tnum" style={{ fontSize: '11px', color: 'var(--color-ink-mute)' }}>Default: 1234</span>
+                <span className="tnum" style={{ fontSize: '11px', color: 'var(--color-ink-mute)' }}>4-digit PIN</span>
               </div>
               <div style={{
                 display: 'flex',
@@ -421,58 +402,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             </button>
           </form>
         )}
-
-        {/* Staff & Pre-Seeded Accounts */}
-        <div style={{
-          marginTop: '16px',
-          paddingTop: '12px',
-          borderTop: '1px solid var(--color-hairline)'
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '8px'
-          }}>
-            <span className="eyebrow" style={{ fontSize: '10px' }}>
-              Quick Evaluation Access
-            </span>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '6px' }}>
-            <button
-              type="button"
-              onClick={() => handleQuickTestLogin('REC-01')}
-              disabled={loading}
-              className="btn btn-secondary"
-              style={{
-                padding: '8px 10px',
-                borderRadius: 'var(--radius-sm)',
-                textAlign: 'left',
-                display: 'block'
-              }}
-            >
-              <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-ink)' }}>Ramesh Patel</div>
-              <div className="tnum" style={{ fontSize: '10px', color: 'var(--color-ink-mute)' }}>Reception • 1234</div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleQuickTestLogin('ADMIN-01')}
-              disabled={loading}
-              className="btn btn-secondary"
-              style={{
-                padding: '8px 10px',
-                borderRadius: 'var(--radius-sm)',
-                textAlign: 'left',
-                display: 'block'
-              }}
-            >
-              <div style={{ fontSize: '12px', fontWeight: 500, color: 'var(--color-ink)' }}>Mess Owner</div>
-              <div className="tnum" style={{ fontSize: '10px', color: 'var(--color-primary)' }}>Admin • 1234</div>
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );

@@ -11,12 +11,17 @@ export const api = {
     const { data: profiles, error } = await supabase
       .from('profiles')
       .select('*')
+      .neq('member_number', 'SYS_CONFIG_OTP')
       .order('member_number', { ascending: true });
 
     if (error || !profiles) {
       console.error('Error fetching profiles:', error);
       return [];
     }
+
+    const filteredProfiles = profiles.filter(
+      p => p.member_number !== 'SYS_CONFIG_OTP' && !p.member_number?.startsWith('SYS_')
+    );
 
     // Fetch active subscriptions
     const { data: subs } = await supabase
@@ -36,7 +41,7 @@ export const api = {
       .eq('status', 'verified')
       .order('created_at', { ascending: false });
 
-    return profiles.map(profile => {
+    return filteredProfiles.map(profile => {
       const memberSubs = (subs || []).filter(s => s.member_id === profile.id);
       const activeSub = memberSubs.find(s => s.status === 'active') || memberSubs[0];
       const memberPayments = (payments || []).filter(p => p.member_id === profile.id);
