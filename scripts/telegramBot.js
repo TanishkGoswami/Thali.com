@@ -219,9 +219,10 @@ function saveMessClosure(date, period, reason, closedBy = 'Admin') {
   try {
     const closures = readMessClosures();
     if (!closures[date]) closures[date] = {};
+    const cleanPeriod = (period === 'all' || period === 'all_day') ? 'all_day' : period.toLowerCase();
     
-    if (period === 'all_day') {
-      ['breakfast', 'lunch', 'dinner'].forEach(p => {
+    if (cleanPeriod === 'all_day') {
+      ['breakfast', 'lunch', 'dinner', 'all_day'].forEach(p => {
         closures[date][p] = {
           closed: true,
           reason,
@@ -231,7 +232,7 @@ function saveMessClosure(date, period, reason, closedBy = 'Admin') {
         };
       });
     } else {
-      closures[date][period] = {
+      closures[date][cleanPeriod] = {
         closed: true,
         reason,
         closedBy,
@@ -251,11 +252,13 @@ function removeMessClosure(date, period) {
   try {
     const closures = readMessClosures();
     if (!closures[date]) return false;
+    const cleanPeriod = (period === 'all' || period === 'all_day') ? 'all_day' : period.toLowerCase();
     
-    if (period === 'all_day') {
+    if (cleanPeriod === 'all_day') {
       delete closures[date];
     } else {
-      delete closures[date][period];
+      delete closures[date][cleanPeriod];
+      delete closures[date]['all_day'];
       if (Object.keys(closures[date]).length === 0) {
         delete closures[date];
       }
@@ -541,11 +544,11 @@ function getMessOffSelectKeyboard() {
 function getMessOffReasonsKeyboard(period) {
   return {
     inline_keyboard: [
-      [{ text: '🔧 Kitchen Deep Cleaning & Maintenance', callback_data: `messoff_askconfirm_${period}_Kitchen Maintenance & Deep Clean` }],
-      [{ text: '🎉 Public Holiday / Festival Off', callback_data: `messoff_askconfirm_${period}_Festival Holiday Off` }],
-      [{ text: '🌧️ Heavy Rain / Water Supply Disruption', callback_data: `messoff_askconfirm_${period}_Severe Weather & Supply Disruption` }],
-      [{ text: '🚨 Staff Shortage / Emergency', callback_data: `messoff_askconfirm_${period}_Staff Emergency Closure` }],
-      [{ text: '✍️ Type Custom Reason', callback_data: `messoff_custom_${period}` }],
+      [{ text: '🎉 Festival / Public Holiday', callback_data: `messoff_askconfirm::${period}::Festival Holiday` }],
+      [{ text: '🔧 Kitchen Maintenance / Deep Clean', callback_data: `messoff_askconfirm::${period}::Kitchen Maintenance` }],
+      [{ text: '🌧️ Water / Supply Issue', callback_data: `messoff_askconfirm::${period}::Water Supply Issue` }],
+      [{ text: '🚨 Staff Shortage / Emergency', callback_data: `messoff_askconfirm::${period}::Staff Emergency` }],
+      [{ text: '✍️ Type Custom Reason', callback_data: `messoff_custom::${period}` }],
       [{ text: '🔙 Cancel', callback_data: 'admin_panel' }]
     ]
   };
@@ -554,7 +557,7 @@ function getMessOffReasonsKeyboard(period) {
 function getMessOffConfirmKeyboard(period, reason) {
   return {
     inline_keyboard: [
-      [{ text: '✅ Yes, Confirm & Send Alert', callback_data: `messoff_exec_${period}_${reason}` }],
+      [{ text: '📢 Yes, Broadcast Notice to Members', callback_data: `messoff_exec::${period}::${reason}` }],
       [{ text: '❌ Cancel (Do Nothing)', callback_data: 'admin_panel' }]
     ]
   };
@@ -763,22 +766,28 @@ _(Note: Mess OFF hone par kisi bhi member ki absent mark nahi hogi aur na hi mea
 
 // Handler: Ask Confirmation before Executing Mess OFF
 async function handleMessOffAskConfirm(chatId, period, reason, tokenOverride = null, messageId = null) {
-  const today = getTodayDateString();
-  const periodLabel = period === 'all_day' ? 'POORA DIN (FULL DAY)' : period.toUpperCase();
+  const cleanPeriod = (period === 'all' || period === 'all_day') ? 'all_day' : period.toLowerCase();
+  const periodLabel = cleanPeriod === 'all_day' ? 'Poora Din (Full Day)' : (cleanPeriod.charAt(0).toUpperCase() + cleanPeriod.slice(1));
+  const memberHeadline = cleanPeriod === 'all_day'
+    ? '📢 *Aaj Mess Poore Din Band Rahegi*'
+    : `📢 *Aaj Mess me ${periodLabel} Band Rahega*`;
 
-  const confirmMsg = `⚠️ *CONFIRM MESS CLOSURE* ⚠️
+  const confirmMsg = `🛑 *Confirm Mess OFF Broadcast*
 
-🛑 *Period:* *${periodLabel}* (${today})
+⚠️ *Period:* *${periodLabel}*
 📝 *Reason:* ${reason}
 
-🛡️ *Automatic Member Protections:*
-• Sabhi members ko *EXCUSED (Zero Absent)* mark kiya jayega
-• Kisi ke pass se *koi meal deduct nahi hoga*
-• Sabhi registered students ko *push broadcast* deliver hoga
+📢 *Members ke phone notification me yeh aayega:*
+────────────────────────
+${memberHeadline}
 
-Kya aap confirm karna chahte hain?`;
+📝 *Reason:* ${reason}
+🛡️ _Note: Aapka koi meal deduct nahi hoga aur na hi absent lagegi._
+────────────────────────
 
-  const kb = getMessOffConfirmKeyboard(period, reason);
+Kya aap confirm karke notice bhejna chahte hain?`;
+
+  const kb = getMessOffConfirmKeyboard(cleanPeriod, reason);
 
   if (messageId) {
     return editMessageText(chatId, messageId, confirmMsg, kb, tokenOverride);
@@ -789,31 +798,30 @@ Kya aap confirm karna chahte hain?`;
 // Handler: Execute Mess OFF + Auto-Excuse + Broadcast
 async function handleExecuteMessOff(chatId, period, reason, tokenOverride = null, messageId = null) {
   const today = getTodayDateString();
-  const periodLabel = period === 'all_day' ? 'Poora Din (Full Day)' : period.toUpperCase();
+  const cleanPeriod = (period === 'all' || period === 'all_day') ? 'all_day' : period.toLowerCase();
+  const periodLabel = cleanPeriod === 'all_day' ? 'Poora Din' : (cleanPeriod.charAt(0).toUpperCase() + cleanPeriod.slice(1));
   
-  saveMessClosure(today, period, reason, 'Admin');
+  saveMessClosure(today, cleanPeriod, reason, 'Admin');
 
-  // Broadcast alert to ALL linked members with 100% clarity that NO meal is cut
-  const memberAlert = `🚨 *OFFICIAL MESS NOTICE: Mess is OFF* 🚨
+  // Super clean, 3-line notification-friendly broadcast for members
+  const memberHeadline = cleanPeriod === 'all_day'
+    ? '📢 *Aaj Mess Poore Din Band Rahegi*'
+    : `📢 *Aaj Mess me ${periodLabel} Band Rahega*`;
 
-⚠️ *Period:* *${periodLabel}* (${today})
+  const memberAlert = `${memberHeadline}
+
 📝 *Reason:* ${reason}
-
-✅ *Absent & Pass Protection:*
-Aapke pass se *koi meal deduct nahi hoga*, aur na hi koi absent count hogi! Aap bahar meal enjoy kar sakte hain.`;
+🛡️ _Note: Aapka koi meal deduct nahi hoga aur na hi absent lagegi._`;
 
   const broadcastReport = await broadcastToAllMembers(memberAlert);
 
-  const confirmMsg = `✅ *Mess OFF Successful & Members Protected!*
+  const confirmMsg = `✅ *Notice Sent to All Members!*
 
-🛑 *Period:* \`${periodLabel}\`
+🛑 *Period:* ${periodLabel}
 📝 *Reason:* ${reason}
-📢 *Push Notification:* Delivered to *${broadcastReport.sent}/${broadcastReport.total}* registered members.
+📢 *Delivered to:* *${broadcastReport.sent}/${broadcastReport.total}* members
 
-🔒 *Automatic Safeguards Active:*
-• Member absent nahi maane jayenge (Excused Holiday)
-• Pass balance se meal cut nahi hoga
-• Member bot /menu par Mess OFF notice display karega`;
+🛡️ *Zero-Absent guarantee active (No meal cut).*`;
 
   if (messageId) {
     return editMessageText(chatId, messageId, confirmMsg, getAdminPanelKeyboard(), tokenOverride);
@@ -1510,31 +1518,60 @@ async function handleCallbackQuery(cbQuery, tokenOverride = null) {
 
   if (data.startsWith('messoff_select_')) {
     const period = data.replace('messoff_select_', '');
-    const promptReasonMsg = `🛑 Selected Period: *${period.toUpperCase()}*\n\nNeeche diye gaye standard reasons me se select karein ya custom reason type karein:`;
+    const periodLabel = period === 'all_day' ? 'Poora Din' : (period.charAt(0).toUpperCase() + period.slice(1));
+    const promptReasonMsg = `🛑 Selected Period: *${periodLabel}*\n\nReason select karein ya custom reason type karein:`;
     return editMessageText(chatId, messageId, promptReasonMsg, getMessOffReasonsKeyboard(period), tokenOverride);
   }
 
-  if (data.startsWith('messoff_askconfirm_')) {
-    const parts = data.replace('messoff_askconfirm_', '').split('_');
-    const period = parts[0];
-    const reason = parts.slice(1).join('_');
+  if (data.startsWith('messoff_askconfirm')) {
+    let period = 'all_day';
+    let reason = 'Festival Holiday';
+    if (data.includes('::')) {
+      const parts = data.split('::');
+      period = parts[1];
+      reason = parts[2];
+    } else {
+      const raw = data.replace('messoff_askconfirm_', '');
+      if (raw.startsWith('all_day_')) {
+        period = 'all_day';
+        reason = raw.replace('all_day_', '');
+      } else {
+        const parts = raw.split('_');
+        period = parts[0];
+        reason = parts.slice(1).join('_');
+      }
+    }
     return handleMessOffAskConfirm(chatId, period, reason, tokenOverride, messageId);
   }
 
-  if (data.startsWith('messoff_custom_')) {
-    const period = data.replace('messoff_custom_', '');
+  if (data.startsWith('messoff_custom')) {
+    const period = data.includes('::') ? data.split('::')[1] : data.replace('messoff_custom_', '');
     const state = getAdminState(chatId);
     state.awaiting = 'messoff_custom_reason';
     state.tempData = { period };
-    return editMessageText(chatId, messageId, `✍️ *Custom Reason:* Kripya neeche chat me reason type karke bhejein (jaise: \`Hostel Water Supply Breakdown\`):`, {
+    return editMessageText(chatId, messageId, `✍️ *Custom Reason:* Kripya reason type karke bhejein (jaise: \`Hostel Water Supply Breakdown\`):`, {
       inline_keyboard: [[{ text: '🔙 Cancel', callback_data: 'admin_panel' }]]
     }, tokenOverride);
   }
 
-  if (data.startsWith('messoff_exec_')) {
-    const parts = data.replace('messoff_exec_', '').split('_');
-    const period = parts[0];
-    const reason = parts.slice(1).join('_');
+  if (data.startsWith('messoff_exec')) {
+    let period = 'all_day';
+    let reason = 'Festival Holiday';
+    if (data.includes('::')) {
+      const parts = data.split('::');
+      period = parts[1];
+      reason = parts[2];
+    } else {
+      const raw = data.replace('messoff_exec_', '');
+      if (raw.startsWith('all_day_')) {
+        period = 'all_day';
+        reason = raw.replace('all_day_', '');
+      } else {
+        const parts = raw.split('_');
+        period = parts[0];
+        reason = parts.slice(1).join('_');
+      }
+    }
     return handleExecuteMessOff(chatId, period, reason, tokenOverride, messageId);
   }
 
