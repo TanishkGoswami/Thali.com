@@ -826,9 +826,12 @@ Neeche diye gaye buttons se aap menu dekh sakte hain aur attendance mark kar sak
 }
 
 async function handleStart(chatId, username, text, tokenOverride = null) {
-  // If user is admin or on admin bot, show admin panel
-  if (await isAuthorizedAdmin(chatId)) {
-    return handleAdminPanel(chatId, tokenOverride);
+  // If on dedicated Admin Bot, show admin panel
+  if (tokenOverride) {
+    if (await isAuthorizedAdmin(chatId)) {
+      return handleAdminPanel(chatId, tokenOverride);
+    }
+    return sendMessage(chatId, `⛔ Access Denied. Yeh bot sirf authorized mess owners ke liye hai.`, null, tokenOverride);
   }
 
   const parts = text.split(' ');
@@ -1065,6 +1068,21 @@ async function handleCallbackQuery(cbQuery, tokenOverride = null) {
   }
 
   // 4. Admin Navigation & Controls
+  const isAdminAction = data.startsWith('admin_') || data.startsWith('messoff_') || data.startsWith('messon_') || data.startsWith('bcast_');
+  if (!tokenOverride && isAdminAction) {
+    return editMessageText(
+      chatId,
+      messageId,
+      `👑 *Thali.com Admin Notice*\n\nYeh controls ab dedicated admin bot par shift ho chuke hain:\n👉 [@ThaliAdminBot](https://t.me/ThaliAdminBot)\n\nStudent pass aur menus ke liye neeche button use karein:`,
+      {
+        inline_keyboard: [
+          [{ text: '👑 Open @ThaliAdminBot', url: 'https://t.me/ThaliAdminBot' }],
+          [{ text: '🍛 Today\'s Menu & RSVP', callback_data: 'action_menu' }]
+        ]
+      }
+    );
+  }
+
   if (data === 'admin_panel' || data === 'admin_refresh') {
     return handleAdminPanel(chatId, tokenOverride, messageId);
   }
@@ -1153,7 +1171,23 @@ async function handleCallbackQuery(cbQuery, tokenOverride = null) {
 async function handleTextMessage(chatId, username, text, tokenOverride = null) {
   const clean = text.trim();
 
-  // Admin Commands
+  // If received on Main Student Bot (@ThaliMessBot), redirect admin commands to @ThaliAdminBot
+  const isAdminCmd = clean.startsWith('/admin') || clean.startsWith('/messoff') || clean.startsWith('/messon') || clean.startsWith('/broadcast') || clean.startsWith('/headcount') || clean.startsWith('/ledger') || clean.startsWith('/member') || clean.startsWith('/setmenu');
+
+  if (!tokenOverride && isAdminCmd) {
+    return sendMessage(
+      chatId,
+      `👑 *Thali.com Admin Console Notice*\n\nAdmin controls aur management actions alag dedicated bot par shift ho gaye hain:\n👉 [@ThaliAdminBot](https://t.me/ThaliAdminBot)\n\nStudent QR pass aur daily menu ke liye neeche diye gaye buttons use karein:`,
+      {
+        inline_keyboard: [
+          [{ text: '👑 Go to @ThaliAdminBot', url: 'https://t.me/ThaliAdminBot' }],
+          [{ text: '🍛 Today\'s Menu & RSVP', callback_data: 'action_menu' }]
+        ]
+      }
+    );
+  }
+
+  // Admin Commands (Only processed on dedicated Admin Bot or authorized session)
   if (clean.startsWith('/admin_login')) {
     const pin = clean.split(' ')[1]?.trim();
     return handleAdminLogin(chatId, pin, tokenOverride);
