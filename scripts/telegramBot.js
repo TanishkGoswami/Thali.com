@@ -553,6 +553,7 @@ const FALLBACK_MENUS = {
 function getMemberMainMenuKeyboard() {
   return {
     inline_keyboard: [
+      [{ text: 'Open Mini App', web_app: { url: 'https://thali-com.vercel.app/telegram' } }],
       [{ text: "Today's Menu & RSVP", callback_data: 'action_menu' }],
       [
         { text: 'Digital QR Pass', callback_data: 'action_pass' },
@@ -565,6 +566,7 @@ function getMemberMainMenuKeyboard() {
 function getAdminPanelKeyboard() {
   return {
     inline_keyboard: [
+      [{ text: 'Open Admin Mini App', web_app: { url: 'https://thali-com.vercel.app/telegram?view=admin' } }],
       [
         { text: 'Declare Mess OFF', callback_data: 'admin_menu_off' },
         { text: 'Reopen Mess', callback_data: 'admin_menu_on' }
@@ -2070,7 +2072,7 @@ async function syncBotProfiles() {
       menu_button: {
         type: 'web_app',
         text: 'Open',
-        web_app: { url: 'https://thali-com.vercel.app' }
+        web_app: { url: 'https://thali-com.vercel.app/telegram' }
       }
     });
     await callTelegram('setMyCommands', {
@@ -2090,6 +2092,13 @@ async function syncBotProfiles() {
       }, ADMIN_BOT_TOKEN);
       await callTelegram('setMyShortDescription', {
         short_description: 'Administrative console for Thali.com mess management.'
+      }, ADMIN_BOT_TOKEN);
+      await callTelegram('setChatMenuButton', {
+        menu_button: {
+          type: 'web_app',
+          text: 'Open',
+          web_app: { url: 'https://thali-com.vercel.app/telegram?view=admin' }
+        }
       }, ADMIN_BOT_TOKEN);
       await callTelegram('setMyCommands', {
         commands: [

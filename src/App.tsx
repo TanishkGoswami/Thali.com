@@ -5,6 +5,7 @@ import { ReceptionistView } from './components/ReceptionistView';
 import { AdminView } from './components/AdminView';
 import { LoginModal } from './components/LoginModal';
 import { ProfileModal } from './components/ProfileModal';
+import { TelegramMiniApp } from './components/TelegramMiniApp';
 import { api } from './services/api';
 import { signOutUser, getLocalSessionId, saveLocalSession, clearLocalSession } from './lib/auth';
 import { supabase } from './lib/supabase';
@@ -13,6 +14,16 @@ import type { Role, Profile, DailyMenu, MealTransaction, MealPeriod } from './ty
 import { Loader2 } from 'lucide-react';
 
 export function App() {
+  // Dedicated Telegram Mini App Route (/telegram or inside Telegram WebApp)
+  const isTelegramRoute = window.location.pathname.startsWith('/telegram') || 
+    Boolean((window as any).Telegram?.WebApp?.initData) ||
+    window.location.search.includes('tgWebApp') || 
+    window.location.search.includes('tgId');
+
+  if (isTelegramRoute) {
+    return <TelegramMiniApp />;
+  }
+
   const [currentUser, setCurrentUser] = useState<(Profile & { remaining_meals?: number; subscription_status?: string; expires_at?: string; payment_method?: 'cash' | 'upi_direct' }) | null>(null);
   const [currentRole, setCurrentRole] = useState<Role>('member');
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
