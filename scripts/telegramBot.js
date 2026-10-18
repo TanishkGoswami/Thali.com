@@ -12,6 +12,7 @@ const dataDir = path.resolve(rootDir, 'data');
 const linksFilePath = path.resolve(dataDir, 'telegram_links.json');
 const closuresFilePath = path.resolve(dataDir, 'mess_closures.json');
 const adminChatsFilePath = path.resolve(dataDir, 'admin_chats.json');
+const subscribersFilePath = path.resolve(dataDir, 'bot_subscribers.json');
 
 // Ensure data directory exists
 if (!fs.existsSync(dataDir)) {
@@ -56,6 +57,95 @@ function readTelegramLinks() {
   return {};
 }
 
+function readBotSubscribers() {
+  try {
+    if (fs.existsSync(subscribersFilePath)) {
+      return JSON.parse(fs.readFileSync(subscribersFilePath, 'utf-8'));
+    }
+  } catch (err) {
+    console.error('Error reading bot_subscribers.json:', err.message);
+  }
+  return {};
+}
+
+function recordBotSubscriber(chatId, fromUser = {}, botType = 'student_bot', extra = {}) {
+  try {
+    const subs = readBotSubscribers();
+    const idKey = String(chatId);
+    const existing = subs[idKey] || {};
+    const links = readTelegramLinks();
+    const linked = links[idKey] || null;
+
+    let roleType = 'guest_visitor';
+    if (linked) {
+      roleType = 'linked_member';
+    } else if (isAuthorizedAdmin(chatId)) {
+      roleType = 'admin_authenticated';
+    }
+
+    let combinedBotType = botType;
+    if (existing.botType && existing.botType !== botType) {
+      combinedBotType = 'both';
+    }
+
+    subs[idKey] = {
+      chatId: Number(chatId),
+      username: fromUser?.username || existing.username || '',
+      firstName: fromUser?.first_name || existing.firstName || '',
+      lastName: fromUser?.last_name || existing.lastName || '',
+      botType: combinedBotType,
+      firstSeen: existing.firstSeen || new Date().toISOString(),
+      lastActive: new Date().toISOString(),
+      status: extra.status || (linked ? 'linked_member' : existing.status || roleType),
+      memberId: linked?.memberId || extra.memberId || existing.memberId || null,
+      memberNumber: linked?.memberNumber || extra.memberNumber || existing.memberNumber || null,
+      fullName: linked?.fullName || extra.fullName || existing.fullName || (fromUser?.first_name ? `${fromUser.first_name || ''} ${fromUser.last_name || ''}`.trim() : ''),
+      phone: linked?.phone || extra.phone || existing.phone || null
+    };
+
+    fs.writeFileSync(subscribersFilePath, JSON.stringify(subs, null, 2), 'utf-8');
+    return subs[idKey];
+  } catch (err) {
+    console.error('Error saving bot_subscribers.json:', err.message);
+    return null;
+  }
+}
+
+function initBotSubscribers() {
+  try {
+    const subs = readBotSubscribers();
+    const links = readTelegramLinks();
+    let updated = false;
+
+    for (const [chatId, link] of Object.entries(links)) {
+      if (!subs[chatId]) {
+        subs[chatId] = {
+          chatId: Number(chatId),
+          username: link.username || '',
+          firstName: link.fullName?.split(' ')[0] || '',
+          lastName: link.fullName?.split(' ').slice(1).join(' ') || '',
+          botType: 'student_bot',
+          firstSeen: link.linkedAt || new Date().toISOString(),
+          lastActive: link.linkedAt || new Date().toISOString(),
+          status: 'linked_member',
+          memberId: link.memberId,
+          memberNumber: link.memberNumber,
+          fullName: link.fullName,
+          phone: link.phone
+        };
+        updated = true;
+      }
+    }
+
+    if (updated || !fs.existsSync(subscribersFilePath)) {
+      fs.writeFileSync(subscribersFilePath, JSON.stringify(subs, null, 2), 'utf-8');
+    }
+  } catch (e) {
+    console.warn('initBotSubscribers notice:', e.message);
+  }
+}
+initBotSubscribers();
+
 function saveTelegramLink(chatId, profile, username = '') {
   try {
     const links = readTelegramLinks();
@@ -70,6 +160,15 @@ function saveTelegramLink(chatId, profile, username = '') {
     };
     fs.writeFileSync(linksFilePath, JSON.stringify(links, null, 2), 'utf-8');
     console.log(`✅ Stored member link: Chat ${chatId} -> ${profile.full_name} (${profile.member_number})`);
+
+    // Synchronize to subscribers registry
+    recordBotSubscriber(chatId, { username }, 'student_bot', {
+      status: 'linked_member',
+      memberId: profile.id,
+      memberNumber: profile.member_number,
+      fullName: profile.full_name,
+      phone: profile.phone
+    });
   } catch (err) {
     console.error('Error saving telegram_links.json:', err.message);
   }
@@ -164,6 +263,11 @@ function saveAdminChat(chatId, info) {
     };
     fs.writeFileSync(adminChatsFilePath, JSON.stringify(admins, null, 2), 'utf-8');
     console.log(`🛡️ Authorized Admin Chat: ${chatId} (${info.name || 'Admin'})`);
+
+    // Synchronize to subscribers registry
+    recordBotSubscriber(chatId, { username: info.username }, 'admin_bot', {
+      status: 'admin_authenticated'
+    });
   } catch (err) {
     console.error('Error saving admin_chats.json:', err.message);
   }
@@ -352,11 +456,12 @@ function getAdminPanelKeyboard() {
         { text: '🍛 Update Today\'s Menu', callback_data: 'admin_setmenu' }
       ],
       [
-        { text: '💰 Daily Ledger & Audit', callback_data: 'admin_ledger' },
-        { text: '🔄 Refresh Status', callback_data: 'admin_refresh' }
+        { text: '👥 Bot Users & Members', callback_data: 'admin_bot_users' },
+        { text: '💰 Daily Ledger & Audit', callback_data: 'admin_ledger' }
       ],
       [
-        { text: '🔒 Log Out / Lock Console', callback_data: 'admin_logout' }
+        { text: '🔄 Refresh Status', callback_data: 'admin_refresh' },
+        { text: '🔒 Log Out Console', callback_data: 'admin_logout' }
       ]
     ]
   };
@@ -568,6 +673,7 @@ async function handleAdminPanel(chatId, tokenOverride = null, messageId = null) 
   const closures = readMessClosures()[today] || {};
   const closedKeys = Object.keys(closures);
   const links = readTelegramLinks();
+  const subs = readBotSubscribers();
 
   const statusLine = closedKeys.length > 0
     ? `⚠️ *Active Closures Today:* ${closedKeys.map(k => `\`${k.toUpperCase()}\``).join(', ')}`
@@ -575,7 +681,7 @@ async function handleAdminPanel(chatId, tokenOverride = null, messageId = null) 
 
   const panelMsg = `👑 *Thali.com Administrator Console*
 📅 *Service Date:* ${today}
-👥 *Connected Members:* *${Object.keys(links).length} Diners*
+👥 *Connected Members:* *${Object.keys(links).length} Diners* (Bot Visitors: *${Object.keys(subs).length}*)
 
 ${statusLine}
 
@@ -919,6 +1025,83 @@ _Sub dues aur meal balances automated ledger me synced hain._`;
   return sendMessage(chatId, ledgerMsg, getAdminPanelKeyboard(), tokenOverride);
 }
 
+// Handler: Bot Users & Subscribers Registry
+async function handleBotUsersReport(chatId, tokenOverride = null, messageId = null) {
+  const subs = readBotSubscribers();
+  const links = readTelegramLinks();
+  const admins = readAdminChats();
+
+  const allSubscribers = Object.values(subs);
+  const totalTracked = allSubscribers.length;
+  const linkedList = Object.entries(links).map(([cId, val]) => ({ chatId: cId, ...val }));
+  const unlinkedGuests = allSubscribers.filter(s => !links[String(s.chatId)] && !admins[String(s.chatId)]);
+  const adminEntries = Object.entries(admins);
+
+  let msg = `👥 *Thali.com Bot User Registry & Subscribers*\n`;
+  msg += `────────────────────────────\n`;
+  msg += `📊 *Total Active Users:* *${totalTracked || linkedList.length} Diners*\n`;
+  msg += `🟢 *Linked Registered Members:* *${linkedList.length} Members*\n`;
+  msg += `⏳ *Unlinked Visitors / Started:* *${unlinkedGuests.length} Diners*\n`;
+  msg += `👑 *Active Authenticated Admins:* *${adminEntries.length} Admins*\n\n`;
+
+  msg += `🟢 *Linked Registered Diners (@ThaliMessBot):*\n`;
+  if (linkedList.length === 0) {
+    msg += `_Abhi tak koi member account linked nahi hai._\n\n`;
+  } else {
+    linkedList.forEach((m, idx) => {
+      const uname = m.username ? `@${m.username}` : '_No username_';
+      const phoneStr = m.phone ? `+91 ${m.phone}` : '_Not linked_';
+      const timeStr = m.linkedAt ? new Date(m.linkedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Recently';
+      msg += `${idx + 1}. *${m.fullName}* (\`${m.memberNumber}\`)\n`;
+      msg += `   • Phone: \`${phoneStr}\` | ${uname}\n`;
+      msg += `   • Chat ID: \`${m.chatId}\` | 🕒 ${timeStr}\n`;
+    });
+    msg += `\n`;
+  }
+
+  if (unlinkedGuests.length > 0) {
+    msg += `⏳ *Visitors Started Bot (Not Linked Yet):*\n`;
+    unlinkedGuests.slice(0, 6).forEach((u) => {
+      const uName = (u.firstName || u.fullName || 'Guest Diner').trim();
+      const uname = u.username ? `@${u.username}` : `Chat \`${u.chatId}\``;
+      const timeStr = u.firstSeen ? new Date(u.firstSeen).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Recently';
+      msg += `• *${uName}* (${uname}) | 🕒 ${timeStr}\n`;
+    });
+    if (unlinkedGuests.length > 6) {
+      msg += `_...aur ${unlinkedGuests.length - 6} aur visitors_\n`;
+    }
+    msg += `\n`;
+  }
+
+  if (adminEntries.length > 0) {
+    msg += `👑 *Authorized Admin Sessions:* \n`;
+    adminEntries.forEach(([cId, a]) => {
+      msg += `• Chat ID: \`${cId}\` (${a.name || 'Admin'} - ${a.role || 'Owner Admin'})\n`;
+    });
+    msg += `\n`;
+  }
+
+  msg += `_Actions ke liye buttons use karein:_`;
+
+  const keyboard = {
+    inline_keyboard: [
+      [
+        { text: '🔍 Search / Inspect Member', callback_data: 'admin_lookup' },
+        { text: '📢 Send Broadcast Alert', callback_data: 'admin_broadcast' }
+      ],
+      [
+        { text: '🔄 Refresh List', callback_data: 'admin_bot_users' },
+        { text: '🔙 Back to Console', callback_data: 'admin_panel' }
+      ]
+    ]
+  };
+
+  if (messageId) {
+    return editMessageText(chatId, messageId, msg, keyboard, tokenOverride);
+  }
+  return sendMessage(chatId, msg, keyboard, tokenOverride);
+}
+
 // -------------------------------------------------------------
 // Member Flow Handlers (On @ThaliMessBot)
 // -------------------------------------------------------------
@@ -1242,6 +1425,11 @@ async function handleCallbackQuery(cbQuery, tokenOverride = null) {
     return handleAdminPanel(chatId, tokenOverride, messageId);
   }
 
+  if (data === 'admin_bot_users') {
+    clearAdminAwaiting(chatId);
+    return handleBotUsersReport(chatId, tokenOverride, messageId);
+  }
+
   if (data === 'admin_logout') {
     removeAdminChat(chatId);
     clearAdminAwaiting(chatId);
@@ -1498,6 +1686,9 @@ Kya aap yeh announcement sabhi registered students ko bhejna chahte hain?`;
   if (clean.startsWith('/start') || clean.startsWith('/admin') || clean.startsWith('/panel')) {
     return handleAdminPanel(chatId, tokenOverride);
   }
+  if (clean.startsWith('/users') || clean.startsWith('/members') || clean.startsWith('/subscribers')) {
+    return handleBotUsersReport(chatId, tokenOverride);
+  }
   if (clean.startsWith('/logout')) {
     removeAdminChat(chatId);
     clearAdminAwaiting(chatId);
@@ -1556,6 +1747,10 @@ async function pollMainBot() {
           const chatId = msg.chat?.id;
           const username = msg.from?.username;
 
+          if (chatId) {
+            recordBotSubscriber(chatId, msg.from, 'student_bot');
+          }
+
           if (msg.contact) {
             const rawPhone = msg.contact.phone_number.replace(/\D/g, '').slice(-10);
             const { data: profiles } = await supabase.from('profiles').select('*').ilike('phone', `%${rawPhone}%`).limit(1);
@@ -1570,6 +1765,10 @@ async function pollMainBot() {
         }
 
         if (update.callback_query) {
+          const cq = update.callback_query;
+          if (cq.message?.chat?.id) {
+            recordBotSubscriber(cq.message.chat.id, cq.from, 'student_bot');
+          }
           await handleCallbackQuery(update.callback_query);
         }
       }
@@ -1596,6 +1795,10 @@ async function pollAdminBot() {
           const username = msg.from?.username;
           const text = (msg.text || '').trim();
 
+          if (chatId) {
+            recordBotSubscriber(chatId, msg.from, 'admin_bot');
+          }
+
           // If admin sent contact verification
           if (msg.contact) {
             await verifyAdminContact(chatId, msg.contact, ADMIN_BOT_TOKEN);
@@ -1605,6 +1808,10 @@ async function pollAdminBot() {
         }
 
         if (update.callback_query) {
+          const cq = update.callback_query;
+          if (cq.message?.chat?.id) {
+            recordBotSubscriber(cq.message.chat.id, cq.from, 'admin_bot');
+          }
           await handleCallbackQuery(update.callback_query, ADMIN_BOT_TOKEN);
         }
       }

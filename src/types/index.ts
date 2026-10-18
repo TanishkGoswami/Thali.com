@@ -76,6 +76,8 @@ export interface Profile {
   phone_verified?: boolean;
   payment_method?: 'cash' | 'upi_direct';
   payment_status?: 'pending' | 'verified';
+  telegram_chat_id?: string;
+  telegram_username?: string;
   created_at: string;
   updated_at: string;
 }

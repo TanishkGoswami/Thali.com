@@ -28,7 +28,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'members' | 'headcount' | 'payments' | 'menu' | 'import'>('members');
   const [searchMember, setSearchMember] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending' | 'low'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending' | 'low' | 'telegram'>('all');
   
   // Modals state
   const [showAddMember, setShowAddMember] = useState(false);
@@ -106,6 +106,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
     if (statusFilter === 'active') return m.subscription_status === 'active';
     if (statusFilter === 'pending') return m.subscription_status === 'pending';
     if (statusFilter === 'low') return (m.remaining_meals ?? 0) <= 5 && m.subscription_status === 'active';
+    if (statusFilter === 'telegram') return Boolean(m.telegram_chat_id || m.telegram_username);
 
     return true;
   });
@@ -113,6 +114,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
   const activeCount = members.filter(m => m.subscription_status === 'active').length;
   const pendingCount = members.filter(m => m.subscription_status === 'pending').length;
   const lowBalanceCount = members.filter(m => (m.remaining_meals ?? 0) <= 5 && m.subscription_status === 'active').length;
+  const telegramCount = members.filter(m => Boolean(m.telegram_chat_id || m.telegram_username)).length;
 
   const handleCreateMember = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -719,6 +721,20 @@ export const AdminView: React.FC<AdminViewProps> = ({
               >
                 Low Balance ({lowBalanceCount})
               </button>
+              <button
+                type="button"
+                onClick={() => setStatusFilter('telegram')}
+                className="btn btn-pill"
+                style={{
+                  fontSize: '11px',
+                  padding: '3px 9px',
+                  backgroundColor: statusFilter === 'telegram' ? '#e0f2fe' : 'var(--color-canvas-soft)',
+                  color: statusFilter === 'telegram' ? '#0369a1' : 'var(--color-ink-mute)',
+                  border: statusFilter === 'telegram' ? '1px solid #7dd3fc' : '1px solid var(--color-hairline)'
+                }}
+              >
+                🤖 Telegram Bot ({telegramCount})
+              </button>
             </div>
           </div>
 
@@ -762,18 +778,59 @@ export const AdminView: React.FC<AdminViewProps> = ({
                       </span>
                     </td>
                     <td style={{ padding: '10px 12px', verticalAlign: 'middle' }}>
-                      <span
-                        className="truncate-text"
-                        style={{
-                          fontWeight: 500,
-                          color: 'var(--color-ink)',
-                          display: 'block',
-                          maxWidth: '160px'
-                        }}
-                        title={m.full_name}
-                      >
-                        {m.full_name}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span
+                          className="truncate-text"
+                          style={{
+                            fontWeight: 500,
+                            color: 'var(--color-ink)',
+                            display: 'block',
+                            maxWidth: '140px'
+                          }}
+                          title={m.full_name}
+                        >
+                          {m.full_name}
+                        </span>
+                        {m.telegram_username ? (
+                          <span
+                            style={{
+                              fontSize: '10px',
+                              fontWeight: 500,
+                              padding: '1px 6px',
+                              borderRadius: 'var(--radius-pill)',
+                              backgroundColor: '#e0f2fe',
+                              color: '#0369a1',
+                              border: '1px solid #bae6fd',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '2px',
+                              flexShrink: 0
+                            }}
+                            title={`Telegram Bot Linked: @${m.telegram_username}`}
+                          >
+                            🤖 @{m.telegram_username}
+                          </span>
+                        ) : m.telegram_chat_id ? (
+                          <span
+                            style={{
+                              fontSize: '10px',
+                              fontWeight: 500,
+                              padding: '1px 6px',
+                              borderRadius: 'var(--radius-pill)',
+                              backgroundColor: '#e0f2fe',
+                              color: '#0369a1',
+                              border: '1px solid #bae6fd',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '2px',
+                              flexShrink: 0
+                            }}
+                            title="Telegram Bot Linked"
+                          >
+                            🤖 Bot
+                          </span>
+                        ) : null}
+                      </div>
                     </td>
                     <td className="tnum" style={{ padding: '10px 12px', color: 'var(--color-ink-mute)', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
                       {m.phone ? `+91 ${m.phone}` : '—'}
@@ -937,11 +994,25 @@ export const AdminView: React.FC<AdminViewProps> = ({
                   borderRadius: 'var(--radius-sm)',
                   fontSize: '12px'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--color-ink-secondary)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--color-ink-secondary)' }}>
                     <span style={{ color: 'var(--color-ink-mute)', fontSize: '11px' }}>Phone:</span>
                     <span className="tnum" style={{ fontWeight: 500, color: 'var(--color-ink)' }}>
                       {m.phone ? `+91 ${m.phone}` : '—'}
                     </span>
+                    {m.telegram_username && (
+                      <span
+                        style={{
+                          fontSize: '9px',
+                          padding: '1px 5px',
+                          borderRadius: 'var(--radius-pill)',
+                          backgroundColor: '#e0f2fe',
+                          color: '#0369a1',
+                          border: '1px solid #bae6fd'
+                        }}
+                      >
+                        🤖 @{m.telegram_username}
+                      </span>
+                    )}
                   </div>
 
                   <div className="tnum" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
