@@ -381,11 +381,12 @@ async function callTelegram(method, payload = {}, tokenOverride = null) {
   }
 }
 
-async function sendMessage(chatId, text, replyMarkup = null, tokenOverride = null) {
+async function sendMessage(chatId, text, replyMarkup = null, tokenOverride = null, disableNotification = false) {
   const payload = {
     chat_id: chatId,
     text,
-    parse_mode: 'Markdown'
+    parse_mode: 'Markdown',
+    disable_notification: disableNotification // explicitly false so Telegram delivers audible notifications
   };
   if (replyMarkup) payload.reply_markup = replyMarkup;
   let res = await callTelegram('sendMessage', payload, tokenOverride);
@@ -426,6 +427,7 @@ async function sendPhotoBuffer(chatId, buffer, caption = '', tokenOverride = nul
     formData.append('chat_id', chatId);
     formData.append('caption', caption);
     formData.append('parse_mode', 'Markdown');
+    formData.append('disable_notification', 'false');
     const blob = new Blob([buffer], { type: 'image/png' });
     formData.append('photo', blob, 'pass_qr.png');
 
@@ -446,23 +448,36 @@ async function answerCallbackQuery(callbackQueryId, text = '', tokenOverride = n
   }, tokenOverride);
 }
 
-// Broadcast message to all registered member chats
+// Broadcast message to all registered member chats with audible sound
 async function broadcastToAllMembers(text, replyMarkup = null) {
   const links = readTelegramLinks();
-  const chatIds = Object.keys(links);
+  const subs = readBotSubscribers();
+
+  const targetChatIds = new Set();
+  for (const cid of Object.keys(links)) {
+    targetChatIds.add(String(cid));
+  }
+  for (const [cid, sub] of Object.entries(subs)) {
+    // Send to members or student bot visitors, exclude admin-only accounts
+    if (sub.botType === 'student_bot' || sub.status === 'linked_member' || sub.memberNumber) {
+      targetChatIds.add(String(cid));
+    }
+  }
+
+  const idList = Array.from(targetChatIds);
   let sent = 0;
   let failed = 0;
 
-  for (const cid of chatIds) {
+  for (const cid of idList) {
     try {
-      const res = await sendMessage(cid, text, replyMarkup);
+      const res = await sendMessage(cid, text, replyMarkup, null, false);
       if (res?.ok) sent++;
       else failed++;
     } catch {
       failed++;
     }
   }
-  return { total: chatIds.length, sent, failed };
+  return { total: idList.length, sent, failed };
 }
 
 // -------------------------------------------------------------
@@ -493,7 +508,8 @@ function getMemberMainMenuKeyboard() {
       [
         { text: '🎫 My Digital QR Pass', callback_data: 'action_pass' },
         { text: '💳 Check Balance', callback_data: 'action_balance' }
-      ]
+      ],
+      [{ text: '🔔 Unmute Bot / Notifications', callback_data: 'action_unmute_help' }]
     ]
   };
 }
@@ -1218,12 +1234,17 @@ async function linkProfileToChat(chatId, username, profile, messageId = null, to
     console.warn('Note: Supabase telegram_chat_id update notice:', err.message);
   }
 
-  const welcomeMsg = `🎉 *Shabaash! Account Successfully Linked!*
+  const welcomeMsg = `🎉 *Account Successfully Linked!*
 
 Welcome, *${profile.full_name}* (\`${profile.member_number}\`)!
 Aapka Thali.com pass iss chat se connect ho gaya hai.
 
-Neeche diye gaye buttons se aap menu dekh sakte hain aur attendance mark kar sakte hain:`;
+🔔 *Zaroori Setting (Must Do):*
+Telegram bots ko by-default mute rakhta hai. Kripya abhi iss chat ko *Unmute* (Notification ON) karein taaki:
+• Mess OFF aur emergency notices turant loud ring ke sath milein
+• Daily lunch & dinner menu updates miss na hon!
+
+👉 *Steps:* Top-right 3 dots (⋮) par tap karke *Unmute* select karein.`;
 
   if (messageId) {
     return editMessageText(chatId, messageId, welcomeMsg, getMemberMainMenuKeyboard(), tokenOverride);
@@ -1258,7 +1279,9 @@ async function handleStartMember(chatId, username, text, tokenOverride = null) {
     const welcomeBackMsg = `👋 *Namaste, ${member.full_name}!*
 
 Aapka account (\`${member.member_number}\`) already connected hai.
-Aaj ka menu dekhne ya pass check karne ke liye neeche diye gaye buttons use karein:`;
+Aaj ka menu dekhne ya pass check karne ke liye neeche diye gaye buttons use karein:
+
+🔔 *Notification Tip:* Ensure karein ki yeh chat *Unmute* hai taaki koi bhi urgent broadcast ya Mess OFF notice aapse miss na ho!`;
     return sendMessage(chatId, welcomeBackMsg, getMemberMainMenuKeyboard(), tokenOverride);
   }
 
@@ -1266,7 +1289,10 @@ Aaj ka menu dekhne ya pass check karne ke liye neeche diye gaye buttons use kare
 
 Aapka account connect karne ke liye:
 1️⃣ Neeche diye gaye *Share Contact* button par tap karein, YA
-2️⃣ Apna **Member ID** (jaise \`M-112\`) ya registered **Mobile Number** type karke bhejein.`;
+2️⃣ Apna **Member ID** (jaise \`M-112\`) ya registered **Mobile Number** type karke bhejein.
+
+🔔 *Important Request:*
+Telegram naye bots ko by-default *Mute* rakhta hai. Kripya top-right 3 dots (⋮) se iss chat ko *Unmute* zaroor kar lein taaki Mess OFF aur daily alerts miss na hon!`;
 
   const keyboard = {
     keyboard: [[{ text: '📱 Share My Phone Number', request_contact: true }]],
@@ -1421,6 +1447,8 @@ async function handleCallbackQuery(cbQuery, tokenOverride = null) {
   else if (data === 'admin_lookup') toastMsg = '🔍 Member Search...';
   else if (data === 'admin_setmenu') toastMsg = '🍛 Update Menu Options...';
   else if (data === 'admin_logout') toastMsg = '🔒 Logging Out Console...';
+  else if (data === 'action_unmute_help') toastMsg = '🔔 Notification Help';
+  else if (data === 'action_back_menu') toastMsg = '🔙 Main Menu';
   else if (data.startsWith('action_')) toastMsg = '⚡ Loading...';
   else if (data.startsWith('rsvp_')) toastMsg = '✔️ Attendance Recorded!';
 
@@ -1454,6 +1482,35 @@ async function handleCallbackQuery(cbQuery, tokenOverride = null) {
   if (data === 'action_menu') return handleMenu(chatId, tokenOverride);
   if (data === 'action_pass') return handlePass(chatId, tokenOverride);
   if (data === 'action_balance') return handleBalance(chatId, tokenOverride);
+
+  if (data === 'action_unmute_help') {
+    const guideMsg = `🔔 *Bot Notification & Sound Guide*
+
+Telegram platform apne sabhi naye bots ko spam protection ke kaaran by-default *Mute* rakhta hai.
+
+Agar aap chahte hain ki:
+• 📢 *Mess OFF Notice* phone par turant loud ring kare
+• 🍛 *Daily Menu & Timings* aapse miss na hon
+
+Toh kripya yeh aasan steps follow karein:
+1️⃣ Iss chat ke top-right corner par 3 vertical dots *(⋮)* tap karein.
+2️⃣ *Unmute* (ya *Notifications: ON*) select karein.
+3️⃣ *(Recommended)* Chat ko *Pin to top* karein taaki hamesha samne rahe.
+
+Ab aapko saare zaroori alerts real-time notification sound ke sath milenge!`;
+
+    return editMessageText(chatId, messageId, guideMsg, {
+      inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'action_back_menu' }]]
+    }, tokenOverride);
+  }
+
+  if (data === 'action_back_menu') {
+    const member = await getMemberByChatId(chatId);
+    const backMsg = member
+      ? `👋 *Namaste, ${member.full_name}!* (\`${member.member_number}\`)\n\nNeeche diye gaye options choose karein:`
+      : `👋 *Welcome to Thali.com Assistant!*\n\nNeeche diye gaye options choose karein:`;
+    return editMessageText(chatId, messageId, backMsg, getMemberMainMenuKeyboard(), tokenOverride);
+  }
 
   // 3. Member RSVP
   if (data.startsWith('rsvp_')) {
@@ -1719,7 +1776,7 @@ async function handleTextMessage(chatId, username, text, tokenOverride = null) {
 
     return sendMessage(
       chatId,
-      `🤖 *Thali.com Assistant Commands:*\n• /menu - Today's menu & RSVP\n• /pass - Digital QR Pass\n• /balance - Meal balance`,
+      `🤖 *Thali.com Assistant Commands:*\n• /menu - Today's menu & RSVP\n• /pass - Digital QR Pass\n• /balance - Meal balance\n\n🔔 *Notification Tip:* Chat ko *Unmute* rakhein taaki Mess OFF ya emergency updates miss na hon!`,
       getMemberMainMenuKeyboard(),
       tokenOverride
     );
