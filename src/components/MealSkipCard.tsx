@@ -52,6 +52,17 @@ export const MealSkipCard: React.FC<MealSkipCardProps> = ({
     setFeedbackMsg(null);
 
     try {
+      if (memberId.startsWith('demo-')) {
+        setFeedbackMsg({
+          text: !currentSkipped
+            ? `Marked Not Coming for ${period}. Plate saved & kitchen notified! (Demo)`
+            : `Marked Coming for ${period}! (Demo)`,
+          type: 'success'
+        });
+        onRefreshSkips();
+        return;
+      }
+
       const res = await api.toggleMealSkip({
         memberId,
         serviceDate: targetDateStr,

@@ -8,6 +8,7 @@ import { ProfileModal } from './components/ProfileModal';
 import { api } from './services/api';
 import { signOutUser, getLocalSessionId, saveLocalSession, clearLocalSession } from './lib/auth';
 import { supabase } from './lib/supabase';
+import { DEMO_MEMBER, DEMO_RECEPTIONIST, DEMO_ADMIN, isDemoUser } from './lib/demoData';
 import type { Role, Profile, DailyMenu, MealTransaction, MealPeriod } from './types';
 import { Loader2 } from 'lucide-react';
 
@@ -37,12 +38,23 @@ export function App() {
       // Authenticated session check: Only restore if a real user logged in previously
       const savedUserId = getLocalSessionId();
       if (savedUserId) {
-        const matchingUser = membersData.find(m => m.id === savedUserId);
-        if (matchingUser) {
-          setCurrentUser(matchingUser);
-          setCurrentRole(matchingUser.role);
+        if (savedUserId === DEMO_MEMBER.id) {
+          setCurrentUser(DEMO_MEMBER);
+          setCurrentRole('member');
+        } else if (savedUserId === DEMO_RECEPTIONIST.id) {
+          setCurrentUser(DEMO_RECEPTIONIST);
+          setCurrentRole('receptionist');
+        } else if (savedUserId === DEMO_ADMIN.id) {
+          setCurrentUser(DEMO_ADMIN);
+          setCurrentRole('owner_admin');
         } else {
-          setCurrentUser(null);
+          const matchingUser = membersData.find(m => m.id === savedUserId);
+          if (matchingUser) {
+            setCurrentUser(matchingUser);
+            setCurrentRole(matchingUser.role);
+          } else {
+            setCurrentUser(null);
+          }
         }
       } else {
         // If no user has logged in, remain strictly logged out!
@@ -103,9 +115,22 @@ export function App() {
   // Handle successful login from LoginModal
   const handleLoginSuccess = (profile: Profile) => {
     saveLocalSession(profile.id);
-    const enriched = members.find(m => m.id === profile.id || m.member_number === profile.member_number) || profile;
-    setCurrentUser(enriched);
-    setCurrentRole(profile.role);
+    if (isDemoUser(profile)) {
+      if (profile.id === DEMO_MEMBER.id) {
+        setCurrentUser(DEMO_MEMBER);
+        setCurrentRole('member');
+      } else if (profile.id === DEMO_RECEPTIONIST.id) {
+        setCurrentUser(DEMO_RECEPTIONIST);
+        setCurrentRole('receptionist');
+      } else if (profile.id === DEMO_ADMIN.id) {
+        setCurrentUser(DEMO_ADMIN);
+        setCurrentRole('owner_admin');
+      }
+    } else {
+      const enriched = members.find(m => m.id === profile.id || m.member_number === profile.member_number) || profile;
+      setCurrentUser(enriched);
+      setCurrentRole(profile.role);
+    }
     setIsLoginModalOpen(false);
     loadData();
   };
@@ -233,6 +258,123 @@ export function App() {
         onOpenProfile={() => setIsProfileModalOpen(true)}
         onLogout={handleLogout}
       />
+
+      {/* Interactive Demo Mode Top Banner */}
+      {isDemoUser(currentUser) && (
+        <div style={{
+          backgroundColor: '#0d253d',
+          color: '#ffffff',
+          padding: '8px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '10px',
+          position: 'sticky',
+          top: '57px',
+          zIndex: 49,
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              backgroundColor: 'var(--color-primary)',
+              color: '#ffffff',
+              padding: '2px 8px',
+              borderRadius: 'var(--radius-pill)',
+              fontWeight: 600,
+              fontSize: '11px'
+            }}>
+              ⚡ Live Demo Sandbox
+            </span>
+            <span style={{ color: '#cbd5e1' }}>
+              Testing as: <strong style={{ color: '#ffffff' }}>{currentUser?.full_name}</strong>
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '12px', color: '#94a3b8', marginRight: '4px' }}>Switch Persona:</span>
+            <button
+              type="button"
+              onClick={() => {
+                setCurrentUser(DEMO_MEMBER);
+                setCurrentRole('member');
+                saveLocalSession(DEMO_MEMBER.id);
+              }}
+              className="btn btn-pill"
+              style={{
+                backgroundColor: currentRole === 'member' ? 'var(--color-primary)' : 'rgba(255,255,255,0.12)',
+                color: '#ffffff',
+                border: 'none',
+                padding: '4px 10px',
+                fontSize: '11px',
+                fontWeight: currentRole === 'member' ? 600 : 400,
+                cursor: 'pointer'
+              }}
+            >
+              🎓 Student
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setCurrentUser(DEMO_RECEPTIONIST);
+                setCurrentRole('receptionist');
+                saveLocalSession(DEMO_RECEPTIONIST.id);
+              }}
+              className="btn btn-pill"
+              style={{
+                backgroundColor: currentRole === 'receptionist' ? 'var(--color-primary)' : 'rgba(255,255,255,0.12)',
+                color: '#ffffff',
+                border: 'none',
+                padding: '4px 10px',
+                fontSize: '11px',
+                fontWeight: currentRole === 'receptionist' ? 600 : 400,
+                cursor: 'pointer'
+              }}
+            >
+              ⚡ Frontdesk
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setCurrentUser(DEMO_ADMIN);
+                setCurrentRole('owner_admin');
+                saveLocalSession(DEMO_ADMIN.id);
+              }}
+              className="btn btn-pill"
+              style={{
+                backgroundColor: currentRole === 'owner_admin' ? 'var(--color-primary)' : 'rgba(255,255,255,0.12)',
+                color: '#ffffff',
+                border: 'none',
+                padding: '4px 10px',
+                fontSize: '11px',
+                fontWeight: currentRole === 'owner_admin' ? 600 : 400,
+                cursor: 'pointer'
+              }}
+            >
+              👑 Mess Owner
+            </button>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="btn btn-pill"
+              style={{
+                backgroundColor: 'rgba(239, 68, 68, 0.25)',
+                color: '#fca5a5',
+                border: '1px solid rgba(239, 68, 68, 0.4)',
+                padding: '4px 10px',
+                fontSize: '11px',
+                marginLeft: '6px',
+                cursor: 'pointer'
+              }}
+            >
+              Exit Demo
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Content Area */}
       <main style={{ flex: 1, position: 'relative', zIndex: 1 }}>

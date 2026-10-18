@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Lock, Mail, User, ArrowRight, RefreshCw, AlertCircle, X, KeyRound } from 'lucide-react';
+import { Lock, Mail, User, ArrowRight, RefreshCw, AlertCircle, X, KeyRound, Sparkles, QrCode, ChefHat, Shield } from 'lucide-react';
 import { loginWithEmailOrIdAndPin, registerNewMember } from '../lib/auth';
 import type { Profile } from '../types';
+import { DEMO_MEMBER, DEMO_RECEPTIONIST, DEMO_ADMIN } from '../lib/demoData';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -82,9 +83,94 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       border: '1px solid var(--color-hairline)',
       animation: 'fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
     }}>
+      {/* 1-Click Interactive Demo Sandbox Strip */}
+      <div style={{
+        padding: '14px 16px',
+        backgroundColor: 'var(--color-canvas-soft)',
+        borderBottom: '1px solid var(--color-hairline)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Sparkles size={14} color="var(--color-primary)" />
+            <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-ink)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Explore Live Demo
+            </span>
+          </div>
+          <span style={{ fontSize: '11px', color: 'var(--color-ink-mute)' }}>No login needed</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+          <button
+            type="button"
+            onClick={() => onLoginSuccess(DEMO_MEMBER)}
+            className="btn btn-secondary"
+            style={{
+              padding: '6px 4px',
+              fontSize: '11px',
+              fontWeight: 500,
+              backgroundColor: '#ffffff',
+              border: '1px solid var(--color-hairline)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '2px',
+              borderRadius: '8px',
+              cursor: 'pointer'
+            }}
+          >
+            <span style={{ fontSize: '14px' }}>🎓</span>
+            <span style={{ fontWeight: 600, color: 'var(--color-ink)', fontSize: '11px' }}>Student</span>
+            <span style={{ fontSize: '9px', color: 'var(--color-ink-mute)' }}>QR & Menu</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onLoginSuccess(DEMO_RECEPTIONIST)}
+            className="btn btn-secondary"
+            style={{
+              padding: '6px 4px',
+              fontSize: '11px',
+              fontWeight: 500,
+              backgroundColor: '#ffffff',
+              border: '1px solid var(--color-hairline)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '2px',
+              borderRadius: '8px',
+              cursor: 'pointer'
+            }}
+          >
+            <span style={{ fontSize: '14px' }}>⚡</span>
+            <span style={{ fontWeight: 600, color: 'var(--color-ink)', fontSize: '11px' }}>Frontdesk</span>
+            <span style={{ fontSize: '9px', color: 'var(--color-ink-mute)' }}>Scanner</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onLoginSuccess(DEMO_ADMIN)}
+            className="btn btn-secondary"
+            style={{
+              padding: '6px 4px',
+              fontSize: '11px',
+              fontWeight: 500,
+              backgroundColor: '#ffffff',
+              border: '1px solid var(--color-hairline)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '2px',
+              borderRadius: '8px',
+              cursor: 'pointer'
+            }}
+          >
+            <span style={{ fontSize: '14px' }}>👑</span>
+            <span style={{ fontWeight: 600, color: 'var(--color-ink)', fontSize: '11px' }}>Owner</span>
+            <span style={{ fontSize: '9px', color: 'var(--color-ink-mute)' }}>Headcount</span>
+          </button>
+        </div>
+      </div>
+
       {/* Top Bar with Segmented Pill Tabs & optional Close Button */}
       <div style={{
-        padding: '16px 16px 0',
+        padding: '14px 16px 0',
         backgroundColor: '#ffffff',
         display: 'flex',
         alignItems: 'center',
@@ -287,7 +373,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               }}>
                 <input
                   type="text"
-                  placeholder="e.g. Tanishk Goswami"
+                  placeholder="e.g. Rahul Sharma"
                   value={regFullName}
                   onChange={(e) => setRegFullName(e.target.value)}
                   required
@@ -320,7 +406,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               }}>
                 <input
                   type="email"
-                  placeholder="e.g. tanishk@gmail.com"
+                  placeholder="e.g. rahul@example.com"
                   value={regEmail}
                   onChange={(e) => setRegEmail(e.target.value)}
                   required
@@ -337,11 +423,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               </div>
             </div>
 
-            {/* Create PIN */}
+            {/* Create Secret PIN */}
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '4px' }}>
-                Create 4-Digit Secret PIN
-              </label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                <label style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)' }}>
+                  Create Secret PIN
+                </label>
+                <span className="tnum" style={{ fontSize: '11px', color: 'var(--color-ink-mute)' }}>4-6 digits</span>
+              </div>
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -409,13 +498,179 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   if (embedded) {
     return (
       <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '75vh',
-        padding: '24px 16px'
+        maxWidth: '1180px',
+        margin: '0 auto',
+        padding: '36px 20px 64px',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+        gap: '40px',
+        alignItems: 'center'
       }}>
-        {cardContent}
+        {/* Left Column: Product Story, Why We Built It, Value Pillars */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+          <div>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              backgroundColor: 'rgba(83, 58, 253, 0.08)',
+              border: '1px solid rgba(83, 58, 253, 0.2)',
+              borderRadius: 'var(--radius-pill)',
+              padding: '4px 12px',
+              fontSize: '12px',
+              fontWeight: 600,
+              color: 'var(--color-primary)',
+              marginBottom: '14px'
+            }}>
+              <Sparkles size={13} />
+              <span>Modern Mess & Dining Hall Operating System</span>
+            </div>
+            <h1 style={{
+              fontSize: '38px',
+              fontWeight: 800,
+              lineHeight: 1.15,
+              letterSpacing: '-0.8px',
+              color: 'var(--color-ink)'
+            }}>
+              Digitize Your Mess.<br />
+              <span style={{ color: 'var(--color-primary)' }}>Stop Kitchen Food Waste.</span>
+            </h1>
+            <p style={{
+              fontSize: '15px',
+              color: 'var(--color-ink-mute)',
+              lineHeight: 1.6,
+              marginTop: '12px',
+              maxWidth: '500px'
+            }}>
+              Thali.com replaces lost paper meal cards with instant QR dining passes, real-time kitchen headcount forecasting, and an auditable ledger for 400+ members.
+            </p>
+          </div>
+
+          {/* 3 High Impact Feature Pillars */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <div style={{
+                width: '38px',
+                height: '38px',
+                borderRadius: '10px',
+                backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                color: '#059669',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                marginTop: '2px'
+              }}>
+                <QrCode size={19} />
+              </div>
+              <div>
+                <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-ink)' }}>
+                  1-Second QR Dining Pass
+                </h4>
+                <p style={{ fontSize: '13px', color: 'var(--color-ink-mute)', marginTop: '2px', lineHeight: 1.4 }}>
+                  Students present their dynamic QR pass or scan the counter standee. Anti-duplicate policy stops double-dipping.
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <div style={{
+                width: '38px',
+                height: '38px',
+                borderRadius: '10px',
+                backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                color: '#2563eb',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                marginTop: '2px'
+              }}>
+                <ChefHat size={19} />
+              </div>
+              <div>
+                <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-ink)' }}>
+                  Kitchen Headcount & Leave RSVP
+                </h4>
+                <p style={{ fontSize: '13px', color: 'var(--color-ink-mute)', marginTop: '2px', lineHeight: 1.4 }}>
+                  Students mark "Going out / Skip" before cutoff. Kitchen cooks exact plates, saving ₹15k–₹30k in wasted groceries monthly.
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <div style={{
+                width: '38px',
+                height: '38px',
+                borderRadius: '10px',
+                backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                color: '#7c3aed',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                marginTop: '2px'
+              }}>
+                <Shield size={19} />
+              </div>
+              <div>
+                <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-ink)' }}>
+                  Strict RBAC & Financial Ledger
+                </h4>
+                <p style={{ fontSize: '13px', color: 'var(--color-ink-mute)', marginTop: '2px', lineHeight: 1.4 }}>
+                  Automated subscription expiry, UPI and Cash payment reconciliation, and granular staff vs. owner permissions.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Demo Launch Callout */}
+          <div style={{
+            padding: '16px',
+            backgroundColor: '#ffffff',
+            borderRadius: 'var(--radius-lg)',
+            border: '1px solid var(--color-hairline)',
+            boxShadow: 'var(--shadow-level-1)'
+          }}>
+            <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              ⚡ Instant Sandbox Mode
+            </span>
+            <p style={{ fontSize: '13px', color: 'var(--color-ink)', fontWeight: 500, marginTop: '2px', marginBottom: '10px' }}>
+              Want to test the app right now without an account?
+            </p>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => onLoginSuccess(DEMO_MEMBER)}
+                className="btn btn-primary btn-pill"
+                style={{ fontSize: '12px', padding: '6px 14px', gap: '6px' }}
+              >
+                <span>🎓</span> Try as Student
+              </button>
+              <button
+                type="button"
+                onClick={() => onLoginSuccess(DEMO_RECEPTIONIST)}
+                className="btn btn-secondary btn-pill"
+                style={{ fontSize: '12px', padding: '6px 14px', gap: '6px' }}
+              >
+                <span>⚡</span> Frontdesk Scanner
+              </button>
+              <button
+                type="button"
+                onClick={() => onLoginSuccess(DEMO_ADMIN)}
+                className="btn btn-secondary btn-pill"
+                style={{ fontSize: '12px', padding: '6px 14px', gap: '6px' }}
+              >
+                <span>👑</span> Mess Owner
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Sign In / Registration Card */}
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          {cardContent}
+        </div>
       </div>
     );
   }

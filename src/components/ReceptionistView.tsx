@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
-import { Search, CheckCircle, XCircle, Camera, QrCode, RefreshCw } from 'lucide-react';
+import { Search, CheckCircle, XCircle, Camera, QrCode, RefreshCw, ChefHat } from 'lucide-react';
 import type { Profile, CheckInResult, MealTransaction, MealPeriod } from '../types';
 import { api } from '../services/api';
 import { sound } from '../lib/audio';
 import { CameraScannerModal } from './CameraScannerModal';
 import { CounterQrModal } from './CounterQrModal';
+import { KitchenHeadcountCard } from './KitchenHeadcountCard';
 
 interface ReceptionistViewProps {
   members: (Profile & { remaining_meals?: number; subscription_status?: string })[];
@@ -22,6 +23,7 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
   recentTransactions,
   onRefresh
 }) => {
+  const [activeTab, setActiveTab] = useState<'checkin' | 'headcount'>('checkin');
   const [searchQuery, setSearchQuery] = useState('');
   const [checkingIn, setCheckingIn] = useState(false);
   const [lastResult, setLastResult] = useState<CheckInResult | null>(null);
@@ -196,67 +198,116 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
         </div>
       </div>
 
+      {/* Frontdesk Operations Tab Navigation */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '4px',
+        backgroundColor: 'var(--color-canvas-soft)',
+        padding: '3px',
+        borderRadius: 'var(--radius-pill)',
+        border: '1px solid var(--color-hairline)',
+        width: 'fit-content'
+      }}>
+        <button
+          type="button"
+          onClick={() => setActiveTab('checkin')}
+          className="btn btn-pill"
+          style={{
+            backgroundColor: activeTab === 'checkin' ? '#ffffff' : 'transparent',
+            color: activeTab === 'checkin' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+            boxShadow: activeTab === 'checkin' ? 'var(--shadow-level-1)' : 'none',
+            fontSize: '12px',
+            fontWeight: activeTab === 'checkin' ? 600 : 400,
+            padding: '6px 14px',
+            gap: '6px'
+          }}
+        >
+          <QrCode size={13} /> Check-In Terminal
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('headcount')}
+          className="btn btn-pill"
+          style={{
+            backgroundColor: activeTab === 'headcount' ? '#ffffff' : 'transparent',
+            color: activeTab === 'headcount' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+            boxShadow: activeTab === 'headcount' ? 'var(--shadow-level-1)' : 'none',
+            fontSize: '12px',
+            fontWeight: activeTab === 'headcount' ? 600 : 400,
+            padding: '6px 14px',
+            gap: '6px'
+          }}
+        >
+          <ChefHat size={13} /> Kitchen Headcount & Forecast
+        </button>
+      </div>
 
-      {/* Result Alert Feedback Banner */}
-      {lastResult && (
-        <div className="animate-fade-in" style={{
-          padding: '16px',
-          borderRadius: 'var(--radius-lg)',
-          border: `1px solid ${lastResult.success ? 'var(--color-success-border)' : 'var(--color-error-border)'}`,
-          backgroundColor: lastResult.success ? 'var(--color-success-bg)' : 'var(--color-error-bg)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '12px',
-          boxShadow: 'var(--shadow-level-1)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
-            {lastResult.success ? (
-              <CheckCircle size={24} color="var(--color-success)" style={{ flexShrink: 0 }} />
-            ) : (
-              <XCircle size={24} color="var(--color-error)" style={{ flexShrink: 0 }} />
-            )}
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                <h3 style={{
-                  fontSize: '15px',
-                  fontWeight: 600,
-                  color: lastResult.success ? 'var(--color-success)' : 'var(--color-error)'
-                }}>
-                  {lastResult.message}
-                </h3>
-                <span className="badge" style={{
-                  backgroundColor: '#ffffff',
-                  border: '1px solid currentColor',
-                  color: lastResult.success ? 'var(--color-success)' : 'var(--color-error)',
-                  fontSize: '9px',
-                  padding: '1px 6px'
-                }}>
-                  {lastResult.code}
-                </span>
+      {activeTab === 'headcount' ? (
+        <KitchenHeadcountCard />
+      ) : (
+        <>
+          {/* Result Alert Feedback Banner */}
+          {lastResult && (
+            <div className="animate-fade-in" style={{
+              padding: '16px',
+              borderRadius: 'var(--radius-lg)',
+              border: `1px solid ${lastResult.success ? 'var(--color-success-border)' : 'var(--color-error-border)'}`,
+              backgroundColor: lastResult.success ? 'var(--color-success-bg)' : 'var(--color-error-bg)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '12px',
+              boxShadow: 'var(--shadow-level-1)',
+              marginBottom: '16px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+                {lastResult.success ? (
+                  <CheckCircle size={24} color="var(--color-success)" style={{ flexShrink: 0 }} />
+                ) : (
+                  <XCircle size={24} color="var(--color-error)" style={{ flexShrink: 0 }} />
+                )}
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                    <h3 style={{
+                      fontSize: '15px',
+                      fontWeight: 600,
+                      color: lastResult.success ? 'var(--color-success)' : 'var(--color-error)'
+                    }}>
+                      {lastResult.message}
+                    </h3>
+                    <span className="badge" style={{
+                      backgroundColor: '#ffffff',
+                      border: '1px solid currentColor',
+                      color: lastResult.success ? 'var(--color-success)' : 'var(--color-error)',
+                      fontSize: '9px',
+                      padding: '1px 6px'
+                    }}>
+                      {lastResult.code}
+                    </span>
+                  </div>
+                  {lastResult.member_name && (
+                    <p className="tnum" style={{ fontSize: '12px', color: 'var(--color-ink)', marginTop: '2px' }}>
+                      Member: <strong>{lastResult.member_name}</strong> ({lastResult.member_number}) • Balance Remaining: <strong>{lastResult.remaining_meals} meals</strong>
+                    </p>
+                  )}
+                </div>
               </div>
-              {lastResult.member_name && (
-                <p className="tnum" style={{ fontSize: '12px', color: 'var(--color-ink)', marginTop: '2px' }}>
-                  Member: <strong>{lastResult.member_name}</strong> ({lastResult.member_number}) • Balance Remaining: <strong>{lastResult.remaining_meals} meals</strong>
-                </p>
-              )}
+
+              <button
+                type="button"
+                onClick={() => setLastResult(null)}
+                className="btn btn-secondary btn-pill"
+                style={{ fontSize: '11px', padding: '3px 10px', marginLeft: 'auto' }}
+              >
+                Dismiss
+              </button>
             </div>
-          </div>
+          )}
 
-          <button
-            type="button"
-            onClick={() => setLastResult(null)}
-            className="btn btn-secondary btn-pill"
-            style={{ fontSize: '11px', padding: '3px 10px', marginLeft: 'auto' }}
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
-
-      {/* Two Column Layout: Scanner / Fast Search & Recent Checkins */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+          {/* Two Column Layout: Scanner / Fast Search & Recent Checkins */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
         
         {/* Left Column: Fast Scanner & Search */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -471,8 +522,9 @@ export const ReceptionistView: React.FC<ReceptionistViewProps> = ({
             )}
           </div>
         </div>
-
       </div>
+    </>
+  )}
       
       {/* Optical Camera QR Scanner Modal */}
       <CameraScannerModal

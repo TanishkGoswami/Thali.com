@@ -396,6 +396,62 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           </button>
         </form>
 
+        {/* Telegram Bot Link Section */}
+        <div style={{
+          marginTop: '16px',
+          backgroundColor: '#f0f9ff',
+          border: '1px solid #bae6fd',
+          borderRadius: 'var(--radius-md)',
+          padding: '12px 14px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '18px' }}>🤖</span>
+              <div>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: '#0369a1', display: 'block' }}>
+                  Telegram Bot Assistant
+                </span>
+                <span style={{ fontSize: '11px', color: '#0284c7' }}>
+                  Daily menu alerts, 1-tap RSVP & digital pass
+                </span>
+              </div>
+            </div>
+            {(currentUser as any).telegram_chat_id ? (
+              <span className="badge badge-active" style={{ fontSize: '10px' }}>
+                ✓ Connected
+              </span>
+            ) : (
+              <span className="badge" style={{ backgroundColor: '#e0f2fe', color: '#0369a1', fontSize: '10px' }}>
+                Not Linked
+              </span>
+            )}
+          </div>
+
+          <a
+            href={`https://t.me/ThaliMessBot?start=${(currentUser.member_number || currentUser.id).replace('-', '_')}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-primary btn-pill"
+            style={{
+              backgroundColor: '#0284c7',
+              fontSize: '12px',
+              padding: '7px 14px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              textDecoration: 'none',
+              color: '#ffffff',
+              fontWeight: 600
+            }}
+          >
+            <span>💬</span> Open @ThaliMessBot in Telegram
+          </a>
+        </div>
+
         {/* Hairline Divider */}
         <div style={{ height: '1px', backgroundColor: 'var(--color-hairline)', margin: '20px 0 16px' }} />
 
