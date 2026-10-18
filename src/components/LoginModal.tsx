@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Lock, Mail, User, ArrowRight, RefreshCw, AlertCircle, X, KeyRound, Sparkles, QrCode, ChefHat, Shield } from 'lucide-react';
+import React, { useState } from 'react';
+import { Lock, Mail, User, ArrowRight, RefreshCw, AlertCircle, X, Sparkles, QrCode, ChefHat, Shield, Send, ChevronRight } from 'lucide-react';
 import { loginWithEmailOrIdAndPin, registerNewMember } from '../lib/auth';
 import type { Profile } from '../types';
 import { DEMO_MEMBER, DEMO_RECEPTIONIST, DEMO_ADMIN } from '../lib/demoData';
@@ -19,7 +19,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   allowClose = true,
   embedded = false
 }) => {
-  const [tab, setTab] = useState<'signin' | 'register'>('signin');
+  // Mode: 'sandbox' (1-click demo personas) vs 'auth' (real credentials)
+  const [activeMode, setActiveMode] = useState<'sandbox' | 'auth'>(embedded ? 'sandbox' : 'auth');
+  const [authTab, setAuthTab] = useState<'signin' | 'register'>('signin');
   
   // Sign In fields
   const [identifier, setIdentifier] = useState('');
@@ -74,424 +76,634 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const cardContent = (
     <div style={{
       backgroundColor: '#ffffff',
-      borderRadius: 'var(--radius-xl)',
+      borderRadius: '20px',
       width: '100%',
-      maxWidth: '430px',
-      maxHeight: '90vh',
-      overflowY: 'auto',
-      boxShadow: 'var(--shadow-modal)',
-      border: '1px solid var(--color-hairline)',
+      maxWidth: '440px',
+      boxShadow: '0 20px 48px -12px rgba(13, 37, 61, 0.12), 0 0 0 1px var(--color-hairline)',
+      overflow: 'hidden',
       animation: 'fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
     }}>
-      {/* 1-Click Interactive Demo Sandbox Strip */}
+      {/* Top Segmented Mode Switcher */}
       <div style={{
-        padding: '14px 16px',
-        backgroundColor: 'var(--color-canvas-soft)',
+        padding: '16px 18px 0',
+        backgroundColor: '#ffffff',
         borderBottom: '1px solid var(--color-hairline)'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Sparkles size={14} color="var(--color-primary)" />
-            <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-ink)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              Explore Live Demo
-            </span>
-          </div>
-          <span style={{ fontSize: '11px', color: 'var(--color-ink-mute)' }}>No login needed</span>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
-          <button
-            type="button"
-            onClick={() => onLoginSuccess(DEMO_MEMBER)}
-            className="btn btn-secondary"
-            style={{
-              padding: '6px 4px',
-              fontSize: '11px',
-              fontWeight: 500,
-              backgroundColor: '#ffffff',
-              border: '1px solid var(--color-hairline)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '2px',
-              borderRadius: '8px',
-              cursor: 'pointer'
-            }}
-          >
-            <span style={{ fontSize: '14px' }}>🎓</span>
-            <span style={{ fontWeight: 600, color: 'var(--color-ink)', fontSize: '11px' }}>Student</span>
-            <span style={{ fontSize: '9px', color: 'var(--color-ink-mute)' }}>QR & Menu</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => onLoginSuccess(DEMO_RECEPTIONIST)}
-            className="btn btn-secondary"
-            style={{
-              padding: '6px 4px',
-              fontSize: '11px',
-              fontWeight: 500,
-              backgroundColor: '#ffffff',
-              border: '1px solid var(--color-hairline)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '2px',
-              borderRadius: '8px',
-              cursor: 'pointer'
-            }}
-          >
-            <span style={{ fontSize: '14px' }}>⚡</span>
-            <span style={{ fontWeight: 600, color: 'var(--color-ink)', fontSize: '11px' }}>Frontdesk</span>
-            <span style={{ fontSize: '9px', color: 'var(--color-ink-mute)' }}>Scanner</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => onLoginSuccess(DEMO_ADMIN)}
-            className="btn btn-secondary"
-            style={{
-              padding: '6px 4px',
-              fontSize: '11px',
-              fontWeight: 500,
-              backgroundColor: '#ffffff',
-              border: '1px solid var(--color-hairline)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '2px',
-              borderRadius: '8px',
-              cursor: 'pointer'
-            }}
-          >
-            <span style={{ fontSize: '14px' }}>👑</span>
-            <span style={{ fontWeight: 600, color: 'var(--color-ink)', fontSize: '11px' }}>Owner</span>
-            <span style={{ fontSize: '9px', color: 'var(--color-ink-mute)' }}>Headcount</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Top Bar with Segmented Pill Tabs & optional Close Button */}
-      <div style={{
-        padding: '14px 16px 0',
-        backgroundColor: '#ffffff',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px'
-      }}>
-        <div style={{
-          display: 'flex',
-          flex: 1,
-          backgroundColor: 'var(--color-canvas-soft)',
-          padding: '3px',
-          borderRadius: 'var(--radius-pill)',
-          border: '1px solid var(--color-hairline)'
-        }}>
-          <button
-            type="button"
-            onClick={() => { setTab('signin'); setErrorMsg(null); }}
-            className="btn btn-pill"
-            style={{
-              flex: 1,
-              backgroundColor: tab === 'signin' ? '#ffffff' : 'transparent',
-              color: tab === 'signin' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
-              boxShadow: tab === 'signin' ? 'var(--shadow-level-1)' : 'none',
-              fontSize: '12px',
-              fontWeight: tab === 'signin' ? 600 : 400,
-              padding: '7px'
-            }}
-          >
-            Sign In
-          </button>
-          <button
-            type="button"
-            onClick={() => { setTab('register'); setErrorMsg(null); }}
-            className="btn btn-pill"
-            style={{
-              flex: 1,
-              backgroundColor: tab === 'register' ? '#ffffff' : 'transparent',
-              color: tab === 'register' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
-              boxShadow: tab === 'register' ? 'var(--shadow-level-1)' : 'none',
-              fontSize: '12px',
-              fontWeight: tab === 'register' ? 600 : 400,
-              padding: '7px'
-            }}
-          >
-            New Member
-          </button>
-        </div>
-
-        {allowClose && onClose && !embedded && (
-          <button
-            type="button"
-            onClick={onClose}
-            className="btn btn-outline btn-pill"
-            style={{
-              padding: '6px',
-              color: 'var(--color-ink-mute)',
-              border: 'none',
-              cursor: 'pointer',
-              flexShrink: 0
-            }}
-            title="Close"
-          >
-            <X size={18} />
-          </button>
-        )}
-      </div>
-
-      {/* Content Form Body */}
-      <div style={{ padding: '16px 20px 24px' }}>
-        {errorMsg && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
           <div style={{
             display: 'flex',
-            alignItems: 'flex-start',
-            gap: '8px',
-            padding: '10px 12px',
-            backgroundColor: 'var(--color-error-bg)',
-            border: '1px solid var(--color-error-border)',
-            borderRadius: 'var(--radius-sm)',
-            marginBottom: '14px',
-            fontSize: '13px',
-            color: 'var(--color-error)'
+            flex: 1,
+            backgroundColor: 'var(--color-canvas-soft)',
+            padding: '3px',
+            borderRadius: 'var(--radius-pill)',
+            border: '1px solid var(--color-hairline)'
           }}>
-            <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
-            <div>{errorMsg}</div>
+            <button
+              type="button"
+              onClick={() => { setActiveMode('sandbox'); setErrorMsg(null); }}
+              className="btn btn-pill"
+              style={{
+                flex: 1,
+                backgroundColor: activeMode === 'sandbox' ? '#ffffff' : 'transparent',
+                color: activeMode === 'sandbox' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+                boxShadow: activeMode === 'sandbox' ? 'var(--shadow-level-1)' : 'none',
+                fontSize: '12px',
+                fontWeight: activeMode === 'sandbox' ? 600 : 500,
+                padding: '6px 10px',
+                gap: '5px'
+              }}
+            >
+              <Sparkles size={13} color="var(--color-primary)" />
+              <span>Interactive Demo</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setActiveMode('auth'); setErrorMsg(null); }}
+              className="btn btn-pill"
+              style={{
+                flex: 1,
+                backgroundColor: activeMode === 'auth' ? '#ffffff' : 'transparent',
+                color: activeMode === 'auth' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+                boxShadow: activeMode === 'auth' ? 'var(--shadow-level-1)' : 'none',
+                fontSize: '12px',
+                fontWeight: activeMode === 'auth' ? 600 : 500,
+                padding: '6px 10px',
+                gap: '5px'
+              }}
+            >
+              <Lock size={13} />
+              <span>Sign In</span>
+            </button>
           </div>
-        )}
 
-        {tab === 'signin' ? (
-          <form onSubmit={handleSignIn} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            {/* Email or Member ID */}
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '4px' }}>
-                Email Address or Member ID
-              </label>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                border: '1px solid var(--color-hairline-input)',
-                borderRadius: 'var(--radius-sm)',
-                padding: '2px 10px',
-                backgroundColor: '#ffffff'
-              }}>
-                <input
-                  type="text"
-                  placeholder="e.g. tanishk@gmail.com or M-101"
-                  value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
-                  required
-                  autoFocus
-                  style={{
-                    flex: 1,
-                    border: 'none',
-                    outline: 'none',
-                    padding: '8px 2px',
-                    color: 'var(--color-ink)',
-                    backgroundColor: 'transparent'
-                  }}
-                />
-                <Mail size={16} color="var(--color-ink-mute)" />
-              </div>
-            </div>
-
-            {/* Secret PIN / Access Code */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                <label style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)' }}>
-                  Secret PIN / Access Code
-                </label>
-                <span className="tnum" style={{ fontSize: '11px', color: 'var(--color-ink-mute)' }}>4-digit PIN</span>
-              </div>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                border: '1px solid var(--color-hairline-input)',
-                borderRadius: 'var(--radius-sm)',
-                padding: '2px 10px',
-                backgroundColor: '#ffffff'
-              }}>
-                <input
-                  type="password"
-                  placeholder="4 to 6 digit PIN"
-                  value={pin}
-                  onChange={(e) => setPin(e.target.value)}
-                  required
-                  maxLength={8}
-                  style={{
-                    flex: 1,
-                    border: 'none',
-                    outline: 'none',
-                    padding: '8px 2px',
-                    fontFamily: 'var(--font-mono)',
-                    letterSpacing: '0.15em',
-                    color: 'var(--color-ink)',
-                    backgroundColor: 'transparent'
-                  }}
-                />
-                <Lock size={16} color="var(--color-ink-mute)" />
-              </div>
-            </div>
-
+          {allowClose && onClose && !embedded && (
             <button
-              type="submit"
-              disabled={loading || !identifier.trim() || !pin.trim()}
-              className="btn btn-primary"
+              type="button"
+              onClick={onClose}
+              className="btn btn-outline btn-pill"
               style={{
-                width: '100%',
-                padding: '10px',
-                fontSize: '14px',
-                marginTop: '4px',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: '8px'
+                padding: '6px',
+                color: 'var(--color-ink-mute)',
+                border: 'none',
+                marginLeft: '8px',
+                cursor: 'pointer',
+                flexShrink: 0
               }}
+              title="Close"
             >
-              {loading ? (
-                <>
-                  <RefreshCw size={15} className="animate-spin" /> Signing In...
-                </>
-              ) : (
-                <>
-                  Access Meal Pass <ArrowRight size={15} />
-                </>
-              )}
+              <X size={18} />
             </button>
-          </form>
-        ) : (
-          <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            {/* Full Name */}
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '4px' }}>
-                Full Name
-              </label>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                border: '1px solid var(--color-hairline-input)',
-                borderRadius: 'var(--radius-sm)',
-                padding: '2px 10px',
-                backgroundColor: '#ffffff'
-              }}>
-                <input
-                  type="text"
-                  placeholder="e.g. Rahul Sharma"
-                  value={regFullName}
-                  onChange={(e) => setRegFullName(e.target.value)}
-                  required
-                  autoFocus
-                  style={{
-                    flex: 1,
-                    border: 'none',
-                    outline: 'none',
-                    padding: '8px 2px',
-                    color: 'var(--color-ink)',
-                    backgroundColor: 'transparent'
-                  }}
-                />
-                <User size={16} color="var(--color-ink-mute)" />
-              </div>
-            </div>
-
-            {/* Email Address */}
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)', marginBottom: '4px' }}>
-                Email Address
-              </label>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                border: '1px solid var(--color-hairline-input)',
-                borderRadius: 'var(--radius-sm)',
-                padding: '2px 10px',
-                backgroundColor: '#ffffff'
-              }}>
-                <input
-                  type="email"
-                  placeholder="e.g. rahul@example.com"
-                  value={regEmail}
-                  onChange={(e) => setRegEmail(e.target.value)}
-                  required
-                  style={{
-                    flex: 1,
-                    border: 'none',
-                    outline: 'none',
-                    padding: '8px 2px',
-                    color: 'var(--color-ink)',
-                    backgroundColor: 'transparent'
-                  }}
-                />
-                <Mail size={16} color="var(--color-ink-mute)" />
-              </div>
-            </div>
-
-            {/* Create Secret PIN */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                <label style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-ink)' }}>
-                  Create Secret PIN
-                </label>
-                <span className="tnum" style={{ fontSize: '11px', color: 'var(--color-ink-mute)' }}>4-6 digits</span>
-              </div>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                border: '1px solid var(--color-hairline-input)',
-                borderRadius: 'var(--radius-sm)',
-                padding: '2px 10px',
-                backgroundColor: '#ffffff'
-              }}>
-                <input
-                  type="password"
-                  placeholder="e.g. 1234 or 2026"
-                  value={regPin}
-                  onChange={(e) => setRegPin(e.target.value)}
-                  required
-                  maxLength={6}
-                  style={{
-                    flex: 1,
-                    border: 'none',
-                    outline: 'none',
-                    padding: '8px 2px',
-                    fontFamily: 'var(--font-mono)',
-                    letterSpacing: '0.15em',
-                    color: 'var(--color-ink)',
-                    backgroundColor: 'transparent'
-                  }}
-                />
-                <KeyRound size={16} color="var(--color-ink-mute)" />
-              </div>
-              <p style={{ fontSize: '11px', color: 'var(--color-ink-mute)', marginTop: '3px' }}>
-                Use this PIN to login without SMS.
-              </p>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading || !regFullName.trim() || !regEmail.trim() || regPin.length < 4}
-              className="btn btn-primary"
-              style={{
-                width: '100%',
-                padding: '10px',
-                fontSize: '14px',
-                marginTop: '4px',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: '8px'
-              }}
-            >
-              {loading ? (
-                <>
-                  <RefreshCw size={15} className="animate-spin" /> Creating Pass...
-                </>
-              ) : (
-                <>
-                  Create Account & Get Pass <ArrowRight size={15} />
-                </>
-              )}
-            </button>
-          </form>
-        )}
+          )}
+        </div>
       </div>
+
+      {/* Mode 1: 1-Click Interactive Demo Sandbox Hub */}
+      {activeMode === 'sandbox' ? (
+        <div style={{ padding: '20px 22px 24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div>
+            <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--color-ink)', letterSpacing: '-0.3px' }}>
+              Instant Sandbox Experience
+            </h3>
+            <p style={{ fontSize: '13px', color: 'var(--color-ink-mute)', marginTop: '3px', lineHeight: 1.4 }}>
+              Select a persona below to explore live features with real demo data — no password required:
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {/* Student Persona Card */}
+            <button
+              type="button"
+              onClick={() => onLoginSuccess(DEMO_MEMBER)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '12px 14px',
+                backgroundColor: '#ffffff',
+                border: '1px solid var(--color-hairline)',
+                borderRadius: 'var(--radius-lg)',
+                cursor: 'pointer',
+                textAlign: 'left',
+                transition: 'all var(--transition-fast)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'var(--color-primary)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(234, 76, 37, 0.1)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--color-hairline)';
+                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              <div style={{
+                width: '38px',
+                height: '38px',
+                borderRadius: '10px',
+                backgroundColor: 'var(--color-primary-subdued)',
+                color: 'var(--color-primary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '18px',
+                flexShrink: 0
+              }}>
+                🎓
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                  <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-ink)' }}>
+                    Student / Diner
+                  </span>
+                  <span className="badge" style={{ fontSize: '10px', padding: '1px 6px', backgroundColor: 'var(--color-canvas-soft)', color: 'var(--color-ink-mute)', border: '1px solid var(--color-hairline)' }}>
+                    M-101
+                  </span>
+                </div>
+                <p style={{ fontSize: '12px', color: 'var(--color-ink-mute)', lineHeight: 1.3, margin: 0 }}>
+                  Live dynamic QR pass, daily mess menus, and meal skip RSVP.
+                </p>
+              </div>
+              <ChevronRight size={16} color="var(--color-ink-mute)" />
+            </button>
+
+            {/* Frontdesk Scanner Persona Card */}
+            <button
+              type="button"
+              onClick={() => onLoginSuccess(DEMO_RECEPTIONIST)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '12px 14px',
+                backgroundColor: '#ffffff',
+                border: '1px solid var(--color-hairline)',
+                borderRadius: 'var(--radius-lg)',
+                cursor: 'pointer',
+                textAlign: 'left',
+                transition: 'all var(--transition-fast)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'var(--color-primary)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(234, 76, 37, 0.1)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--color-hairline)';
+                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              <div style={{
+                width: '38px',
+                height: '38px',
+                borderRadius: '10px',
+                backgroundColor: '#ecfdf5',
+                color: '#059669',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '18px',
+                flexShrink: 0
+              }}>
+                ⚡
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                  <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-ink)' }}>
+                    Counter Scanner Terminal
+                  </span>
+                  <span className="badge" style={{ fontSize: '10px', padding: '1px 6px', backgroundColor: '#e6fffa', color: '#047857', border: '1px solid #b2f5ea' }}>
+                    Staff
+                  </span>
+                </div>
+                <p style={{ fontSize: '12px', color: 'var(--color-ink-mute)', lineHeight: 1.3, margin: 0 }}>
+                  High-speed QR camera scanner, instant verification, and live diner counter.
+                </p>
+              </div>
+              <ChevronRight size={16} color="var(--color-ink-mute)" />
+            </button>
+
+            {/* Mess Owner Persona Card */}
+            <button
+              type="button"
+              onClick={() => onLoginSuccess(DEMO_ADMIN)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '12px 14px',
+                backgroundColor: '#ffffff',
+                border: '1px solid var(--color-hairline)',
+                borderRadius: 'var(--radius-lg)',
+                cursor: 'pointer',
+                textAlign: 'left',
+                transition: 'all var(--transition-fast)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'var(--color-primary)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(234, 76, 37, 0.1)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--color-hairline)';
+                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              <div style={{
+                width: '38px',
+                height: '38px',
+                borderRadius: '10px',
+                backgroundColor: '#fef3c7',
+                color: '#d97706',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '18px',
+                flexShrink: 0
+              }}>
+                👑
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                  <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-ink)' }}>
+                    Mess Owner & Admin
+                  </span>
+                  <span className="badge" style={{ fontSize: '10px', padding: '1px 6px', backgroundColor: '#fef9c3', color: '#854d0e', border: '1px solid #fef08a' }}>
+                    Supervisor
+                  </span>
+                </div>
+                <p style={{ fontSize: '12px', color: 'var(--color-ink-mute)', lineHeight: 1.3, margin: 0 }}>
+                  Kitchen headcount forecast, member dues ledger, and plan subscriptions.
+                </p>
+              </div>
+              <ChevronRight size={16} color="var(--color-ink-mute)" />
+            </button>
+          </div>
+
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingTop: '6px',
+            borderTop: '1px solid var(--color-hairline)'
+          }}>
+            <button
+              type="button"
+              onClick={() => setActiveMode('auth')}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--color-primary)',
+                fontSize: '12px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+            >
+              Have a registered account? Sign In <ArrowRight size={12} />
+            </button>
+          </div>
+        </div>
+      ) : (
+        /* Mode 2: Member & Staff Sign In / Registration */
+        <div style={{ padding: '20px 22px 24px' }}>
+          {/* Sub-tab switcher: Sign In vs New Member */}
+          <div style={{
+            display: 'flex',
+            backgroundColor: 'var(--color-canvas-soft)',
+            padding: '3px',
+            borderRadius: 'var(--radius-pill)',
+            border: '1px solid var(--color-hairline)',
+            marginBottom: '16px'
+          }}>
+            <button
+              type="button"
+              onClick={() => { setAuthTab('signin'); setErrorMsg(null); }}
+              className="btn btn-pill"
+              style={{
+                flex: 1,
+                backgroundColor: authTab === 'signin' ? '#ffffff' : 'transparent',
+                color: authTab === 'signin' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+                boxShadow: authTab === 'signin' ? 'var(--shadow-level-1)' : 'none',
+                fontSize: '12px',
+                fontWeight: authTab === 'signin' ? 600 : 400,
+                padding: '6px'
+              }}
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => { setAuthTab('register'); setErrorMsg(null); }}
+              className="btn btn-pill"
+              style={{
+                flex: 1,
+                backgroundColor: authTab === 'register' ? '#ffffff' : 'transparent',
+                color: authTab === 'register' ? 'var(--color-ink)' : 'var(--color-ink-mute)',
+                boxShadow: authTab === 'register' ? 'var(--shadow-level-1)' : 'none',
+                fontSize: '12px',
+                fontWeight: authTab === 'register' ? 600 : 400,
+                padding: '6px'
+              }}
+            >
+              New Member
+            </button>
+          </div>
+
+          {errorMsg && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '8px',
+              padding: '10px 12px',
+              backgroundColor: 'var(--color-error-bg)',
+              border: '1px solid var(--color-error-border)',
+              borderRadius: 'var(--radius-sm)',
+              marginBottom: '14px',
+              fontSize: '13px',
+              color: 'var(--color-error)'
+            }}>
+              <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
+              <div>{errorMsg}</div>
+            </div>
+          )}
+
+          {authTab === 'signin' ? (
+            <form onSubmit={handleSignIn} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)', marginBottom: '5px' }}>
+                  Email Address or Member ID
+                </label>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  border: '1px solid var(--color-hairline-input)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '2px 12px',
+                  backgroundColor: '#ffffff'
+                }}>
+                  <input
+                    type="text"
+                    placeholder="e.g. M-112 or tanishk@gmail.com"
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    required
+                    style={{
+                      flex: 1,
+                      border: 'none',
+                      outline: 'none',
+                      padding: '8px 0',
+                      fontSize: '14px',
+                      color: 'var(--color-ink)',
+                      backgroundColor: 'transparent'
+                    }}
+                  />
+                  <Mail size={16} color="var(--color-ink-mute)" />
+                </div>
+              </div>
+
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)' }}>
+                    Secret PIN / Access Code
+                  </label>
+                  <span className="tnum" style={{ fontSize: '11px', color: 'var(--color-ink-mute)' }}>4-digit PIN</span>
+                </div>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  border: '1px solid var(--color-hairline-input)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '2px 12px',
+                  backgroundColor: '#ffffff'
+                }}>
+                  <input
+                    type="password"
+                    placeholder="••••"
+                    value={pin}
+                    onChange={(e) => setPin(e.target.value)}
+                    required
+                    maxLength={8}
+                    style={{
+                      flex: 1,
+                      border: 'none',
+                      outline: 'none',
+                      padding: '8px 0',
+                      fontSize: '15px',
+                      letterSpacing: '0.15em',
+                      color: 'var(--color-ink)',
+                      backgroundColor: 'transparent'
+                    }}
+                  />
+                  <Lock size={16} color="var(--color-ink-mute)" />
+                </div>
+              </div>
+
+              <div style={{
+                fontSize: '11px',
+                color: 'var(--color-ink-mute)',
+                backgroundColor: 'var(--color-canvas-soft)',
+                padding: '6px 10px',
+                borderRadius: 'var(--radius-sm)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                <span>💡</span>
+                <span>Demo account PIN is <strong>1234</strong></span>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading || !identifier.trim() || !pin.trim()}
+                className="btn btn-primary"
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  marginTop: '4px',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                {loading ? (
+                  <>
+                    <RefreshCw size={15} className="animate-spin" /> Signing In...
+                  </>
+                ) : (
+                  <>
+                    Access Meal Pass <ArrowRight size={15} />
+                  </>
+                )}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)', marginBottom: '5px' }}>
+                  Full Name
+                </label>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  border: '1px solid var(--color-hairline-input)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '2px 12px',
+                  backgroundColor: '#ffffff'
+                }}>
+                  <input
+                    type="text"
+                    placeholder="e.g. Rahul Sharma"
+                    value={regFullName}
+                    onChange={(e) => setRegFullName(e.target.value)}
+                    required
+                    style={{
+                      flex: 1,
+                      border: 'none',
+                      outline: 'none',
+                      padding: '8px 0',
+                      fontSize: '14px',
+                      color: 'var(--color-ink)',
+                      backgroundColor: 'transparent'
+                    }}
+                  />
+                  <User size={16} color="var(--color-ink-mute)" />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)', marginBottom: '5px' }}>
+                  Email Address
+                </label>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  border: '1px solid var(--color-hairline-input)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '2px 12px',
+                  backgroundColor: '#ffffff'
+                }}>
+                  <input
+                    type="email"
+                    placeholder="e.g. rahul@example.com"
+                    value={regEmail}
+                    onChange={(e) => setRegEmail(e.target.value)}
+                    required
+                    style={{
+                      flex: 1,
+                      border: 'none',
+                      outline: 'none',
+                      padding: '8px 0',
+                      fontSize: '14px',
+                      color: 'var(--color-ink)',
+                      backgroundColor: 'transparent'
+                    }}
+                  />
+                  <Mail size={16} color="var(--color-ink-mute)" />
+                </div>
+              </div>
+
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-ink)' }}>
+                    Create 4-Digit Secret PIN
+                  </label>
+                  <span className="tnum" style={{ fontSize: '11px', color: 'var(--color-ink-mute)' }}>Used to sign in</span>
+                </div>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  border: '1px solid var(--color-hairline-input)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '2px 12px',
+                  backgroundColor: '#ffffff'
+                }}>
+                  <input
+                    type="password"
+                    placeholder="••••"
+                    value={regPin}
+                    onChange={(e) => setRegPin(e.target.value)}
+                    required
+                    maxLength={8}
+                    style={{
+                      flex: 1,
+                      border: 'none',
+                      outline: 'none',
+                      padding: '8px 0',
+                      fontSize: '15px',
+                      letterSpacing: '0.15em',
+                      color: 'var(--color-ink)',
+                      backgroundColor: 'transparent'
+                    }}
+                  />
+                  <Lock size={16} color="var(--color-ink-mute)" />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading || !regFullName.trim() || !regEmail.trim() || !regPin.trim()}
+                className="btn btn-primary"
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  marginTop: '4px',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                {loading ? (
+                  <>
+                    <RefreshCw size={15} className="animate-spin" /> Creating Pass...
+                  </>
+                ) : (
+                  <>
+                    Create Account & Get Pass <ArrowRight size={15} />
+                  </>
+                )}
+              </button>
+            </form>
+          )}
+
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginTop: '16px',
+            paddingTop: '12px',
+            borderTop: '1px solid var(--color-hairline)'
+          }}>
+            <button
+              type="button"
+              onClick={() => setActiveMode('sandbox')}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--color-ink-mute)',
+                fontSize: '12px',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+            >
+              <span>Want to test without an account?</span>
+              <strong style={{ color: 'var(--color-primary)' }}>Try Interactive Demo</strong>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -500,174 +712,207 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       <div style={{
         maxWidth: '1180px',
         margin: '0 auto',
-        padding: '36px 20px 64px',
+        padding: '48px 20px 80px',
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-        gap: '40px',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+        gap: '48px',
         alignItems: 'center'
       }}>
-        {/* Left Column: Product Story, Why We Built It, Value Pillars */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+        {/* Left Column: Authoritative Product Narrative */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
           <div>
             <div style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
-              backgroundColor: 'rgba(83, 58, 253, 0.08)',
-              border: '1px solid rgba(83, 58, 253, 0.2)',
+              backgroundColor: 'var(--color-primary-subdued)',
+              border: '1px solid var(--color-primary-border)',
               borderRadius: 'var(--radius-pill)',
               padding: '4px 12px',
               fontSize: '12px',
               fontWeight: 600,
               color: 'var(--color-primary)',
-              marginBottom: '14px'
+              marginBottom: '16px'
             }}>
               <Sparkles size={13} />
-              <span>Modern Mess & Dining Hall Operating System</span>
+              <span>Modern Dining Hall & Mess Automation</span>
             </div>
+            
             <h1 style={{
-              fontSize: '38px',
+              fontSize: 'clamp(32px, 4vw, 46px)',
               fontWeight: 800,
-              lineHeight: 1.15,
-              letterSpacing: '-0.8px',
-              color: 'var(--color-ink)'
+              lineHeight: 1.12,
+              letterSpacing: '-1.2px',
+              color: 'var(--color-ink)',
+              margin: 0
             }}>
-              Digitize Your Mess.<br />
+              Digitize Your Dining Hall.<br />
               <span style={{ color: 'var(--color-primary)' }}>Stop Kitchen Food Waste.</span>
             </h1>
+
             <p style={{
-              fontSize: '15px',
+              fontSize: '16px',
               color: 'var(--color-ink-mute)',
               lineHeight: 1.6,
-              marginTop: '12px',
-              maxWidth: '500px'
+              marginTop: '16px',
+              maxWidth: '520px'
             }}>
-              Thali.com replaces lost paper meal cards with instant QR dining passes, real-time kitchen headcount forecasting, and an auditable ledger for 400+ members.
+              Thali.com replaces lost paper coupons with dynamic anti-duplicate QR passes, live Telegram meal RSVPs, and automated kitchen headcount forecasting — trusted by hostels, PGs, and corporate mess halls.
             </p>
           </div>
 
-          {/* 3 High Impact Feature Pillars */}
+          {/* 3 High-Impact Feature Bento Cards */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+            <div style={{
+              display: 'flex',
+              gap: '14px',
+              padding: '14px 16px',
+              backgroundColor: '#ffffff',
+              border: '1px solid var(--color-hairline)',
+              borderRadius: 'var(--radius-lg)',
+              boxShadow: 'var(--shadow-level-1)'
+            }}>
               <div style={{
-                width: '38px',
-                height: '38px',
+                width: '40px',
+                height: '40px',
                 borderRadius: '10px',
-                backgroundColor: 'rgba(5, 150, 105, 0.1)',
-                color: '#059669',
+                backgroundColor: 'var(--color-primary-subdued)',
+                color: 'var(--color-primary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                flexShrink: 0,
-                marginTop: '2px'
+                flexShrink: 0
               }}>
-                <QrCode size={19} />
+                <QrCode size={20} />
               </div>
               <div>
-                <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-ink)' }}>
+                <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-ink)', margin: 0 }}>
                   1-Second QR Dining Pass
                 </h4>
-                <p style={{ fontSize: '13px', color: 'var(--color-ink-mute)', marginTop: '2px', lineHeight: 1.4 }}>
-                  Students present their dynamic QR pass or scan the counter standee. Anti-duplicate policy stops double-dipping.
+                <p style={{ fontSize: '13px', color: 'var(--color-ink-mute)', marginTop: '3px', lineHeight: 1.4, margin: 0 }}>
+                  Students present their auto-refreshing QR pass. Anti-duplicate policy stops screenshot sharing and double dipping.
                 </p>
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+            <div style={{
+              display: 'flex',
+              gap: '14px',
+              padding: '14px 16px',
+              backgroundColor: '#ffffff',
+              border: '1px solid var(--color-hairline)',
+              borderRadius: 'var(--radius-lg)',
+              boxShadow: 'var(--shadow-level-1)'
+            }}>
               <div style={{
-                width: '38px',
-                height: '38px',
+                width: '40px',
+                height: '40px',
                 borderRadius: '10px',
-                backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                backgroundColor: '#eff6ff',
                 color: '#2563eb',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                flexShrink: 0,
-                marginTop: '2px'
+                flexShrink: 0
               }}>
-                <ChefHat size={19} />
+                <ChefHat size={20} />
               </div>
               <div>
-                <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-ink)' }}>
+                <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-ink)', margin: 0 }}>
                   Kitchen Headcount & Leave RSVP
                 </h4>
-                <p style={{ fontSize: '13px', color: 'var(--color-ink-mute)', marginTop: '2px', lineHeight: 1.4 }}>
-                  Students mark "Going out / Skip" before cutoff. Kitchen cooks exact plates, saving ₹15k–₹30k in wasted groceries monthly.
+                <p style={{ fontSize: '13px', color: 'var(--color-ink-mute)', marginTop: '3px', lineHeight: 1.4, margin: 0 }}>
+                  Students tap "Skip / Attend" on Telegram before daily cutoff. Kitchen cooks exact portions, saving ₹15k–₹30k in wasted groceries monthly.
                 </p>
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+            <div style={{
+              display: 'flex',
+              gap: '14px',
+              padding: '14px 16px',
+              backgroundColor: '#ffffff',
+              border: '1px solid var(--color-hairline)',
+              borderRadius: 'var(--radius-lg)',
+              boxShadow: 'var(--shadow-level-1)'
+            }}>
               <div style={{
-                width: '38px',
-                height: '38px',
+                width: '40px',
+                height: '40px',
                 borderRadius: '10px',
-                backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                backgroundColor: '#f5f3ff',
                 color: '#7c3aed',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                flexShrink: 0,
-                marginTop: '2px'
+                flexShrink: 0
               }}>
-                <Shield size={19} />
+                <Shield size={20} />
               </div>
               <div>
-                <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-ink)' }}>
+                <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-ink)', margin: 0 }}>
                   Strict RBAC & Financial Ledger
                 </h4>
-                <p style={{ fontSize: '13px', color: 'var(--color-ink-mute)', marginTop: '2px', lineHeight: 1.4 }}>
-                  Automated subscription expiry, UPI and Cash payment reconciliation, and granular staff vs. owner permissions.
+                <p style={{ fontSize: '13px', color: 'var(--color-ink-mute)', marginTop: '3px', lineHeight: 1.4, margin: 0 }}>
+                  Automated subscription validity, cash & UPI reconciliation, tamper-proof meal countdown audits, and separated staff vs. owner permissions.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Quick Demo Launch Callout */}
+          {/* Connected Telegram Bot Callout */}
           <div style={{
-            padding: '16px',
-            backgroundColor: '#ffffff',
-            borderRadius: 'var(--radius-lg)',
-            border: '1px solid var(--color-hairline)',
-            boxShadow: 'var(--shadow-level-1)'
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '12px 16px',
+            backgroundColor: '#f0f9ff',
+            border: '1px solid #bae6fd',
+            borderRadius: 'var(--radius-lg)'
           }}>
-            <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              ⚡ Instant Sandbox Mode
-            </span>
-            <p style={{ fontSize: '13px', color: 'var(--color-ink)', fontWeight: 500, marginTop: '2px', marginBottom: '10px' }}>
-              Want to test the app right now without an account?
-            </p>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                onClick={() => onLoginSuccess(DEMO_MEMBER)}
-                className="btn btn-primary btn-pill"
-                style={{ fontSize: '12px', padding: '6px 14px', gap: '6px' }}
-              >
-                <span>🎓</span> Try as Student
-              </button>
-              <button
-                type="button"
-                onClick={() => onLoginSuccess(DEMO_RECEPTIONIST)}
-                className="btn btn-secondary btn-pill"
-                style={{ fontSize: '12px', padding: '6px 14px', gap: '6px' }}
-              >
-                <span>⚡</span> Frontdesk Scanner
-              </button>
-              <button
-                type="button"
-                onClick={() => onLoginSuccess(DEMO_ADMIN)}
-                className="btn btn-secondary btn-pill"
-                style={{ fontSize: '12px', padding: '6px 14px', gap: '6px' }}
-              >
-                <span>👑</span> Mess Owner
-              </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                backgroundColor: '#0284c7',
+                color: '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <Send size={16} />
+              </div>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 600, color: '#0369a1' }}>
+                  Telegram Bot Active: @ThaliMessBot
+                </div>
+                <div style={{ fontSize: '11px', color: '#0284c7' }}>
+                  Students check menus & mark attendance directly from Telegram
+                </div>
+              </div>
             </div>
+            <a
+              href="https://t.me/ThaliMessBot"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-pill"
+              style={{
+                fontSize: '12px',
+                padding: '5px 12px',
+                backgroundColor: '#ffffff',
+                color: '#0284c7',
+                border: '1px solid #bae6fd',
+                textDecoration: 'none',
+                fontWeight: 600
+              }}
+            >
+              Open Bot →
+            </a>
           </div>
         </div>
 
-        {/* Right Column: Sign In / Registration Card */}
+        {/* Right Column: Unified Interactive Card */}
         <div style={{ display: 'flex', justifyContent: 'center' }}>
           {cardContent}
         </div>
@@ -675,6 +920,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     );
   }
 
+  // Popup Modal Mode (for switching persona or logging in while in demo)
   return (
     <div style={{
       position: 'fixed',
@@ -683,8 +929,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       right: 0,
       bottom: 0,
       backgroundColor: 'rgba(13, 37, 61, 0.45)',
-      backdropFilter: 'blur(6px)',
-      WebkitBackdropFilter: 'blur(6px)',
+      backdropFilter: 'blur(8px)',
+      WebkitBackdropFilter: 'blur(8px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',

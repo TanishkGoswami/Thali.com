@@ -414,18 +414,18 @@ export function App() {
         />
       )}
 
-      {/* Stripe-style Footer: Clean light canvas with hairline divider */}
+      {/* Clean Professional Footer */}
       <footer style={{
         backgroundColor: '#ffffff',
         color: 'var(--color-ink-mute)',
-        padding: '32px 24px',
+        padding: '22px 24px',
         marginTop: 'auto',
         borderTop: '1px solid var(--color-hairline)',
         position: 'relative',
         zIndex: 1
       }}>
         <div style={{
-          maxWidth: '1240px',
+          maxWidth: '1180px',
           margin: '0 auto',
           display: 'flex',
           justifyContent: 'space-between',
@@ -433,18 +433,22 @@ export function App() {
           flexWrap: 'wrap',
           gap: '16px'
         }}>
-          <div>
-            <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-ink)', letterSpacing: '-0.2px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <img src="/logo.png" alt="Thali.com" style={{ width: '22px', height: '22px', borderRadius: '6px' }} />
+            <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-ink)' }}>
               Thali<span style={{ color: 'var(--color-primary)' }}>.com</span>
-            </div>
-            <p style={{ fontSize: '13px', color: 'var(--color-ink-mute)', marginTop: '2px' }}>
-              Digital Mess Infrastructure & Meal Pass Verification
-            </p>
+            </span>
+            <span style={{ color: 'var(--color-ink-mute-2)', fontSize: '13px' }}>
+              — Modern Dining Hall & Hostel Mess Operating System
+            </span>
           </div>
-          <div className="tnum" style={{ display: 'flex', gap: '20px', fontSize: '12px', color: 'var(--color-ink-mute-2)', flexWrap: 'wrap' }}>
-            <span>Timezone: Asia/Kolkata</span>
+          <div className="tnum" style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--color-ink-mute-2)', alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981' }} />
+              All Systems Operational
+            </span>
+            <span>Asia/Kolkata</span>
             <span>Plan: ₹2,800 / 54 Meals</span>
-            <span>Plans: 2 Meals / day (Breakfast, Lunch, Dinner options)</span>
           </div>
         </div>
       </footer>

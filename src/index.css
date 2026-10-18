@@ -1,19 +1,20 @@
 /* Thali.com — Stripe / Stripi Design System Tokens (DESIGN.md) */
 :root {
-  /* Brand & Signature Colors */
-  --color-primary: #533afd;            /* Signature Indigo CTA */
-  --color-primary-deep: #4434d4;       /* Hover state */
-  --color-primary-press: #2e2b8c;      /* Pressed state */
-  --color-primary-soft: #665efd;       /* Light accent */
-  --color-primary-subdued: #f0effe;    /* Subdued pale indigo fill */
-  --color-primary-subdued-hover: #b9b9f9;
+  /* Brand & Signature Colors (Warm culinary orange/amber matching Thali.com logo) */
+  --color-primary: #ea4c25;            /* Signature Warm Saffron / Orange CTA */
+  --color-primary-deep: #d33c14;       /* Hover state */
+  --color-primary-press: #b02c0b;      /* Pressed state */
+  --color-primary-soft: #f96d48;       /* Light accent */
+  --color-primary-subdued: #fff2ee;    /* Subdued pale orange fill */
+  --color-primary-subdued-hover: #ffe4dc;
+  --color-primary-border: rgba(234, 76, 37, 0.25);
   --color-on-primary: #ffffff;
 
   /* Atmospheric Gradient Mesh Stops */
   --color-ruby: #ea2261;
   --color-magenta: #f96bee;
   --color-lemon: #ff9a62;
-  --color-lavender: #c4b5fd;
+  --color-lavender: #fed7aa;
 
   /* Dark App / Console Chrome */
   --color-brand-dark-900: #0d253d;     /* Deep navy for dark cards / featured */
@@ -21,10 +22,10 @@
 
   /* Surfaces */
   --color-canvas: #ffffff;             /* Primary page canvas */
-  --color-canvas-soft: #f6f9fc;        /* Cool-tinted off-white feature surface */
-  --color-canvas-cream: #f5e9d4;       /* Warm cream interlude band */
-  --color-hairline: #e3e8ee;           /* 1px card/divider hairline */
-  --color-hairline-input: #a8c3de;     /* Form input crisp border */
+  --color-canvas-soft: #f8fafc;        /* Cool-tinted off-white feature surface */
+  --color-canvas-cream: #fff7ed;       /* Warm subtle cream interlude band */
+  --color-hairline: #e2e8f0;           /* 1px card/divider hairline */
+  --color-hairline-input: #cbd5e1;     /* Form input crisp border */
 
   /* Text & Inks */
   --color-ink: #0d253d;                /* Primary deep navy body text (never pure black) */
@@ -138,24 +139,31 @@ h4 {
   display: block;
 }
 
-/* Atmospheric Stripe Gradient Mesh backdrop */
+/* Atmospheric Subtle Warm Gradient Mesh backdrop */
 .gradient-mesh-hero {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 380px;
+  height: 480px;
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 60% 80% at 15% 10%, rgba(245, 233, 212, 0.85) 0%, transparent 60%),
-    radial-gradient(ellipse 55% 70% at 45% -10%, rgba(255, 178, 120, 0.45) 0%, transparent 55%),
-    radial-gradient(ellipse 65% 75% at 85% 0%, rgba(196, 181, 253, 0.6) 0%, transparent 65%),
-    radial-gradient(ellipse 50% 60% at 70% 35%, rgba(83, 58, 253, 0.28) 0%, transparent 60%),
-    radial-gradient(ellipse 40% 50% at 95% 45%, rgba(234, 34, 97, 0.22) 0%, transparent 55%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0) 60%, #ffffff 100%);
-  filter: blur(24px);
-  opacity: 0.95;
+    radial-gradient(ellipse 65% 50% at 20% 0%, rgba(255, 237, 213, 0.45) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 45% at 85% 5%, rgba(254, 215, 170, 0.3) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 50% -10%, rgba(255, 247, 237, 0.7) 0%, transparent 70%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, #ffffff 100%);
+  opacity: 0.85;
+}
+
+/* Fix Browser / Chrome Pale Yellow Autofill */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: var(--color-ink) !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 /* Button & Pill Components (DESIGN.md: 9999px pills with tight padding) */

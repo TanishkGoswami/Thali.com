@@ -1,5 +1,5 @@
 import React from 'react';
-import { QrCode, Shield, User, LogIn } from 'lucide-react';
+import { QrCode, Shield, User, LogIn, Send } from 'lucide-react';
 import type { Role, Profile, MealPeriod } from '../types';
 
 interface NavbarProps {
@@ -219,19 +219,40 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
               </button>
             ) : (
-              <button
-                type="button"
-                onClick={onOpenLogin}
-                className="btn btn-primary"
-                style={{
-                  gap: '6px',
-                  padding: '5px 14px',
-                  fontSize: '12px',
-                  borderRadius: 'var(--radius-pill)'
-                }}
-              >
-                <LogIn size={13} /> Sign In
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <a
+                  href="https://t.me/ThaliMessBot"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-secondary"
+                  style={{
+                    gap: '6px',
+                    padding: '5px 12px',
+                    fontSize: '12px',
+                    borderRadius: 'var(--radius-pill)',
+                    textDecoration: 'none'
+                  }}
+                  title="Open Thali Mess Assistant on Telegram"
+                >
+                  <Send size={13} color="#229ED9" />
+                  <span>@ThaliMessBot</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={onOpenLogin}
+                  className="btn btn-outline"
+                  style={{
+                    gap: '5px',
+                    padding: '5px 12px',
+                    fontSize: '12px',
+                    borderRadius: 'var(--radius-pill)',
+                    color: 'var(--color-ink)'
+                  }}
+                >
+                  <LogIn size={13} />
+                  <span>Staff Login</span>
+                </button>
+              </div>
             )}
           </div>
         </div>
