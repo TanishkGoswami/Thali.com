@@ -20,6 +20,36 @@ if (!fs.existsSync(dataDir)) {
 }
 
 // -------------------------------------------------------------
+// Singleton Process Lock (Prevent duplicate bot instances)
+// -------------------------------------------------------------
+const pidFilePath = path.resolve(dataDir, 'bot.pid');
+try {
+  if (fs.existsSync(pidFilePath)) {
+    const oldPid = parseInt(fs.readFileSync(pidFilePath, 'utf-8').trim(), 10);
+    if (oldPid && oldPid !== process.pid) {
+      try {
+        process.kill(oldPid, 0); // Check if alive
+        console.log(`⚠️ Terminating previous bot process (PID ${oldPid})...`);
+        process.kill(oldPid, 'SIGKILL');
+      } catch (e) {
+        // Old PID is not running, stale file
+      }
+    }
+  }
+  fs.writeFileSync(pidFilePath, String(process.pid), 'utf-8');
+} catch (e) {
+  console.warn('PID lock notice:', e.message);
+}
+
+process.on('exit', () => {
+  try {
+    if (fs.existsSync(pidFilePath) && fs.readFileSync(pidFilePath, 'utf-8').trim() === String(process.pid)) {
+      fs.unlinkSync(pidFilePath);
+    }
+  } catch (_) {}
+});
+
+// -------------------------------------------------------------
 // In-Memory Admin Conversation States & Rate-Limiting
 // -------------------------------------------------------------
 const adminState = {};
@@ -333,7 +363,15 @@ async function callTelegram(method, payload = {}, tokenOverride = null) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    return await res.json();
+    const json = await res.json();
+    if (!json?.ok) {
+      if (json?.description?.includes('message is not modified')) {
+        // Safe: Content is already identical
+      } else {
+        console.error(`❌ Telegram API error on ${method}:`, json?.description || json);
+      }
+    }
+    return json;
   } catch (err) {
     console.error(`Telegram API error on ${method}:`, err.message);
     return null;
@@ -347,7 +385,12 @@ async function sendMessage(chatId, text, replyMarkup = null, tokenOverride = nul
     parse_mode: 'Markdown'
   };
   if (replyMarkup) payload.reply_markup = replyMarkup;
-  return callTelegram('sendMessage', payload, tokenOverride);
+  let res = await callTelegram('sendMessage', payload, tokenOverride);
+  if (!res?.ok && res?.description?.includes("can't parse entities")) {
+    delete payload.parse_mode;
+    res = await callTelegram('sendMessage', payload, tokenOverride);
+  }
+  return res;
 }
 
 async function editMessageText(chatId, messageId, text, replyMarkup = null, tokenOverride = null) {
@@ -358,7 +401,19 @@ async function editMessageText(chatId, messageId, text, replyMarkup = null, toke
     parse_mode: 'Markdown'
   };
   if (replyMarkup) payload.reply_markup = replyMarkup;
-  return callTelegram('editMessageText', payload, tokenOverride);
+  let res = await callTelegram('editMessageText', payload, tokenOverride);
+
+  // If Markdown entity parsing failed, retry plain text
+  if (!res?.ok && res?.description?.includes("can't parse entities")) {
+    delete payload.parse_mode;
+    res = await callTelegram('editMessageText', payload, tokenOverride);
+  }
+
+  // If edit failed because message is too old or missing, fallback to sending fresh message
+  if (!res?.ok && !res?.description?.includes('message is not modified')) {
+    return sendMessage(chatId, text, replyMarkup, tokenOverride);
+  }
+  return res;
 }
 
 async function sendPhotoBuffer(chatId, buffer, caption = '', tokenOverride = null) {
@@ -1049,10 +1104,11 @@ async function handleBotUsersReport(chatId, tokenOverride = null, messageId = nu
     msg += `_Abhi tak koi member account linked nahi hai._\n\n`;
   } else {
     linkedList.forEach((m, idx) => {
-      const uname = m.username ? `@${m.username}` : '_No username_';
-      const phoneStr = m.phone ? `+91 ${m.phone}` : '_Not linked_';
+      const uname = m.username ? `\`@${m.username}\`` : '_No username_';
+      const phoneStr = m.phone ? `+91 ${m.phone}` : 'Not linked';
       const timeStr = m.linkedAt ? new Date(m.linkedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Recently';
-      msg += `${idx + 1}. *${m.fullName}* (\`${m.memberNumber}\`)\n`;
+      const cleanName = (m.fullName || 'Member').replace(/[_*`]/g, '');
+      msg += `${idx + 1}. *${cleanName}* (\`${m.memberNumber}\`)\n`;
       msg += `   • Phone: \`${phoneStr}\` | ${uname}\n`;
       msg += `   • Chat ID: \`${m.chatId}\` | 🕒 ${timeStr}\n`;
     });
@@ -1062,8 +1118,8 @@ async function handleBotUsersReport(chatId, tokenOverride = null, messageId = nu
   if (unlinkedGuests.length > 0) {
     msg += `⏳ *Visitors Started Bot (Not Linked Yet):*\n`;
     unlinkedGuests.slice(0, 6).forEach((u) => {
-      const uName = (u.firstName || u.fullName || 'Guest Diner').trim();
-      const uname = u.username ? `@${u.username}` : `Chat \`${u.chatId}\``;
+      const uName = (u.firstName || u.fullName || 'Guest Diner').trim().replace(/[_*`]/g, '');
+      const uname = u.username ? `\`@${u.username}\`` : `Chat \`${u.chatId}\``;
       const timeStr = u.firstSeen ? new Date(u.firstSeen).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Recently';
       msg += `• *${uName}* (${uname}) | 🕒 ${timeStr}\n`;
     });
@@ -1345,7 +1401,22 @@ async function handleCallbackQuery(cbQuery, tokenOverride = null) {
   const messageId = cbQuery.message?.message_id;
   const data = cbQuery.data;
 
-  await answerCallbackQuery(cbQuery.id, '', tokenOverride);
+  // Provide instant tactile visual feedback on Telegram
+  let toastMsg = '';
+  if (data === 'admin_refresh' || data === 'admin_panel') toastMsg = '🔄 Status Refreshed!';
+  else if (data === 'admin_bot_users') toastMsg = '👥 Loading Bot Users & Registry...';
+  else if (data === 'admin_headcount') toastMsg = '📊 Loading Kitchen Headcount...';
+  else if (data === 'admin_ledger') toastMsg = '💰 Loading Daily Ledger...';
+  else if (data === 'admin_menu_off') toastMsg = '🛑 Mess OFF Options';
+  else if (data === 'admin_menu_on') toastMsg = '🟢 Reopen Mess Options';
+  else if (data === 'admin_broadcast') toastMsg = '📢 Broadcast Options';
+  else if (data === 'admin_lookup') toastMsg = '🔍 Member Search...';
+  else if (data === 'admin_setmenu') toastMsg = '🍛 Update Menu Options...';
+  else if (data === 'admin_logout') toastMsg = '🔒 Logging Out Console...';
+  else if (data.startsWith('action_')) toastMsg = '⚡ Loading...';
+  else if (data.startsWith('rsvp_')) toastMsg = '✔️ Attendance Recorded!';
+
+  await answerCallbackQuery(cbQuery.id, toastMsg, tokenOverride);
 
   // If callback is on MainBot but targets Admin action, block completely without revealing admin bot
   const isAdminAction = data.startsWith('admin_') || data.startsWith('messoff_') || data.startsWith('messon_') || data.startsWith('bcast_');
@@ -1746,6 +1817,7 @@ async function pollMainBot() {
 
         if (update.callback_query) {
           const cq = update.callback_query;
+          console.log(`🔘 [MainBot] Button clicked: "${cq.data}" by chat ${cq.message?.chat?.id}`);
           if (cq.message?.chat?.id) {
             recordBotSubscriber(cq.message.chat.id, cq.from, 'student_bot');
           }
@@ -1789,6 +1861,7 @@ async function pollAdminBot() {
 
         if (update.callback_query) {
           const cq = update.callback_query;
+          console.log(`🔘 [AdminBot] Button clicked: "${cq.data}" by chat ${cq.message?.chat?.id}`);
           if (cq.message?.chat?.id) {
             recordBotSubscriber(cq.message.chat.id, cq.from, 'admin_bot');
           }
