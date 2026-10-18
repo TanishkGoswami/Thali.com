@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, Mail, User, ArrowRight, RefreshCw, AlertCircle, X, Sparkles, QrCode, ChefHat, Shield, Send, ChevronRight } from 'lucide-react';
+import { Lock, Mail, User, ArrowRight, RefreshCw, AlertCircle, X, QrCode, ChefHat, Shield, Send, ChevronRight } from 'lucide-react';
 import { loginWithEmailOrIdAndPin, registerNewMember } from '../lib/auth';
 import type { Profile } from '../types';
 import { DEMO_MEMBER, DEMO_RECEPTIONIST, DEMO_ADMIN } from '../lib/demoData';
@@ -109,11 +109,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 boxShadow: activeMode === 'sandbox' ? 'var(--shadow-level-1)' : 'none',
                 fontSize: '12px',
                 fontWeight: activeMode === 'sandbox' ? 600 : 500,
-                padding: '6px 10px',
-                gap: '5px'
+                padding: '6px 10px'
               }}
             >
-              <Sparkles size={13} color="var(--color-primary)" />
               <span>Interactive Demo</span>
             </button>
             <button
@@ -721,23 +719,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         {/* Left Column: Authoritative Product Narrative */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
           <div>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              backgroundColor: 'var(--color-primary-subdued)',
-              border: '1px solid var(--color-primary-border)',
-              borderRadius: 'var(--radius-pill)',
-              padding: '4px 12px',
-              fontSize: '12px',
-              fontWeight: 600,
-              color: 'var(--color-primary)',
-              marginBottom: '16px'
-            }}>
-              <Sparkles size={13} />
-              <span>Modern Dining Hall & Mess Automation</span>
-            </div>
-            
             <h1 style={{
               fontSize: 'clamp(32px, 4vw, 46px)',
               fontWeight: 800,

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import confetti from 'canvas-confetti';
 import {
-  Sparkles,
+  CreditCard,
   RefreshCw,
   UtensilsCrossed,
   History,
@@ -792,7 +792,7 @@ export const MemberView: React.FC<MemberViewProps> = ({
             className="btn btn-primary"
             style={{ width: '100%', marginTop: '16px' }}
           >
-            <Sparkles size={14} /> {member.subscription_status === 'active' ? 'Renew Subscription (₹2,800)' : (otpEnabled ? 'Verify Phone & Activate (₹2,800)' : 'Link Phone & Activate Pass (₹2,800)')}
+            <CreditCard size={14} /> {member.subscription_status === 'active' ? 'Renew Subscription (₹2,800)' : (otpEnabled ? 'Verify Phone & Activate (₹2,800)' : 'Link Phone & Activate Pass (₹2,800)')}
           </button>
         </div>
       </div>
