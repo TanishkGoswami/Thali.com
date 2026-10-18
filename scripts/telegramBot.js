@@ -553,12 +553,11 @@ const FALLBACK_MENUS = {
 function getMemberMainMenuKeyboard() {
   return {
     inline_keyboard: [
-      [{ text: '🍛 Today\'s Menu & RSVP', callback_data: 'action_menu' }],
+      [{ text: "Today's Menu & RSVP", callback_data: 'action_menu' }],
       [
-        { text: '🎫 My Digital QR Pass', callback_data: 'action_pass' },
-        { text: '💳 Check Balance', callback_data: 'action_balance' }
-      ],
-      [{ text: '🔔 Unmute Bot / Notifications', callback_data: 'action_unmute_help' }]
+        { text: 'Digital QR Pass', callback_data: 'action_pass' },
+        { text: 'Meal Balance', callback_data: 'action_balance' }
+      ]
     ]
   };
 }
@@ -567,24 +566,24 @@ function getAdminPanelKeyboard() {
   return {
     inline_keyboard: [
       [
-        { text: '🛑 Declare Mess OFF', callback_data: 'admin_menu_off' },
-        { text: '🟢 Reopen Mess', callback_data: 'admin_menu_on' }
+        { text: 'Declare Mess OFF', callback_data: 'admin_menu_off' },
+        { text: 'Reopen Mess', callback_data: 'admin_menu_on' }
       ],
       [
-        { text: '📢 Send Broadcast Alert', callback_data: 'admin_broadcast' },
-        { text: '📊 Kitchen Headcount', callback_data: 'admin_headcount' }
+        { text: 'Send Broadcast', callback_data: 'admin_broadcast' },
+        { text: 'Kitchen Headcount', callback_data: 'admin_headcount' }
       ],
       [
-        { text: '🔍 Member Lookup / Top-Up', callback_data: 'admin_lookup' },
-        { text: '🍛 Update Today\'s Menu', callback_data: 'admin_setmenu' }
+        { text: 'Member Lookup / Top-Up', callback_data: 'admin_lookup' },
+        { text: 'Update Menu', callback_data: 'admin_setmenu' }
       ],
       [
-        { text: '👥 Bot Users & Members', callback_data: 'admin_bot_users' },
-        { text: '💰 Daily Ledger & Audit', callback_data: 'admin_ledger' }
+        { text: 'Registered Members', callback_data: 'admin_bot_users' },
+        { text: 'Daily Ledger', callback_data: 'admin_ledger' }
       ],
       [
-        { text: '🔄 Refresh Status', callback_data: 'admin_refresh' },
-        { text: '🔒 Log Out Console', callback_data: 'admin_logout' }
+        { text: 'Refresh Status', callback_data: 'admin_refresh' },
+        { text: 'Log Out', callback_data: 'admin_logout' }
       ]
     ]
   };
@@ -594,14 +593,14 @@ function getMessOffSelectKeyboard() {
   return {
     inline_keyboard: [
       [
-        { text: '🌅 Breakfast OFF', callback_data: 'messoff_select_breakfast' },
-        { text: '☀️ Lunch OFF', callback_data: 'messoff_select_lunch' }
+        { text: 'Breakfast OFF', callback_data: 'messoff_select_breakfast' },
+        { text: 'Lunch OFF', callback_data: 'messoff_select_lunch' }
       ],
       [
-        { text: '🌙 Dinner OFF', callback_data: 'messoff_select_dinner' },
-        { text: '📅 Entire Day OFF', callback_data: 'messoff_select_all_day' }
+        { text: 'Dinner OFF', callback_data: 'messoff_select_dinner' },
+        { text: 'Full Day OFF', callback_data: 'messoff_select_all_day' }
       ],
-      [{ text: '🔙 Back to Admin Panel', callback_data: 'admin_panel' }]
+      [{ text: 'Back to Admin Panel', callback_data: 'admin_panel' }]
     ]
   };
 }
@@ -609,12 +608,12 @@ function getMessOffSelectKeyboard() {
 function getMessOffReasonsKeyboard(period) {
   return {
     inline_keyboard: [
-      [{ text: '🎉 Festival / Public Holiday', callback_data: `messoff_askconfirm::${period}::Festival Holiday` }],
-      [{ text: '🔧 Kitchen Maintenance / Deep Clean', callback_data: `messoff_askconfirm::${period}::Kitchen Maintenance` }],
-      [{ text: '🌧️ Water / Supply Issue', callback_data: `messoff_askconfirm::${period}::Water Supply Issue` }],
-      [{ text: '🚨 Staff Shortage / Emergency', callback_data: `messoff_askconfirm::${period}::Staff Emergency` }],
-      [{ text: '✍️ Type Custom Reason', callback_data: `messoff_custom::${period}` }],
-      [{ text: '🔙 Cancel', callback_data: 'admin_panel' }]
+      [{ text: 'Festival Holiday', callback_data: `messoff_askconfirm::${period}::Festival Holiday` }],
+      [{ text: 'Kitchen Maintenance', callback_data: `messoff_askconfirm::${period}::Kitchen Maintenance` }],
+      [{ text: 'Water Supply Issue', callback_data: `messoff_askconfirm::${period}::Water Supply Issue` }],
+      [{ text: 'Staff Shortage', callback_data: `messoff_askconfirm::${period}::Staff Shortage` }],
+      [{ text: 'Custom Reason', callback_data: `messoff_custom::${period}` }],
+      [{ text: 'Cancel', callback_data: 'admin_panel' }]
     ]
   };
 }
@@ -622,8 +621,8 @@ function getMessOffReasonsKeyboard(period) {
 function getMessOffConfirmKeyboard(period, reason) {
   return {
     inline_keyboard: [
-      [{ text: '📢 Yes, Broadcast Notice to Members', callback_data: `messoff_exec::${period}::${reason}` }],
-      [{ text: '❌ Cancel (Do Nothing)', callback_data: 'admin_panel' }]
+      [{ text: 'Broadcast Notice to Members', callback_data: `messoff_exec::${period}::${reason}` }],
+      [{ text: 'Cancel', callback_data: 'admin_panel' }]
     ]
   };
 }
@@ -631,27 +630,27 @@ function getMessOffConfirmKeyboard(period, reason) {
 function getReopenSelectKeyboard(todayClosures) {
   const buttons = [];
   if (todayClosures.breakfast) {
-    buttons.push([{ text: '🟢 Reopen Breakfast', callback_data: 'messon_exec_breakfast' }]);
+    buttons.push([{ text: 'Reopen Breakfast', callback_data: 'messon_exec_breakfast' }]);
   }
   if (todayClosures.lunch) {
-    buttons.push([{ text: '🟢 Reopen Lunch', callback_data: 'messon_exec_lunch' }]);
+    buttons.push([{ text: 'Reopen Lunch', callback_data: 'messon_exec_lunch' }]);
   }
   if (todayClosures.dinner) {
-    buttons.push([{ text: '🟢 Reopen Dinner', callback_data: 'messon_exec_dinner' }]);
+    buttons.push([{ text: 'Reopen Dinner', callback_data: 'messon_exec_dinner' }]);
   }
-  buttons.push([{ text: '🟢 Reopen All Closed Periods', callback_data: 'messon_exec_all_day' }]);
-  buttons.push([{ text: '🔙 Back to Admin Panel', callback_data: 'admin_panel' }]);
+  buttons.push([{ text: 'Reopen All Periods', callback_data: 'messon_exec_all_day' }]);
+  buttons.push([{ text: 'Back to Admin Panel', callback_data: 'admin_panel' }]);
   return { inline_keyboard: buttons };
 }
 
 function getBroadcastTemplatesKeyboard() {
   return {
     inline_keyboard: [
-      [{ text: '🍲 Special Feast Tonight (Gulab Jamun)', callback_data: 'bcast_template_feast' }],
-      [{ text: '⏰ Dinner Delayed by 30 Minutes', callback_data: 'bcast_template_delay' }],
-      [{ text: '💳 Monthly Pass Renewal Due Alert', callback_data: 'bcast_template_fees' }],
-      [{ text: '✍️ Type Custom Announcement', callback_data: 'bcast_custom_prompt' }],
-      [{ text: '🔙 Back to Admin Panel', callback_data: 'admin_panel' }]
+      [{ text: 'Special Feast Notice', callback_data: 'bcast_template_feast' }],
+      [{ text: 'Timing Delay (30 Minutes)', callback_data: 'bcast_template_delay' }],
+      [{ text: 'Monthly Fee Renewal Reminder', callback_data: 'bcast_template_fees' }],
+      [{ text: 'Custom Announcement', callback_data: 'bcast_custom_prompt' }],
+      [{ text: 'Back to Admin Panel', callback_data: 'admin_panel' }]
     ]
   };
 }
@@ -659,8 +658,8 @@ function getBroadcastTemplatesKeyboard() {
 function getBroadcastConfirmKeyboard() {
   return {
     inline_keyboard: [
-      [{ text: '🚀 Yes, Broadcast to All Members', callback_data: 'bcast_custom_execute' }],
-      [{ text: '❌ Cancel', callback_data: 'admin_panel' }]
+      [{ text: 'Send Broadcast', callback_data: 'bcast_custom_execute' }],
+      [{ text: 'Cancel', callback_data: 'admin_panel' }]
     ]
   };
 }
@@ -870,23 +869,23 @@ async function handleExecuteMessOff(chatId, period, reason, tokenOverride = null
 
   // Super clean, 3-line notification-friendly broadcast for members
   const memberHeadline = cleanPeriod === 'all_day'
-    ? '📢 *Aaj Mess Poore Din Band Rahegi*'
-    : `📢 *Aaj Mess me ${periodLabel} Band Rahega*`;
+    ? 'Mess Notice: Aaj Mess Poore Din Band Rahegi'
+    : `Mess Notice: Aaj Mess me ${periodLabel} Band Rahega`;
 
-  const memberAlert = `${memberHeadline}
+  const memberAlert = `*${memberHeadline}*
 
-📝 *Reason:* ${reason}
-🛡️ _Note: Aapka koi meal deduct nahi hoga aur na hi absent lagegi._`;
+Reason: ${reason}
+Note: Aapka koi meal deduct nahi hoga aur na hi absent lagegi.`;
 
   const broadcastReport = await broadcastToAllMembers(memberAlert);
 
-  const confirmMsg = `✅ *Notice Sent to All Members!*
+  const confirmMsg = `*Notice Sent to Members*
 
-🛑 *Period:* ${periodLabel}
-📝 *Reason:* ${reason}
-📢 *Delivered to:* *${broadcastReport.sent}/${broadcastReport.total}* members
+Period: ${periodLabel}
+Reason: ${reason}
+Delivered: ${broadcastReport.sent}/${broadcastReport.total} members
 
-🛡️ *Zero-Absent guarantee active (No meal cut).*`;
+Zero-absent protection applied.`;
 
   if (messageId) {
     return editMessageText(chatId, messageId, confirmMsg, getAdminPanelKeyboard(), tokenOverride);
@@ -902,16 +901,16 @@ async function handleExecuteMessOn(chatId, period, tokenOverride = null, message
   removeMessClosure(today, period);
 
   // Broadcast to members
-  const memberAlert = `🟢 *MESS REOPENED* 🟢
+  const memberAlert = `*Mess Reopened*
 
-Aapki mess *${periodLabel}* ke liye waapas shuru ho gayi hai! Normal dining & QR pass check-in active hai.`;
+Mess service is operational for ${periodLabel}. Regular meal service and QR check-ins are active.`;
 
   const report = await broadcastToAllMembers(memberAlert);
 
-  const confirmMsg = `🟢 *Mess Reopened Successfully!*
+  const confirmMsg = `*Mess Reopened*
 
-*${periodLabel}* ke liye mess dobara operational kar di gayi hai.
-📢 Reopen announcement sent to *${report.sent}* members.`;
+${periodLabel} is now marked open.
+Announcement delivered to ${report.sent} members.`;
 
   if (messageId) {
     return editMessageText(chatId, messageId, confirmMsg, getAdminPanelKeyboard(), tokenOverride);
@@ -1283,17 +1282,12 @@ async function linkProfileToChat(chatId, username, profile, messageId = null, to
     console.warn('Note: Supabase telegram_chat_id update notice:', err.message);
   }
 
-  const welcomeMsg = `🎉 *Account Successfully Linked!*
+  const welcomeMsg = `Account linked successfully.
 
-Welcome, *${profile.full_name}* (\`${profile.member_number}\`)!
-Aapka Thali.com pass iss chat se connect ho gaya hai.
+Member: *${profile.full_name}* (\`${profile.member_number}\`)
+Your digital pass is connected to this chat.
 
-🔔 *Zaroori Setting (Must Do):*
-Telegram bots ko by-default mute rakhta hai. Kripya abhi iss chat ko *Unmute* (Notification ON) karein taaki:
-• Mess OFF aur emergency notices turant loud ring ke sath milein
-• Daily lunch & dinner menu updates miss na hon!
-
-👉 *Steps:* Top-right 3 dots (⋮) par tap karke *Unmute* select karein.`;
+Use the menu below to view daily meals or access your pass:`;
 
   if (messageId) {
     return editMessageText(chatId, messageId, welcomeMsg, getMemberMainMenuKeyboard(), tokenOverride);
@@ -1322,36 +1316,30 @@ async function handleStartMember(chatId, username, text, tokenOverride = null) {
     }
   }
 
-  const bannerPath = path.resolve(__dirname, '../data/thali_bot_banner.jpg');
-
   // Check if already linked
   const member = await getMemberByChatId(chatId);
   if (member) {
-    const welcomeBackMsg = `👋 *Namaste, ${member.full_name}!*
+    const welcomeBackMsg = `Welcome back, *${member.full_name}* (\`${member.member_number}\`).
 
-Aapka account (\`${member.member_number}\`) already connected hai.
-Aaj ka menu dekhne ya pass check karne ke liye neeche diye gaye buttons use karein:
-
-🔔 *Notification Tip:* Ensure karein ki yeh chat *Unmute* hai taaki koi bhi urgent broadcast ya Mess OFF notice aapse miss na ho!`;
-    return sendPhotoFile(chatId, bannerPath, welcomeBackMsg, getMemberMainMenuKeyboard(), tokenOverride);
+Your account is connected. Select an option below to view today's menu, check balance, or access your QR pass.`;
+    return sendMessage(chatId, welcomeBackMsg, getMemberMainMenuKeyboard(), tokenOverride);
   }
 
-  const promptShare = `👋 *Namaste! Welcome to Thali.com Assistant!*
+  const promptShare = `Welcome to *Thali.com Mess Assistant*.
 
-Aapka account connect karne ke liye:
-1️⃣ Neeche diye gaye *Share Contact* button par tap karein, YA
-2️⃣ Apna **Member ID** (jaise \`M-112\`) ya registered **Mobile Number** type karke bhejein.
+To connect your membership:
+1. Tap the button below to share your phone number, or
+2. Send your Member ID (e.g. \`M-112\`) or registered mobile number.
 
-🔔 *Important Request:*
-Telegram naye bots ko by-default *Mute* rakhta hai. Kripya top-right 3 dots (⋮) se iss chat ko *Unmute* zaroor kar lein taaki Mess OFF aur daily alerts miss na hon!`;
+Note: Keep this chat unmuted to receive emergency mess notices.`;
 
   const keyboard = {
-    keyboard: [[{ text: '📱 Share My Phone Number', request_contact: true }]],
+    keyboard: [[{ text: 'Share Phone Number', request_contact: true }]],
     resize_keyboard: true,
     one_time_keyboard: true
   };
 
-  return sendPhotoFile(chatId, bannerPath, promptShare, keyboard, tokenOverride);
+  return sendMessage(chatId, promptShare, keyboard, tokenOverride);
 }
 
 async function handleMenu(chatId, tokenOverride = null) {
@@ -1378,36 +1366,35 @@ async function handleMenu(chatId, tokenOverride = null) {
     if (dMenu?.items?.length) dinnerText = dMenu.items.map(i => i.name).join(', ');
   }
 
-  const bNotice = closures.breakfast ? `\n⚠️ _(Note: Breakfast is OFF today - ${closures.breakfast.reason}. No meal deducted.)_` : '';
-  const lNotice = closures.lunch ? `\n⚠️ _(Note: Lunch is OFF today - ${closures.lunch.reason}. No meal deducted.)_` : '';
-  const dNotice = closures.dinner ? `\n⚠️ _(Note: Dinner is OFF today - ${closures.dinner.reason}. No meal deducted.)_` : '';
+  const bNotice = closures.breakfast ? `\n(Breakfast is closed today: ${closures.breakfast.reason})` : '';
+  const lNotice = closures.lunch ? `\n(Lunch is closed today: ${closures.lunch.reason})` : '';
+  const dNotice = closures.dinner ? `\n(Dinner is closed today: ${closures.dinner.reason})` : '';
 
-  const menuMsg = `🍛 *Today's Mess Menu* (${today})
+  const menuMsg = `*Today's Mess Menu* (${today})
 
-🌅 *Breakfast (07:30 AM – 10:30 AM)*${bNotice}
+*Breakfast (07:30 AM – 10:30 AM)*${bNotice}
 ${breakfastText.split(', ').map(i => `• ${i}`).join('\n')}
 
-☀️ *Lunch (12:30 PM – 03:30 PM)*${lNotice}
+*Lunch (12:30 PM – 03:30 PM)*${lNotice}
 ${lunchText.split(', ').map(i => `• ${i}`).join('\n')}
 
-🌙 *Dinner (07:30 PM – 10:30 PM)*${dNotice}
-${dinnerText.split(', ').map(i => `• ${i}`).join('\n')}
-
-_Neeche diye gaye buttons se apni attendance mark karein:_`;
+*Dinner (07:30 PM – 10:30 PM)*${dNotice}
+${dinnerText.split(', ').map(i => `• ${i}`).join('\n')}`;
 
   const rows = [];
   if (!closures.lunch) {
     rows.push([
-      { text: '✅ Coming for Lunch', callback_data: 'rsvp_attend_lunch' },
-      { text: '❌ Skip Lunch', callback_data: 'rsvp_skip_lunch' }
+      { text: 'Attending Lunch', callback_data: 'rsvp_attend_lunch' },
+      { text: 'Skip Lunch', callback_data: 'rsvp_skip_lunch' }
     ]);
   }
   if (!closures.dinner) {
     rows.push([
-      { text: '✅ Coming for Dinner', callback_data: 'rsvp_attend_dinner' },
-      { text: '❌ Skip Dinner', callback_data: 'rsvp_skip_dinner' }
+      { text: 'Attending Dinner', callback_data: 'rsvp_attend_dinner' },
+      { text: 'Skip Dinner', callback_data: 'rsvp_skip_dinner' }
     ]);
   }
+  rows.push([{ text: 'Back to Menu', callback_data: 'action_back_menu' }]);
 
   const keyboard = { inline_keyboard: rows };
   return sendMessage(chatId, menuMsg, keyboard, tokenOverride);
@@ -1416,7 +1403,7 @@ _Neeche diye gaye buttons se apni attendance mark karein:_`;
 async function handlePass(chatId, tokenOverride = null) {
   const member = await getMemberByChatId(chatId);
   if (!member) {
-    return sendMessage(chatId, `⚠️ Pehle account link karein! Apna Member ID (jaise \`M-112\`) bhejein.`, null, tokenOverride);
+    return sendMessage(chatId, 'Please connect your account first by sending your Member ID.', null, tokenOverride);
   }
 
   const token = member.qr_token || `QR_MEM_${member.member_number}`;
@@ -1426,11 +1413,12 @@ async function handlePass(chatId, tokenOverride = null) {
     color: { dark: '#0d253d', light: '#ffffff' }
   });
 
-  const caption = `🎫 *Your Digital Thali.com Pass*
-👤 *Member:* ${member.full_name} (\`${member.member_number}\`)
-🔑 *Token:* \`${token}\`
+  const caption = `*Thali.com Digital Pass*
 
-📱 Counter receptionist ya scanner par yeh QR code dikhayein!`;
+Member: *${member.full_name}* (\`${member.member_number}\`)
+Token: \`${token}\`
+
+Present this QR code at the dining counter scanner.`;
 
   return sendPhotoBuffer(chatId, qrBuffer, caption, tokenOverride);
 }
@@ -1438,7 +1426,7 @@ async function handlePass(chatId, tokenOverride = null) {
 async function handleBalance(chatId, tokenOverride = null) {
   const member = await getMemberByChatId(chatId);
   if (!member) {
-    return sendMessage(chatId, `⚠️ Pehle account link karein! Apna Member ID (jaise \`M-112\`) bhejein.`, null, tokenOverride);
+    return sendMessage(chatId, 'Please connect your account first by sending your Member ID.', null, tokenOverride);
   }
 
   const { data: subs } = await supabase
@@ -1465,14 +1453,12 @@ async function handleBalance(chatId, tokenOverride = null) {
     }
   }
 
-  const balanceMsg = `💳 *Meal Pass Balance*
+  const balanceMsg = `*Meal Pass Balance*
 
-👤 *Member:* ${member.full_name} (\`${member.member_number}\`)
-🍛 *Meals Remaining:* *${remaining} Meals*
-📅 *Plan Expiry:* ${expiryStr}
-🔄 *Status:* ${activeSub?.status === 'active' ? '🟢 Active Plan' : '🟡 ' + (activeSub?.status || 'Active')}
-
-_Roz attendance mark karein taaki kitchen mein khana waste na ho._`;
+Member: *${member.full_name}* (\`${member.member_number}\`)
+Meals Remaining: *${remaining}*
+Plan Expiry: ${expiryStr}
+Status: *${activeSub?.status?.toUpperCase() || 'ACTIVE'}*`;
 
   return sendMessage(chatId, balanceMsg, getMemberMainMenuKeyboard(), tokenOverride);
 }
@@ -1488,20 +1474,20 @@ async function handleCallbackQuery(cbQuery, tokenOverride = null) {
 
   // Provide instant tactile visual feedback on Telegram
   let toastMsg = '';
-  if (data === 'admin_refresh' || data === 'admin_panel') toastMsg = '🔄 Status Refreshed!';
-  else if (data === 'admin_bot_users') toastMsg = '👥 Loading Bot Users & Registry...';
-  else if (data === 'admin_headcount') toastMsg = '📊 Loading Kitchen Headcount...';
-  else if (data === 'admin_ledger') toastMsg = '💰 Loading Daily Ledger...';
-  else if (data === 'admin_menu_off') toastMsg = '🛑 Mess OFF Options';
-  else if (data === 'admin_menu_on') toastMsg = '🟢 Reopen Mess Options';
-  else if (data === 'admin_broadcast') toastMsg = '📢 Broadcast Options';
-  else if (data === 'admin_lookup') toastMsg = '🔍 Member Search...';
-  else if (data === 'admin_setmenu') toastMsg = '🍛 Update Menu Options...';
-  else if (data === 'admin_logout') toastMsg = '🔒 Logging Out Console...';
-  else if (data === 'action_unmute_help') toastMsg = '🔔 Notification Help';
-  else if (data === 'action_back_menu') toastMsg = '🔙 Main Menu';
-  else if (data.startsWith('action_')) toastMsg = '⚡ Loading...';
-  else if (data.startsWith('rsvp_')) toastMsg = '✔️ Attendance Recorded!';
+  if (data === 'admin_refresh' || data === 'admin_panel') toastMsg = 'Status refreshed';
+  else if (data === 'admin_bot_users') toastMsg = 'Loading members...';
+  else if (data === 'admin_headcount') toastMsg = 'Loading headcount...';
+  else if (data === 'admin_ledger') toastMsg = 'Loading ledger...';
+  else if (data === 'admin_menu_off') toastMsg = 'Closure options';
+  else if (data === 'admin_menu_on') toastMsg = 'Reopen options';
+  else if (data === 'admin_broadcast') toastMsg = 'Broadcast options';
+  else if (data === 'admin_lookup') toastMsg = 'Searching member...';
+  else if (data === 'admin_setmenu') toastMsg = 'Menu options';
+  else if (data === 'admin_logout') toastMsg = 'Logged out';
+  else if (data === 'action_unmute_help') toastMsg = 'Notification guide';
+  else if (data === 'action_back_menu') toastMsg = 'Main menu';
+  else if (data.startsWith('action_')) toastMsg = 'Loading...';
+  else if (data.startsWith('rsvp_')) toastMsg = 'Attendance recorded';
 
   await answerCallbackQuery(cbQuery.id, toastMsg, tokenOverride);
 
@@ -1511,7 +1497,7 @@ async function handleCallbackQuery(cbQuery, tokenOverride = null) {
     return editMessageText(
       chatId,
       messageId,
-      `⚠️ *Option Unavailable*\n\nStudent dining pass aur menu ke liye neeche diye gaye buttons use karein:`,
+      'Option unavailable. Use the menu below:',
       getMemberMainMenuKeyboard()
     );
   }
@@ -1526,7 +1512,7 @@ async function handleCallbackQuery(cbQuery, tokenOverride = null) {
   }
 
   if (data === 'cancel_link') {
-    return editMessageText(chatId, messageId, `Koi baat nahi! Apna sahi Member ID (jaise \`M-112\`) ya registered phone bhejein.`, null, tokenOverride);
+    return editMessageText(chatId, messageId, 'Please send your correct Member ID (e.g. M-112) or registered phone number.', null, tokenOverride);
   }
 
   // 2. Member Actions
@@ -1535,31 +1521,24 @@ async function handleCallbackQuery(cbQuery, tokenOverride = null) {
   if (data === 'action_balance') return handleBalance(chatId, tokenOverride);
 
   if (data === 'action_unmute_help') {
-    const guideMsg = `🔔 *Bot Notification & Sound Guide*
+    const guideMsg = `*Notification Settings*
 
-Telegram platform apne sabhi naye bots ko spam protection ke kaaran by-default *Mute* rakhta hai.
+Telegram automatically mutes new bots. To ensure you receive emergency mess notices and meal updates:
 
-Agar aap chahte hain ki:
-• 📢 *Mess OFF Notice* phone par turant loud ring kare
-• 🍛 *Daily Menu & Timings* aapse miss na hon
-
-Toh kripya yeh aasan steps follow karein:
-1️⃣ Iss chat ke top-right corner par 3 vertical dots *(⋮)* tap karein.
-2️⃣ *Unmute* (ya *Notifications: ON*) select karein.
-3️⃣ *(Recommended)* Chat ko *Pin to top* karein taaki hamesha samne rahe.
-
-Ab aapko saare zaroori alerts real-time notification sound ke sath milenge!`;
+1. Tap the three dots (⋮) in the top-right corner.
+2. Select 'Unmute'.
+3. (Optional) Select 'Pin' to keep Thali.com at the top of your chat list.`;
 
     return editMessageText(chatId, messageId, guideMsg, {
-      inline_keyboard: [[{ text: '🔙 Back to Menu', callback_data: 'action_back_menu' }]]
+      inline_keyboard: [[{ text: 'Back to Menu', callback_data: 'action_back_menu' }]]
     }, tokenOverride);
   }
 
   if (data === 'action_back_menu') {
     const member = await getMemberByChatId(chatId);
     const backMsg = member
-      ? `👋 *Namaste, ${member.full_name}!* (\`${member.member_number}\`)\n\nNeeche diye gaye options choose karein:`
-      : `👋 *Welcome to Thali.com Assistant!*\n\nNeeche diye gaye options choose karein:`;
+      ? `Welcome, *${member.full_name}* (\`${member.member_number}\`).\n\nSelect an option:`
+      : `Welcome to *Thali.com Mess Assistant*.\n\nSelect an option:`;
     return editMessageText(chatId, messageId, backMsg, getMemberMainMenuKeyboard(), tokenOverride);
   }
 
@@ -1567,7 +1546,7 @@ Ab aapko saare zaroori alerts real-time notification sound ke sath milenge!`;
   if (data.startsWith('rsvp_')) {
     const member = await getMemberByChatId(chatId);
     if (!member) {
-      return sendMessage(chatId, `⚠️ Pehle account link karein! Apna Member ID bhejein.`, null, tokenOverride);
+      return sendMessage(chatId, 'Please connect your account first by sending your Member ID.', null, tokenOverride);
     }
 
     const isSkip = data.includes('skip');
@@ -1576,7 +1555,7 @@ Ab aapko saare zaroori alerts real-time notification sound ke sath milenge!`;
 
     const closure = isPeriodClosed(today, period);
     if (closure) {
-      return sendMessage(chatId, `⚠️ *Mess OFF Hai:* Aaj ${period.toUpperCase()} off hai (${closure.reason}). Aapka meal cut nahi hoga!`, null, tokenOverride);
+      return sendMessage(chatId, `Mess notice: ${period.toUpperCase()} is closed today (${closure.reason}). No meals will be deducted.`, null, tokenOverride);
     }
 
     try {
@@ -1585,14 +1564,14 @@ Ab aapko saare zaroori alerts real-time notification sound ke sath milenge!`;
           { member_id: member.id, service_date: today, meal_period: period, reason: 'Marked Skip via Telegram' },
           { onConflict: 'member_id,service_date,meal_period' }
         );
-        return sendMessage(chatId, `❌ *Attendance Updated:* You marked *NOT COMING* for ${period.toUpperCase()} today. Kitchen informed!`, null, tokenOverride);
+        return sendMessage(chatId, `Attendance updated: Marked as *Skipping ${period.toUpperCase()}* today. Kitchen informed.`, null, tokenOverride);
       } else {
         await supabase.from('meal_skips').delete().eq('member_id', member.id).eq('service_date', today).eq('meal_period', period);
-        return sendMessage(chatId, `✅ *Attendance Confirmed:* Marked *COMING* for ${period.toUpperCase()} today. 🍛`, null, tokenOverride);
+        return sendMessage(chatId, `Attendance confirmed: Marked as *Attending ${period.toUpperCase()}* today.`, null, tokenOverride);
       }
     } catch (err) {
       console.error('Error recording RSVP:', err.message);
-      return sendMessage(chatId, `⚠️ Could not record RSVP. Please try again.`, null, tokenOverride);
+      return sendMessage(chatId, 'Could not record RSVP. Please try again.', null, tokenOverride);
     }
   }
 
@@ -1827,7 +1806,13 @@ async function handleTextMessage(chatId, username, text, tokenOverride = null) {
 
     return sendMessage(
       chatId,
-      `🤖 *Thali.com Assistant Commands:*\n• /menu - Today's menu & RSVP\n• /pass - Digital QR Pass\n• /balance - Meal balance\n\n🔔 *Notification Tip:* Chat ko *Unmute* rakhein taaki Mess OFF ya emergency updates miss na hon!`,
+      `*Thali.com Mess Assistant Commands*
+
+/menu - View today's mess menu and RSVP
+/pass - Access your digital QR pass
+/balance - Check active meal balance
+
+Note: Keep this chat unmuted to receive emergency mess notices.`,
       getMemberMainMenuKeyboard(),
       tokenOverride
     );
@@ -2029,23 +2014,23 @@ async function syncBotProfiles() {
     // 1. Student Bot (@ThaliMessBot)
     await callTelegram('setMyName', { name: 'Thali Mess Assistant' });
     await callTelegram('setMyDescription', {
-      description: `🍛 Welcome to Thali.com Mess Assistant!\n\nYour personal dining & mess companion:\n• 🍛 Aaj ka breakfast, lunch & dinner menu live dekhein\n• 🎫 Instant Digital QR Pass mess entry ke liye\n• 📢 Emergency Mess OFF & timing alerts turant payein\n• ⚡ One-tap RSVP attendance mark karein\n• 💳 Meal balance check karein\n\nTap "Start" below to connect your dining pass in 5 seconds! 👇`
+      description: `Thali Mess Assistant is the official dining companion for Thali.com members. Use it to view daily menus, check meal balances, and access your digital QR pass.\n\nCommands:\n/menu - View today's mess menu and RSVP\n/pass - Access your digital QR pass\n/balance - Check active meal balance\n\nWebsite:\nhttps://thali.com`
     });
     await callTelegram('setMyShortDescription', {
-      short_description: 'Official Thali.com Dining Assistant. Live daily menu, Digital QR Pass, RSVPs & instant notices.'
+      short_description: 'Official dining assistant for Thali.com members.'
     });
 
     // 2. Admin Bot (@ThaliAdminBot)
     if (ADMIN_BOT_TOKEN) {
       await callTelegram('setMyName', { name: 'Thali Admin Portal' }, ADMIN_BOT_TOKEN);
       await callTelegram('setMyDescription', {
-        description: `👑 Dedicated Executive Admin Portal for Thali.com.\n\nKey capabilities:\n• 🛑 Declare Mess OFF with zero-absent protection\n• 📢 Instant broadcast alerts to all members\n• 📊 Real-time kitchen headcount forecasting\n• 🔍 Member lookup & meal top-up\n• 💰 Daily audit ledger\n\nRestricted access. PIN authentication required.`
+        description: `Thali Admin Portal is the management console for Thali.com administrators. Use it to broadcast notices, declare mess closures, inspect kitchen headcount, and manage memberships.\n\nCommands:\n/panel - Open admin console\n/headcount - View kitchen attendance forecast\n/broadcast - Send announcement to members\n/status - Check mess status`
       }, ADMIN_BOT_TOKEN);
       await callTelegram('setMyShortDescription', {
-        short_description: 'Dedicated Executive Admin Console for Thali.com Mess Management.'
+        short_description: 'Administrative console for Thali.com mess management.'
       }, ADMIN_BOT_TOKEN);
     }
-    console.log('✅ Bot descriptions, names & intro metadata synchronized successfully.');
+    console.log('Bot descriptions, names & intro metadata synchronized.');
   } catch (err) {
     console.warn('Note on syncBotProfiles:', err.message);
   }
