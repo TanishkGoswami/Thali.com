@@ -437,7 +437,56 @@ async function sendPhotoBuffer(chatId, buffer, caption = '', tokenOverride = nul
     });
     return await res.json();
   } catch (err) {
-    console.error('Error sending photo:', err.message);
+    console.error('Error sending photo buffer:', err.message);
+  }
+}
+
+async function sendPhotoFile(chatId, filePath, caption = '', replyMarkup = null, tokenOverride = null) {
+  try {
+    if (!fs.existsSync(filePath)) {
+      return sendMessage(chatId, caption, replyMarkup, tokenOverride);
+    }
+    const base = tokenOverride ? `https://api.telegram.org/bot${tokenOverride}` : TELEGRAM_API;
+    const fileBuffer = fs.readFileSync(filePath);
+    const formData = new FormData();
+    formData.append('chat_id', chatId);
+    if (caption) {
+      formData.append('caption', caption);
+      formData.append('parse_mode', 'Markdown');
+    }
+    formData.append('disable_notification', 'false');
+    if (replyMarkup) {
+      formData.append('reply_markup', JSON.stringify(replyMarkup));
+    }
+    const blob = new Blob([fileBuffer], { type: 'image/jpeg' });
+    formData.append('photo', blob, path.basename(filePath));
+
+    let res = await fetch(`${base}/sendPhoto`, {
+      method: 'POST',
+      body: formData
+    });
+    let json = await res.json();
+    if (!json?.ok && json?.description?.includes("can't parse entities")) {
+      const retryData = new FormData();
+      retryData.append('chat_id', chatId);
+      if (caption) retryData.append('caption', caption);
+      retryData.append('disable_notification', 'false');
+      if (replyMarkup) retryData.append('reply_markup', JSON.stringify(replyMarkup));
+      retryData.append('photo', blob, path.basename(filePath));
+      const retryRes = await fetch(`${base}/sendPhoto`, {
+        method: 'POST',
+        body: retryData
+      });
+      json = await retryRes.json();
+    }
+    if (!json?.ok) {
+      console.warn('sendPhotoFile fallback to text:', json?.description);
+      return sendMessage(chatId, caption, replyMarkup, tokenOverride);
+    }
+    return json;
+  } catch (err) {
+    console.error('Error in sendPhotoFile:', err.message);
+    return sendMessage(chatId, caption, replyMarkup, tokenOverride);
   }
 }
 
@@ -1273,6 +1322,8 @@ async function handleStartMember(chatId, username, text, tokenOverride = null) {
     }
   }
 
+  const bannerPath = path.resolve(__dirname, '../data/thali_bot_banner.jpg');
+
   // Check if already linked
   const member = await getMemberByChatId(chatId);
   if (member) {
@@ -1282,7 +1333,7 @@ Aapka account (\`${member.member_number}\`) already connected hai.
 Aaj ka menu dekhne ya pass check karne ke liye neeche diye gaye buttons use karein:
 
 🔔 *Notification Tip:* Ensure karein ki yeh chat *Unmute* hai taaki koi bhi urgent broadcast ya Mess OFF notice aapse miss na ho!`;
-    return sendMessage(chatId, welcomeBackMsg, getMemberMainMenuKeyboard(), tokenOverride);
+    return sendPhotoFile(chatId, bannerPath, welcomeBackMsg, getMemberMainMenuKeyboard(), tokenOverride);
   }
 
   const promptShare = `👋 *Namaste! Welcome to Thali.com Assistant!*
@@ -1300,7 +1351,7 @@ Telegram naye bots ko by-default *Mute* rakhta hai. Kripya top-right 3 dots (⋮
     one_time_keyboard: true
   };
 
-  return sendMessage(chatId, promptShare, keyboard, tokenOverride);
+  return sendPhotoFile(chatId, bannerPath, promptShare, keyboard, tokenOverride);
 }
 
 async function handleMenu(chatId, tokenOverride = null) {
@@ -1973,8 +2024,37 @@ async function pollAdminBot() {
 // Service Startup
 // -------------------------------------------------------------
 
+async function syncBotProfiles() {
+  try {
+    // 1. Student Bot (@ThaliMessBot)
+    await callTelegram('setMyName', { name: 'Thali Mess Assistant' });
+    await callTelegram('setMyDescription', {
+      description: `🍛 Welcome to Thali.com Mess Assistant!\n\nYour personal dining & mess companion:\n• 🍛 Aaj ka breakfast, lunch & dinner menu live dekhein\n• 🎫 Instant Digital QR Pass mess entry ke liye\n• 📢 Emergency Mess OFF & timing alerts turant payein\n• ⚡ One-tap RSVP attendance mark karein\n• 💳 Meal balance check karein\n\nTap "Start" below to connect your dining pass in 5 seconds! 👇`
+    });
+    await callTelegram('setMyShortDescription', {
+      short_description: 'Official Thali.com Dining Assistant. Live daily menu, Digital QR Pass, RSVPs & instant notices.'
+    });
+
+    // 2. Admin Bot (@ThaliAdminBot)
+    if (ADMIN_BOT_TOKEN) {
+      await callTelegram('setMyName', { name: 'Thali Admin Portal' }, ADMIN_BOT_TOKEN);
+      await callTelegram('setMyDescription', {
+        description: `👑 Dedicated Executive Admin Portal for Thali.com.\n\nKey capabilities:\n• 🛑 Declare Mess OFF with zero-absent protection\n• 📢 Instant broadcast alerts to all members\n• 📊 Real-time kitchen headcount forecasting\n• 🔍 Member lookup & meal top-up\n• 💰 Daily audit ledger\n\nRestricted access. PIN authentication required.`
+      }, ADMIN_BOT_TOKEN);
+      await callTelegram('setMyShortDescription', {
+        short_description: 'Dedicated Executive Admin Console for Thali.com Mess Management.'
+      }, ADMIN_BOT_TOKEN);
+    }
+    console.log('✅ Bot descriptions, names & intro metadata synchronized successfully.');
+  } catch (err) {
+    console.warn('Note on syncBotProfiles:', err.message);
+  }
+}
+
 async function start() {
   console.log('🤖 Connecting to Telegram Bot API...');
+
+  await syncBotProfiles();
 
   const mainMe = await callTelegram('getMe');
   if (mainMe?.ok) {
