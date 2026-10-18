@@ -2061,10 +2061,25 @@ async function syncBotProfiles() {
     // 1. Student Bot (@ThaliMessBot)
     await callTelegram('setMyName', { name: 'Thali Mess Assistant' });
     await callTelegram('setMyDescription', {
-      description: `Thali Mess Assistant is the official dining companion for Thali.com members. Use it to view daily menus, check meal balances, and access your digital QR pass.\n\nCommands:\n/menu - View today's mess menu and RSVP\n/pass - Access your digital QR pass\n/balance - Check active meal balance\n\nWebsite:\nhttps://thali.com`
+      description: `Thali Mess Assistant is the official dining companion for Thali.com members. Use it to view daily menus, check meal balances, and access your digital QR pass.\n\nCommands:\n/menu - View today's mess menu and RSVP\n/pass - Access your digital QR pass\n/balance - Check active meal balance\n\nWebsite:\nhttps://thali-com.vercel.app`
     });
     await callTelegram('setMyShortDescription', {
       short_description: 'Official dining assistant for Thali.com members.'
+    });
+    await callTelegram('setChatMenuButton', {
+      menu_button: {
+        type: 'web_app',
+        text: 'Open',
+        web_app: { url: 'https://thali-com.vercel.app' }
+      }
+    });
+    await callTelegram('setMyCommands', {
+      commands: [
+        { command: 'menu', description: "View today's menu and RSVP" },
+        { command: 'pass', description: 'Access your digital QR pass' },
+        { command: 'balance', description: 'Check active meal balance' },
+        { command: 'start', description: 'Open main menu' }
+      ]
     });
 
     // 2. Admin Bot (@ThaliAdminBot)
@@ -2076,8 +2091,16 @@ async function syncBotProfiles() {
       await callTelegram('setMyShortDescription', {
         short_description: 'Administrative console for Thali.com mess management.'
       }, ADMIN_BOT_TOKEN);
+      await callTelegram('setMyCommands', {
+        commands: [
+          { command: 'panel', description: 'Open admin console' },
+          { command: 'headcount', description: 'View kitchen attendance forecast' },
+          { command: 'broadcast', description: 'Send announcement to members' },
+          { command: 'status', description: 'Check mess status' }
+        ]
+      }, ADMIN_BOT_TOKEN);
     }
-    console.log('Bot descriptions, names & intro metadata synchronized.');
+    console.log('Bot descriptions, menu button & commands synchronized.');
   } catch (err) {
     console.warn('Note on syncBotProfiles:', err.message);
   }
