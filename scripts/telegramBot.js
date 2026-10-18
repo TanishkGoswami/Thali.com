@@ -1342,10 +1342,43 @@ Note: Keep this chat unmuted to receive emergency mess notices.`;
   return sendMessage(chatId, promptShare, keyboard, tokenOverride);
 }
 
-async function handleMenu(chatId, tokenOverride = null) {
+async function handleMenu(chatId, tokenOverride = null, messageId = null) {
   const today = getTodayDateString();
-  const closures = readMessClosures()[today] || {};
+  const todayClosures = readMessClosures()[today] || {};
 
+  const isAllDayClosed = Boolean(
+    todayClosures.all_day || 
+    (todayClosures.breakfast && todayClosures.lunch && todayClosures.dinner)
+  );
+
+  // Case 1: Entire day is closed - Do not show any dishes or RSVP buttons
+  if (isAllDayClosed) {
+    const reason = todayClosures.all_day?.reason || 
+      todayClosures.lunch?.reason || 
+      todayClosures.dinner?.reason || 
+      todayClosures.breakfast?.reason ||
+      'Festival Holiday';
+
+    const closedAllDayMsg = `*Today's Mess Status* (${today})
+
+Mess is closed for the entire day.
+Reason: ${reason}
+
+Note: No meals will be deducted from your plan and attendance is marked excused.`;
+
+    const keyboard = {
+      inline_keyboard: [
+        [{ text: 'Back to Menu', callback_data: 'action_back_menu' }]
+      ]
+    };
+
+    if (messageId) {
+      return editMessageText(chatId, messageId, closedAllDayMsg, keyboard, tokenOverride);
+    }
+    return sendMessage(chatId, closedAllDayMsg, keyboard, tokenOverride);
+  }
+
+  // Case 2: Partial day closure or open day
   const { data: menus } = await supabase
     .from('menus')
     .select('*, items:menu_items(*)')
@@ -1366,29 +1399,40 @@ async function handleMenu(chatId, tokenOverride = null) {
     if (dMenu?.items?.length) dinnerText = dMenu.items.map(i => i.name).join(', ');
   }
 
-  const bNotice = closures.breakfast ? `\n(Breakfast is closed today: ${closures.breakfast.reason})` : '';
-  const lNotice = closures.lunch ? `\n(Lunch is closed today: ${closures.lunch.reason})` : '';
-  const dNotice = closures.dinner ? `\n(Dinner is closed today: ${closures.dinner.reason})` : '';
+  const sections = [];
 
-  const menuMsg = `*Today's Mess Menu* (${today})
+  // Breakfast: Show closed notice OR active dishes (never both)
+  if (todayClosures.breakfast) {
+    sections.push(`*Breakfast (07:30 AM – 10:30 AM)*\nClosed: ${todayClosures.breakfast.reason} (No meal deducted)`);
+  } else {
+    sections.push(`*Breakfast (07:30 AM – 10:30 AM)*\n${breakfastText.split(', ').map(i => `• ${i}`).join('\n')}`);
+  }
 
-*Breakfast (07:30 AM – 10:30 AM)*${bNotice}
-${breakfastText.split(', ').map(i => `• ${i}`).join('\n')}
+  // Lunch: Show closed notice OR active dishes (never both)
+  if (todayClosures.lunch) {
+    sections.push(`*Lunch (12:30 PM – 03:30 PM)*\nClosed: ${todayClosures.lunch.reason} (No meal deducted)`);
+  } else {
+    sections.push(`*Lunch (12:30 PM – 03:30 PM)*\n${lunchText.split(', ').map(i => `• ${i}`).join('\n')}`);
+  }
 
-*Lunch (12:30 PM – 03:30 PM)*${lNotice}
-${lunchText.split(', ').map(i => `• ${i}`).join('\n')}
+  // Dinner: Show closed notice OR active dishes (never both)
+  if (todayClosures.dinner) {
+    sections.push(`*Dinner (07:30 PM – 10:30 PM)*\nClosed: ${todayClosures.dinner.reason} (No meal deducted)`);
+  } else {
+    sections.push(`*Dinner (07:30 PM – 10:30 PM)*\n${dinnerText.split(', ').map(i => `• ${i}`).join('\n')}`);
+  }
 
-*Dinner (07:30 PM – 10:30 PM)*${dNotice}
-${dinnerText.split(', ').map(i => `• ${i}`).join('\n')}`;
+  const menuMsg = `*Today's Mess Menu* (${today})\n\n${sections.join('\n\n')}`;
 
+  // Only show RSVP buttons for open meal periods
   const rows = [];
-  if (!closures.lunch) {
+  if (!todayClosures.lunch) {
     rows.push([
       { text: 'Attending Lunch', callback_data: 'rsvp_attend_lunch' },
       { text: 'Skip Lunch', callback_data: 'rsvp_skip_lunch' }
     ]);
   }
-  if (!closures.dinner) {
+  if (!todayClosures.dinner) {
     rows.push([
       { text: 'Attending Dinner', callback_data: 'rsvp_attend_dinner' },
       { text: 'Skip Dinner', callback_data: 'rsvp_skip_dinner' }
@@ -1397,6 +1441,9 @@ ${dinnerText.split(', ').map(i => `• ${i}`).join('\n')}`;
   rows.push([{ text: 'Back to Menu', callback_data: 'action_back_menu' }]);
 
   const keyboard = { inline_keyboard: rows };
+  if (messageId) {
+    return editMessageText(chatId, messageId, menuMsg, keyboard, tokenOverride);
+  }
   return sendMessage(chatId, menuMsg, keyboard, tokenOverride);
 }
 
@@ -1516,7 +1563,7 @@ async function handleCallbackQuery(cbQuery, tokenOverride = null) {
   }
 
   // 2. Member Actions
-  if (data === 'action_menu') return handleMenu(chatId, tokenOverride);
+  if (data === 'action_menu') return handleMenu(chatId, tokenOverride, messageId);
   if (data === 'action_pass') return handlePass(chatId, tokenOverride);
   if (data === 'action_balance') return handleBalance(chatId, tokenOverride);
 
