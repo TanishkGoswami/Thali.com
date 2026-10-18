@@ -1347,19 +1347,14 @@ async function handleCallbackQuery(cbQuery, tokenOverride = null) {
 
   await answerCallbackQuery(cbQuery.id, '', tokenOverride);
 
-  // If callback is on MainBot but targets Admin action, redirect
+  // If callback is on MainBot but targets Admin action, block completely without revealing admin bot
   const isAdminAction = data.startsWith('admin_') || data.startsWith('messoff_') || data.startsWith('messon_') || data.startsWith('bcast_');
   if (!tokenOverride && isAdminAction) {
     return editMessageText(
       chatId,
       messageId,
-      `👑 *Thali.com Admin Notice*\n\nYeh controls dedicated admin bot par active hain:\n👉 [@ThaliAdminBot](https://t.me/ThaliAdminBot)`,
-      {
-        inline_keyboard: [
-          [{ text: '👑 Open @ThaliAdminBot', url: 'https://t.me/ThaliAdminBot' }],
-          [{ text: '🍛 Today\'s Menu & RSVP', callback_data: 'action_menu' }]
-        ]
-      }
+      `⚠️ *Option Unavailable*\n\nStudent dining pass aur menu ke liye neeche diye gaye buttons use karein:`,
+      getMemberMainMenuKeyboard()
     );
   }
 
@@ -1594,21 +1589,6 @@ async function handleTextMessage(chatId, username, text, tokenOverride = null) {
 
   // 1. If on Main Student Bot (@ThaliMessBot)
   if (!tokenOverride) {
-    const isAdminCmd = clean.startsWith('/admin') || clean.startsWith('/messoff') || clean.startsWith('/messon') || clean.startsWith('/broadcast') || clean.startsWith('/headcount') || clean.startsWith('/ledger') || clean.startsWith('/member') || clean.startsWith('/setmenu');
-
-    if (isAdminCmd) {
-      return sendMessage(
-        chatId,
-        `👑 *Thali.com Admin Console Notice*\n\nAdmin controls aur management actions dedicated bot par hain:\n👉 [@ThaliAdminBot](https://t.me/ThaliAdminBot)\n\nStudent QR pass aur daily menu ke liye neeche buttons use karein:`,
-        {
-          inline_keyboard: [
-            [{ text: '👑 Go to @ThaliAdminBot', url: 'https://t.me/ThaliAdminBot' }],
-            [{ text: '🍛 Today\'s Menu & RSVP', callback_data: 'action_menu' }]
-          ]
-        }
-      );
-    }
-
     if (clean.startsWith('/start')) return handleStartMember(chatId, username, clean, tokenOverride);
     if (clean.startsWith('/menu') || clean.startsWith('/rsvp')) return handleMenu(chatId, tokenOverride);
     if (clean.startsWith('/pass')) return handlePass(chatId, tokenOverride);
@@ -1632,7 +1612,7 @@ async function handleTextMessage(chatId, username, text, tokenOverride = null) {
     return sendMessage(
       chatId,
       `🤖 *Thali.com Assistant Commands:*\n• /menu - Today's menu & RSVP\n• /pass - Digital QR Pass\n• /balance - Meal balance`,
-      null,
+      getMemberMainMenuKeyboard(),
       tokenOverride
     );
   }
