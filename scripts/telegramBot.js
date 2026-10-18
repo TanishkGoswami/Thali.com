@@ -19,6 +19,29 @@ if (!fs.existsSync(dataDir)) {
 }
 
 // -------------------------------------------------------------
+// In-Memory Admin Conversation States & Rate-Limiting
+// -------------------------------------------------------------
+const adminState = {};
+
+function getAdminState(chatId) {
+  if (!adminState[String(chatId)]) {
+    adminState[String(chatId)] = {
+      awaiting: null,
+      tempData: {},
+      failedPins: 0,
+      lockedUntil: 0
+    };
+  }
+  return adminState[String(chatId)];
+}
+
+function clearAdminAwaiting(chatId) {
+  const state = getAdminState(chatId);
+  state.awaiting = null;
+  state.tempData = {};
+}
+
+// -------------------------------------------------------------
 // Persistent Storage Helpers
 // -------------------------------------------------------------
 
@@ -46,7 +69,7 @@ function saveTelegramLink(chatId, profile, username = '') {
       linkedAt: new Date().toISOString()
     };
     fs.writeFileSync(linksFilePath, JSON.stringify(links, null, 2), 'utf-8');
-    console.log(`✅ Stored link: Chat ${chatId} -> ${profile.full_name} (${profile.member_number})`);
+    console.log(`✅ Stored member link: Chat ${chatId} -> ${profile.full_name} (${profile.member_number})`);
   } catch (err) {
     console.error('Error saving telegram_links.json:', err.message);
   }
@@ -146,36 +169,25 @@ function saveAdminChat(chatId, info) {
   }
 }
 
-// Check if a chat ID belongs to an authorized Admin
-async function isAuthorizedAdmin(chatId) {
+function removeAdminChat(chatId) {
+  try {
+    const admins = readAdminChats();
+    delete admins[String(chatId)];
+    fs.writeFileSync(adminChatsFilePath, JSON.stringify(admins, null, 2), 'utf-8');
+    console.log(`🔒 Logged out Admin Chat: ${chatId}`);
+  } catch (err) {
+    console.error('Error removing admin chat:', err.message);
+  }
+}
+
+// Strict Check: Is this chat ID currently authenticated as an Admin?
+function isAuthorizedAdmin(chatId) {
   const admins = readAdminChats();
-  if (admins[String(chatId)]) return true;
-
-  const links = readTelegramLinks();
-  const linked = links[String(chatId)];
-  if (linked?.role === 'owner_admin') {
-    saveAdminChat(chatId, { name: linked.fullName, role: 'owner_admin' });
-    return true;
-  }
-
-  if (linked?.memberId) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role, full_name')
-      .eq('id', linked.memberId)
-      .maybeSingle();
-
-    if (profile?.role === 'owner_admin') {
-      saveAdminChat(chatId, { name: profile.full_name, role: 'owner_admin' });
-      return true;
-    }
-  }
-
-  return false;
+  return Boolean(admins[String(chatId)]);
 }
 
 // -------------------------------------------------------------
-// Configuration & Clients
+// Configuration & Supabase Client
 // -------------------------------------------------------------
 
 const env = {};
@@ -204,7 +216,6 @@ if (!BOT_TOKEN) {
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
-const ADMIN_TELEGRAM_API = ADMIN_BOT_TOKEN ? `https://api.telegram.org/bot${ADMIN_BOT_TOKEN}` : null;
 
 // -------------------------------------------------------------
 // Telegram HTTP Helpers
@@ -343,6 +354,9 @@ function getAdminPanelKeyboard() {
       [
         { text: '💰 Daily Ledger & Audit', callback_data: 'admin_ledger' },
         { text: '🔄 Refresh Status', callback_data: 'admin_refresh' }
+      ],
+      [
+        { text: '🔒 Log Out / Lock Console', callback_data: 'admin_logout' }
       ]
     ]
   };
@@ -357,7 +371,7 @@ function getMessOffSelectKeyboard() {
       ],
       [
         { text: '🌙 Dinner OFF', callback_data: 'messoff_select_dinner' },
-        { text: '📅 Full Day OFF', callback_data: 'messoff_select_all_day' }
+        { text: '📅 Entire Day OFF', callback_data: 'messoff_select_all_day' }
       ],
       [{ text: '🔙 Back to Admin Panel', callback_data: 'admin_panel' }]
     ]
@@ -367,10 +381,21 @@ function getMessOffSelectKeyboard() {
 function getMessOffReasonsKeyboard(period) {
   return {
     inline_keyboard: [
-      [{ text: '🔧 Kitchen Maintenance / Deep Clean', callback_data: `messoff_exec_${period}_Kitchen Maintenance & Cleaning` }],
-      [{ text: '🎉 Public Holiday / Festival Off', callback_data: `messoff_exec_${period}_Festival Holiday` }],
-      [{ text: '🚨 Staff Shortage / Emergency', callback_data: `messoff_exec_${period}_Staff Emergency & Unavoidable Closure` }],
+      [{ text: '🔧 Kitchen Deep Cleaning & Maintenance', callback_data: `messoff_askconfirm_${period}_Kitchen Maintenance & Deep Clean` }],
+      [{ text: '🎉 Public Holiday / Festival Off', callback_data: `messoff_askconfirm_${period}_Festival Holiday Off` }],
+      [{ text: '🌧️ Heavy Rain / Water Supply Disruption', callback_data: `messoff_askconfirm_${period}_Severe Weather & Supply Disruption` }],
+      [{ text: '🚨 Staff Shortage / Emergency', callback_data: `messoff_askconfirm_${period}_Staff Emergency Closure` }],
+      [{ text: '✍️ Type Custom Reason', callback_data: `messoff_custom_${period}` }],
       [{ text: '🔙 Cancel', callback_data: 'admin_panel' }]
+    ]
+  };
+}
+
+function getMessOffConfirmKeyboard(period, reason) {
+  return {
+    inline_keyboard: [
+      [{ text: '✅ Yes, Confirm & Send Alert', callback_data: `messoff_exec_${period}_${reason}` }],
+      [{ text: '❌ Cancel (Do Nothing)', callback_data: 'admin_panel' }]
     ]
   };
 }
@@ -396,10 +421,138 @@ function getBroadcastTemplatesKeyboard() {
     inline_keyboard: [
       [{ text: '🍲 Special Feast Tonight (Gulab Jamun)', callback_data: 'bcast_template_feast' }],
       [{ text: '⏰ Dinner Delayed by 30 Minutes', callback_data: 'bcast_template_delay' }],
-      [{ text: '💳 Monthly Pass Renewal Due Notice', callback_data: 'bcast_template_fees' }],
+      [{ text: '💳 Monthly Pass Renewal Due Alert', callback_data: 'bcast_template_fees' }],
+      [{ text: '✍️ Type Custom Announcement', callback_data: 'bcast_custom_prompt' }],
       [{ text: '🔙 Back to Admin Panel', callback_data: 'admin_panel' }]
     ]
   };
+}
+
+function getBroadcastConfirmKeyboard() {
+  return {
+    inline_keyboard: [
+      [{ text: '🚀 Yes, Broadcast to All Members', callback_data: 'bcast_custom_execute' }],
+      [{ text: '❌ Cancel', callback_data: 'admin_panel' }]
+    ]
+  };
+}
+
+// -------------------------------------------------------------
+// Admin Authentication Flow & Lock Screen
+// -------------------------------------------------------------
+
+async function sendAdminAuthPrompt(chatId, tokenOverride, errorMsg = '') {
+  const state = getAdminState(chatId);
+
+  // Check rate limit
+  if (state.lockedUntil > Date.now()) {
+    const remMinutes = Math.ceil((state.lockedUntil - Date.now()) / (60 * 1000));
+    return sendMessage(
+      chatId,
+      `🚨 *Security Lockout: Too Many Failed PIN Attempts*\n\nSecurity ke kaaran aapka session *${remMinutes} minutes* ke liye lock ho gaya hai.\nKripya baad me try karein.`,
+      null,
+      tokenOverride
+    );
+  }
+
+  const errBanner = errorMsg ? `\n\n⚠️ *${errorMsg}*\n` : '';
+
+  const lockMsg = `🔒 *Thali.com Administrator Console*
+_Protected Executive Terminal_${errBanner}
+
+Yeh bot sirf authorized Mess Owners aur Management ke liye protected hai.
+
+Kripya apna **4-Digit Secret Admin PIN** type karke bhejein:
+_(Default Admin PIN: \`1234\`)_
+
+Ya neeche diye gaye button se registered admin phone verify karein:`;
+
+  const keyboard = {
+    keyboard: [[{ text: '📱 Verify Registered Admin Number', request_contact: true }]],
+    resize_keyboard: true,
+    one_time_keyboard: true
+  };
+
+  return sendMessage(chatId, lockMsg, keyboard, tokenOverride);
+}
+
+async function verifyAdminPin(chatId, pin, tokenOverride) {
+  const state = getAdminState(chatId);
+
+  if (state.lockedUntil > Date.now()) {
+    return sendAdminAuthPrompt(chatId, tokenOverride);
+  }
+
+  // 1. Check matching PIN in Supabase for role = 'owner_admin'
+  const { data: adminProfiles } = await supabase
+    .from('profiles')
+    .select('id, full_name, role, pin_code')
+    .eq('role', 'owner_admin');
+
+  const matched = (adminProfiles || []).find(p => p.pin_code === pin || (pin === '1234' && p.role === 'owner_admin'));
+
+  if (matched) {
+    // Successfully verified!
+    state.failedPins = 0;
+    saveAdminChat(chatId, {
+      name: matched.full_name || 'Admin',
+      role: 'owner_admin',
+      memberId: matched.id
+    });
+
+    await sendMessage(
+      chatId,
+      `✅ *Authentication Successful!* 🛡️\nWelcome, *${matched.full_name}*! Admin session unlock ho gaya hai.`,
+      { remove_keyboard: true },
+      tokenOverride
+    );
+
+    return handleAdminPanel(chatId, tokenOverride);
+  }
+
+  // Failed attempt
+  state.failedPins = (state.failedPins || 0) + 1;
+  if (state.failedPins >= 5) {
+    state.lockedUntil = Date.now() + 15 * 60 * 1000; // 15 mins lock
+    return sendMessage(
+      chatId,
+      `🚨 *Security Alert: 5 Galat PIN Attempts*\n\nAapka chat ID 15 minutes ke liye lock ho gaya hai brute-force protection ke liye.`,
+      null,
+      tokenOverride
+    );
+  }
+
+  return sendAdminAuthPrompt(chatId, tokenOverride, `Galat PIN! (${state.failedPins}/5 attempts used)`);
+}
+
+async function verifyAdminContact(chatId, contact, tokenOverride) {
+  const rawPhone = contact.phone_number.replace(/\D/g, '').slice(-10);
+
+  const { data: adminProfiles } = await supabase
+    .from('profiles')
+    .select('id, full_name, role, phone')
+    .eq('role', 'owner_admin')
+    .ilike('phone', `%${rawPhone}%`);
+
+  if (adminProfiles && adminProfiles.length > 0) {
+    const admin = adminProfiles[0];
+    saveAdminChat(chatId, {
+      name: admin.full_name || 'Admin',
+      role: 'owner_admin',
+      memberId: admin.id
+    });
+
+    await sendMessage(
+      chatId,
+      `✅ *Phone Verified!* 🛡️\nWelcome, *${admin.full_name}*! Registered phone number +91 ${rawPhone} verified.`,
+      { remove_keyboard: true },
+      tokenOverride
+    );
+
+    return handleAdminPanel(chatId, tokenOverride);
+  }
+
+  return sendAdminAuthPrompt(chatId, tokenOverride, `Number +91 ${rawPhone} kisi Admin account se link nahi hai.`);
 }
 
 // -------------------------------------------------------------
@@ -407,6 +560,10 @@ function getBroadcastTemplatesKeyboard() {
 // -------------------------------------------------------------
 
 async function handleAdminPanel(chatId, tokenOverride = null, messageId = null) {
+  if (!isAuthorizedAdmin(chatId)) {
+    return sendAdminAuthPrompt(chatId, tokenOverride);
+  }
+
   const today = getTodayDateString();
   const closures = readMessClosures()[today] || {};
   const closedKeys = Object.keys(closures);
@@ -417,12 +574,12 @@ async function handleAdminPanel(chatId, tokenOverride = null, messageId = null) 
     : `🟢 *Mess Operational Status:* All meal periods ACTIVE`;
 
   const panelMsg = `👑 *Thali.com Administrator Console*
-📅 *Date:* ${today}
+📅 *Service Date:* ${today}
 👥 *Connected Members:* *${Object.keys(links).length} Diners*
 
 ${statusLine}
 
-Neeche diye gaye admin controls se mess manage karein:`;
+Neeche diye gaye buttons se mess manage karein:`;
 
   if (messageId) {
     return editMessageText(chatId, messageId, panelMsg, getAdminPanelKeyboard(), tokenOverride);
@@ -430,17 +587,42 @@ Neeche diye gaye admin controls se mess manage karein:`;
   return sendMessage(chatId, panelMsg, getAdminPanelKeyboard(), tokenOverride);
 }
 
-// Handler: Declare Mess OFF (Prompt Period)
+// Handler: Declare Mess OFF (Period Prompt)
 async function handleMessOffPrompt(chatId, tokenOverride = null, messageId = null) {
-  const promptMsg = `🛑 *Declare Mess OFF & Protect Members*
+  const promptMsg = `🛑 *Declare Mess OFF (Emergency & Holiday)*
 
-Select karein ki kaunsa meal period OFF karna hai:
+Select karein ki kaunsa meal period band karna hai:
 _(Note: Mess OFF hone par kisi bhi member ki absent mark nahi hogi aur na hi meal pass deduct hoga.)_`;
 
   if (messageId) {
     return editMessageText(chatId, messageId, promptMsg, getMessOffSelectKeyboard(), tokenOverride);
   }
   return sendMessage(chatId, promptMsg, getMessOffSelectKeyboard(), tokenOverride);
+}
+
+// Handler: Ask Confirmation before Executing Mess OFF
+async function handleMessOffAskConfirm(chatId, period, reason, tokenOverride = null, messageId = null) {
+  const today = getTodayDateString();
+  const periodLabel = period === 'all_day' ? 'POORA DIN (FULL DAY)' : period.toUpperCase();
+
+  const confirmMsg = `⚠️ *CONFIRM MESS CLOSURE* ⚠️
+
+🛑 *Period:* *${periodLabel}* (${today})
+📝 *Reason:* ${reason}
+
+🛡️ *Automatic Member Protections:*
+• Sabhi members ko *EXCUSED (Zero Absent)* mark kiya jayega
+• Kisi ke pass se *koi meal deduct nahi hoga*
+• Sabhi registered students ko *push broadcast* deliver hoga
+
+Kya aap confirm karna chahte hain?`;
+
+  const kb = getMessOffConfirmKeyboard(period, reason);
+
+  if (messageId) {
+    return editMessageText(chatId, messageId, confirmMsg, kb, tokenOverride);
+  }
+  return sendMessage(chatId, confirmMsg, kb, tokenOverride);
 }
 
 // Handler: Execute Mess OFF + Auto-Excuse + Broadcast
@@ -488,7 +670,7 @@ async function handleExecuteMessOn(chatId, period, tokenOverride = null, message
   // Broadcast to members
   const memberAlert = `🟢 *MESS REOPENED* 🟢
 
-Aapki mess *${periodLabel}* ke liye waapas khul gayi hai! Normal dining & QR pass check-in active hai.`;
+Aapki mess *${periodLabel}* ke liye waapas shuru ho gayi hai! Normal dining & QR pass check-in active hai.`;
 
   const report = await broadcastToAllMembers(memberAlert);
 
@@ -507,7 +689,6 @@ Aapki mess *${periodLabel}* ke liye waapas khul gayi hai! Normal dining & QR pas
 async function handleHeadcountReport(chatId, tokenOverride = null, messageId = null) {
   const today = getTodayDateString();
 
-  // 1. Fetch total active subscribers
   const { data: subs } = await supabase
     .from('subscriptions')
     .select('id, member_id, status')
@@ -515,7 +696,6 @@ async function handleHeadcountReport(chatId, tokenOverride = null, messageId = n
 
   const totalDiners = subs?.length || 45;
 
-  // 2. Fetch skips for today
   const { data: skips } = await supabase
     .from('meal_skips')
     .select('meal_period')
@@ -533,7 +713,7 @@ async function handleHeadcountReport(chatId, tokenOverride = null, messageId = n
 
   const reportMsg = `📊 *Kitchen Headcount & Cooking Forecast*
 📅 *Service Date:* ${today}
-👥 *Total Active Diners:* ${totalDiners}
+👥 *Total Active Subscribers:* ${totalDiners} Diners
 
 🌅 *Breakfast (07:30 AM – 10:30 AM)*
 Expected Headcount: ${bStatus}
@@ -544,8 +724,8 @@ Expected Headcount: ${lStatus}
 🌙 *Dinner (07:30 PM – 10:30 PM)*
 Expected Headcount: ${dStatus}
 
-💡 *Cooking Advisory:*
-RSVP data ke mutabik exact quantity cook karein taaki kitchen food waste zero rahe.`;
+💡 *Kitchen Waste Advisory:*
+Kitchen staff ko exact portions cook karne ka instruction dein taaki zero food waste rahe.`;
 
   const kb = {
     inline_keyboard: [
@@ -577,7 +757,9 @@ async function handleMemberLookup(chatId, query, tokenOverride = null) {
   const { data: profiles } = await queryBuilder.limit(3);
 
   if (!profiles || profiles.length === 0) {
-    return sendMessage(chatId, `🔍 Koi member nahi mila query: \`${query}\` ke liye.\nFormat: \`/member M-112\` ya mobile number.`, null, tokenOverride);
+    return sendMessage(chatId, `🔍 Koi member nahi mila query: \`${query}\` ke liye.\nFormat: \`M-112\` ya mobile number.`, {
+      inline_keyboard: [[{ text: '🔙 Back to Admin Panel', callback_data: 'admin_panel' }]]
+    }, tokenOverride);
   }
 
   for (const profile of profiles) {
@@ -599,7 +781,7 @@ async function handleMemberLookup(chatId, query, tokenOverride = null) {
       remaining = Math.max(0, activeSub.meals_granted + consumed);
     }
 
-    const memberCard = `👤 *Member Profile*
+    const memberCard = `👤 *Member Details*
 🆔 *ID:* \`${profile.member_number}\`
 📛 *Name:* ${profile.full_name}
 📱 *Phone:* \`+91 ${profile.phone || 'N/A'}\`
@@ -650,7 +832,7 @@ async function handleAddMeals(chatId, profileId, count, tokenOverride = null, me
     );
   }
 
-  const successMsg = `✅ Successfully added *+${count} Meals* to *${profile.full_name}* (\`${profile.member_number}\`)!\nMember ko notification bhej di gayi hai.`;
+  const successMsg = `✅ Successfully added *+${count} Meals* to *${profile.full_name}* (\`${profile.member_number}\`)!\nMember ko notification deliver ho gayi hai.`;
 
   if (messageId) {
     return editMessageText(chatId, messageId, successMsg, getAdminPanelKeyboard(), tokenOverride);
@@ -663,7 +845,7 @@ async function handleSetMenu(chatId, period, menuText, tokenOverride = null) {
   const today = getTodayDateString();
   const cleanPeriod = period.toLowerCase();
   if (!['breakfast', 'lunch', 'dinner'].includes(cleanPeriod)) {
-    return sendMessage(chatId, `⚠️ Invalid period. Use: \`/setmenu lunch Paneer Butter Masala, Roti, Rice\``, null, tokenOverride);
+    return sendMessage(chatId, `⚠️ Invalid period. Select Breakfast, Lunch, or Dinner.`, null, tokenOverride);
   }
 
   // Upsert into menus table
@@ -685,7 +867,6 @@ async function handleSetMenu(chatId, period, menuText, tokenOverride = null) {
   }
 
   if (menuId) {
-    // Delete existing items and insert new
     await supabase.from('menu_items').delete().eq('menu_id', menuId);
     const items = menuText.split(',').map(s => s.trim()).filter(Boolean);
     const rows = items.map(name => ({ menu_id: menuId, name, category: 'Main' }));
@@ -697,7 +878,7 @@ async function handleSetMenu(chatId, period, menuText, tokenOverride = null) {
 🍽️ Items:
 ${menuText.split(',').map(i => `• ${i.trim()}`).join('\n')}
 
-Website aur Telegram bot dono par live update ho gaya hai!`;
+Website aur Member Telegram Bot dono par live update ho gaya hai!`;
 
   return sendMessage(chatId, msg, getAdminPanelKeyboard(), tokenOverride);
 }
@@ -723,14 +904,14 @@ async function handleDailyLedger(chatId, tokenOverride = null, messageId = null)
   const ledgerMsg = `💰 *Daily Check-In & Financial Ledger*
 📅 *Audit Date:* ${today}
 
-📊 *Today's Counter Check-Ins:*
-• Valid Dining Check-Ins: *${accepted} meals*
+📊 *Today's Counter Activity:*
+• Successful Diners: *${accepted} meals*
 • Denied / Duplicate Scans: *${rejected} scans*
 
-👥 *Active Plan Subscriptions:* *${activeSubs?.length || 0} active passes*
+👥 *Active Plan Subscribers:* *${activeSubs?.length || 0} active passes*
 💵 *Estimated Monthly Run Rate:* ₹${(activeSubs?.length || 0) * 2800}
 
-_Sub dues aur meal balances automated auditable ledger me synced hain._`;
+_Sub dues aur meal balances automated ledger me synced hain._`;
 
   if (messageId) {
     return editMessageText(chatId, messageId, ledgerMsg, getAdminPanelKeyboard(), tokenOverride);
@@ -738,30 +919,8 @@ _Sub dues aur meal balances automated auditable ledger me synced hain._`;
   return sendMessage(chatId, ledgerMsg, getAdminPanelKeyboard(), tokenOverride);
 }
 
-// Handler: /admin_login PIN
-async function handleAdminLogin(chatId, pin, tokenOverride = null) {
-  if (pin === '1234') {
-    saveAdminChat(chatId, { name: 'Mess Administrator', role: 'owner_admin' });
-    return handleAdminPanel(chatId, tokenOverride);
-  }
-
-  const { data: adminProfile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('role', 'owner_admin')
-    .eq('pin_code', pin)
-    .maybeSingle();
-
-  if (adminProfile) {
-    saveAdminChat(chatId, { name: adminProfile.full_name, role: 'owner_admin' });
-    return handleAdminPanel(chatId, tokenOverride);
-  }
-
-  return sendMessage(chatId, `❌ Invalid Admin PIN. Access denied.`, null, tokenOverride);
-}
-
 // -------------------------------------------------------------
-// Member Flow Handlers (Unchanged, 100% Intact & Protected)
+// Member Flow Handlers (On @ThaliMessBot)
 // -------------------------------------------------------------
 
 async function getMemberByChatId(chatId) {
@@ -825,15 +984,7 @@ Neeche diye gaye buttons se aap menu dekh sakte hain aur attendance mark kar sak
   return sendMessage(chatId, welcomeMsg, getMemberMainMenuKeyboard(), tokenOverride);
 }
 
-async function handleStart(chatId, username, text, tokenOverride = null) {
-  // If on dedicated Admin Bot, show admin panel
-  if (tokenOverride) {
-    if (await isAuthorizedAdmin(chatId)) {
-      return handleAdminPanel(chatId, tokenOverride);
-    }
-    return sendMessage(chatId, `⛔ Access Denied. Yeh bot sirf authorized mess owners ke liye hai.`, null, tokenOverride);
-  }
-
+async function handleStartMember(chatId, username, text, tokenOverride = null) {
   const parts = text.split(' ');
   const payload = parts[1]?.trim();
 
@@ -903,7 +1054,6 @@ async function handleMenu(chatId, tokenOverride = null) {
     if (dMenu?.items?.length) dinnerText = dMenu.items.map(i => i.name).join(', ');
   }
 
-  // Format closure warnings if mess is off
   const bNotice = closures.breakfast ? `\n⚠️ _(Note: Breakfast is OFF today - ${closures.breakfast.reason}. No meal deducted.)_` : '';
   const lNotice = closures.lunch ? `\n⚠️ _(Note: Lunch is OFF today - ${closures.lunch.reason}. No meal deducted.)_` : '';
   const dNotice = closures.dinner ? `\n⚠️ _(Note: Dinner is OFF today - ${closures.dinner.reason}. No meal deducted.)_` : '';
@@ -921,7 +1071,6 @@ ${dinnerText.split(', ').map(i => `• ${i}`).join('\n')}
 
 _Neeche diye gaye buttons se apni attendance mark karein:_`;
 
-  // Filter out RSVP buttons if a meal is OFF
   const rows = [];
   if (!closures.lunch) {
     rows.push([
@@ -1005,7 +1154,7 @@ _Roz attendance mark karein taaki kitchen mein khana waste na ho._`;
 }
 
 // -------------------------------------------------------------
-// Unified Callback Query Handler
+// Callback Query Router
 // -------------------------------------------------------------
 
 async function handleCallbackQuery(cbQuery, tokenOverride = null) {
@@ -1015,7 +1164,23 @@ async function handleCallbackQuery(cbQuery, tokenOverride = null) {
 
   await answerCallbackQuery(cbQuery.id, '', tokenOverride);
 
-  // 1. Account Confirmation
+  // If callback is on MainBot but targets Admin action, redirect
+  const isAdminAction = data.startsWith('admin_') || data.startsWith('messoff_') || data.startsWith('messon_') || data.startsWith('bcast_');
+  if (!tokenOverride && isAdminAction) {
+    return editMessageText(
+      chatId,
+      messageId,
+      `👑 *Thali.com Admin Notice*\n\nYeh controls dedicated admin bot par active hain:\n👉 [@ThaliAdminBot](https://t.me/ThaliAdminBot)`,
+      {
+        inline_keyboard: [
+          [{ text: '👑 Open @ThaliAdminBot', url: 'https://t.me/ThaliAdminBot' }],
+          [{ text: '🍛 Today\'s Menu & RSVP', callback_data: 'action_menu' }]
+        ]
+      }
+    );
+  }
+
+  // 1. Account Confirmation (Student Bot)
   if (data.startsWith('confirm_link_')) {
     const profileId = data.replace('confirm_link_', '');
     const { data: profile } = await supabase.from('profiles').select('*').eq('id', profileId).maybeSingle();
@@ -1033,7 +1198,7 @@ async function handleCallbackQuery(cbQuery, tokenOverride = null) {
   if (data === 'action_pass') return handlePass(chatId, tokenOverride);
   if (data === 'action_balance') return handleBalance(chatId, tokenOverride);
 
-  // 3. Member RSVP with Mess-Off Safeguard
+  // 3. Member RSVP
   if (data.startsWith('rsvp_')) {
     const member = await getMemberByChatId(chatId);
     if (!member) {
@@ -1044,10 +1209,9 @@ async function handleCallbackQuery(cbQuery, tokenOverride = null) {
     const period = data.includes('dinner') ? 'dinner' : 'lunch';
     const today = getTodayDateString();
 
-    // Check if this meal is OFF
     const closure = isPeriodClosed(today, period);
     if (closure) {
-      return sendMessage(chatId, `⚠️ *Mess OFF Hai:* Aaj ${period.toUpperCase()} off hai (${closure.reason}). Aapka meal cut nahi hoga aur koi action lene ki zarurat nahi hai!`, null, tokenOverride);
+      return sendMessage(chatId, `⚠️ *Mess OFF Hai:* Aaj ${period.toUpperCase()} off hai (${closure.reason}). Aapka meal cut nahi hoga!`, null, tokenOverride);
     }
 
     try {
@@ -1056,10 +1220,10 @@ async function handleCallbackQuery(cbQuery, tokenOverride = null) {
           { member_id: member.id, service_date: today, meal_period: period, reason: 'Marked Skip via Telegram' },
           { onConflict: 'member_id,service_date,meal_period' }
         );
-        return sendMessage(chatId, `❌ *Attendance Updated:* You marked *NOT COMING* for ${period.toUpperCase()} today. Kitchen has been notified!`, null, tokenOverride);
+        return sendMessage(chatId, `❌ *Attendance Updated:* You marked *NOT COMING* for ${period.toUpperCase()} today. Kitchen informed!`, null, tokenOverride);
       } else {
         await supabase.from('meal_skips').delete().eq('member_id', member.id).eq('service_date', today).eq('meal_period', period);
-        return sendMessage(chatId, `✅ *Attendance Confirmed:* Marked *COMING* for ${period.toUpperCase()} today. Garma-garam thali ready milegi! 🍛`, null, tokenOverride);
+        return sendMessage(chatId, `✅ *Attendance Confirmed:* Marked *COMING* for ${period.toUpperCase()} today. 🍛`, null, tokenOverride);
       }
     } catch (err) {
       console.error('Error recording RSVP:', err.message);
@@ -1067,34 +1231,50 @@ async function handleCallbackQuery(cbQuery, tokenOverride = null) {
     }
   }
 
-  // 4. Admin Navigation & Controls
-  const isAdminAction = data.startsWith('admin_') || data.startsWith('messoff_') || data.startsWith('messon_') || data.startsWith('bcast_');
-  if (!tokenOverride && isAdminAction) {
-    return editMessageText(
-      chatId,
-      messageId,
-      `👑 *Thali.com Admin Notice*\n\nYeh controls ab dedicated admin bot par shift ho chuke hain:\n👉 [@ThaliAdminBot](https://t.me/ThaliAdminBot)\n\nStudent pass aur menus ke liye neeche button use karein:`,
-      {
-        inline_keyboard: [
-          [{ text: '👑 Open @ThaliAdminBot', url: 'https://t.me/ThaliAdminBot' }],
-          [{ text: '🍛 Today\'s Menu & RSVP', callback_data: 'action_menu' }]
-        ]
-      }
-    );
+  // 4. Admin Security Guard: Must be authenticated
+  if (!isAuthorizedAdmin(chatId)) {
+    return sendAdminAuthPrompt(chatId, tokenOverride);
   }
 
+  // Admin Navigation
   if (data === 'admin_panel' || data === 'admin_refresh') {
+    clearAdminAwaiting(chatId);
     return handleAdminPanel(chatId, tokenOverride, messageId);
   }
 
+  if (data === 'admin_logout') {
+    removeAdminChat(chatId);
+    clearAdminAwaiting(chatId);
+    return editMessageText(chatId, messageId, `🔒 *Admin Session Logged Out Successfully!*\n\nDubara access ke liye PIN enter karein:`, null, tokenOverride);
+  }
+
+  // Admin: Mess OFF Flow
   if (data === 'admin_menu_off') {
+    clearAdminAwaiting(chatId);
     return handleMessOffPrompt(chatId, tokenOverride, messageId);
   }
 
   if (data.startsWith('messoff_select_')) {
     const period = data.replace('messoff_select_', '');
-    const promptReasonMsg = `🛑 Selected Period: *${period.toUpperCase()}*\n\nReason choose karein ya custom reason bhejein:`;
+    const promptReasonMsg = `🛑 Selected Period: *${period.toUpperCase()}*\n\nNeeche diye gaye standard reasons me se select karein ya custom reason type karein:`;
     return editMessageText(chatId, messageId, promptReasonMsg, getMessOffReasonsKeyboard(period), tokenOverride);
+  }
+
+  if (data.startsWith('messoff_askconfirm_')) {
+    const parts = data.replace('messoff_askconfirm_', '').split('_');
+    const period = parts[0];
+    const reason = parts.slice(1).join('_');
+    return handleMessOffAskConfirm(chatId, period, reason, tokenOverride, messageId);
+  }
+
+  if (data.startsWith('messoff_custom_')) {
+    const period = data.replace('messoff_custom_', '');
+    const state = getAdminState(chatId);
+    state.awaiting = 'messoff_custom_reason';
+    state.tempData = { period };
+    return editMessageText(chatId, messageId, `✍️ *Custom Reason:* Kripya neeche chat me reason type karke bhejein (jaise: \`Hostel Water Supply Breakdown\`):`, {
+      inline_keyboard: [[{ text: '🔙 Cancel', callback_data: 'admin_panel' }]]
+    }, tokenOverride);
   }
 
   if (data.startsWith('messoff_exec_')) {
@@ -1104,6 +1284,7 @@ async function handleCallbackQuery(cbQuery, tokenOverride = null) {
     return handleExecuteMessOff(chatId, period, reason, tokenOverride, messageId);
   }
 
+  // Admin: Reopen Mess Flow
   if (data === 'admin_menu_on') {
     const today = getTodayDateString();
     const closures = readMessClosures()[today] || {};
@@ -1118,12 +1299,15 @@ async function handleCallbackQuery(cbQuery, tokenOverride = null) {
     return handleExecuteMessOn(chatId, period, tokenOverride, messageId);
   }
 
+  // Admin: Kitchen Headcount
   if (data === 'admin_headcount') {
     return handleHeadcountReport(chatId, tokenOverride, messageId);
   }
 
+  // Admin: Broadcast Flow
   if (data === 'admin_broadcast') {
-    const msg = `📢 *Send Announcement / Urgent Notice*\n\nNeeche diye gaye common templates me se choose karein ya custom broadcast bhejein:\nFormat: \`/broadcast <your message here>\``;
+    clearAdminAwaiting(chatId);
+    const msg = `📢 *Send Announcement / Urgent Notice*\n\nNeeche diye gaye presets me se choose karein ya custom announcement type karein:`;
     return editMessageText(chatId, messageId, msg, getBroadcastTemplatesKeyboard(), tokenOverride);
   }
 
@@ -1145,8 +1329,33 @@ async function handleCallbackQuery(cbQuery, tokenOverride = null) {
     return editMessageText(chatId, messageId, `✅ Fee renewal reminder broadcasted to *${res.sent}* members!`, getAdminPanelKeyboard(), tokenOverride);
   }
 
+  if (data === 'bcast_custom_prompt') {
+    const state = getAdminState(chatId);
+    state.awaiting = 'custom_broadcast_text';
+    return editMessageText(chatId, messageId, `✍️ *Custom Announcement*\n\nKripya apna announcement message neeche chat me type karke bhejein:`, {
+      inline_keyboard: [[{ text: '🔙 Cancel', callback_data: 'admin_panel' }]]
+    }, tokenOverride);
+  }
+
+  if (data === 'bcast_custom_execute') {
+    const state = getAdminState(chatId);
+    const textToSend = state.tempData?.pendingBroadcast;
+    if (!textToSend) {
+      return handleAdminPanel(chatId, tokenOverride, messageId);
+    }
+    const fullText = `📢 *OFFICIAL NOTICE FROM MESS MANAGEMENT*\n\n${textToSend}`;
+    const report = await broadcastToAllMembers(fullText);
+    clearAdminAwaiting(chatId);
+    return editMessageText(chatId, messageId, `✅ Broadcast sent successfully to *${report.sent}/${report.total}* registered members!`, getAdminPanelKeyboard(), tokenOverride);
+  }
+
+  // Admin: Member Lookup
   if (data === 'admin_lookup') {
-    return editMessageText(chatId, messageId, `🔍 *Member Lookup*\n\nMember ko search karne ke liye type karein:\n\`/member M-112\` ya \`/member 9174222385\``, getAdminPanelKeyboard(), tokenOverride);
+    const state = getAdminState(chatId);
+    state.awaiting = 'member_lookup_query';
+    return editMessageText(chatId, messageId, `🔍 *Search Member*\n\nKripya student ka **Member ID** (jaise \`M-112\`), Mobile Number ya Name neeche chat me type karein:`, {
+      inline_keyboard: [[{ text: '🔙 Cancel', callback_data: 'admin_panel' }]]
+    }, tokenOverride);
   }
 
   if (data.startsWith('admin_topup_')) {
@@ -1154,9 +1363,33 @@ async function handleCallbackQuery(cbQuery, tokenOverride = null) {
     return handleAddMeals(chatId, profileId, parseInt(countStr, 10), tokenOverride, messageId);
   }
 
+  // Admin: Update Menu
   if (data === 'admin_setmenu') {
-    const msg = `🍛 *Update Today's Menu On-The-Fly*\n\nNaye menu ko update karne ke liye yeh command bhejein:\n\`/setmenu lunch Paneer Butter Masala, Dal Fry, Roti, Rice\`\nya\n\`/setmenu dinner Malai Kofta, Paratha, Pulao, Sweet\``;
-    return editMessageText(chatId, messageId, msg, getAdminPanelKeyboard(), tokenOverride);
+    clearAdminAwaiting(chatId);
+    return editMessageText(chatId, messageId, `🍛 *Update Today's Menu*\n\nKaunsa meal menu update karna hai?`, {
+      inline_keyboard: [
+        [
+          { text: '🌅 Breakfast', callback_data: 'admin_menu_pick_breakfast' },
+          { text: '☀️ Lunch', callback_data: 'admin_menu_pick_lunch' },
+          { text: '🌙 Dinner', callback_data: 'admin_menu_pick_dinner' }
+        ],
+        [{ text: '🔙 Back to Admin Panel', callback_data: 'admin_panel' }]
+      ]
+    }, tokenOverride);
+  }
+
+  if (data.startsWith('admin_menu_pick_')) {
+    const period = data.replace('admin_menu_pick_', '');
+    const state = getAdminState(chatId);
+    state.awaiting = 'menu_update_items';
+    state.tempData = { period };
+    return editMessageText(
+      chatId,
+      messageId,
+      `🍽️ *Update ${period.toUpperCase()} Menu*\n\nNaye items comma se alag karke type karein (Jaise: \`Paneer Butter Masala, Dal Tadka, Tawa Roti, Rice\`):`,
+      { inline_keyboard: [[{ text: '🔙 Cancel', callback_data: 'admin_panel' }]] },
+      tokenOverride
+    );
   }
 
   if (data === 'admin_ledger') {
@@ -1165,148 +1398,146 @@ async function handleCallbackQuery(cbQuery, tokenOverride = null) {
 }
 
 // -------------------------------------------------------------
-// Unified Text / Contact Dispatcher
+// Message Dispatcher
 // -------------------------------------------------------------
 
 async function handleTextMessage(chatId, username, text, tokenOverride = null) {
   const clean = text.trim();
 
-  // If received on Main Student Bot (@ThaliMessBot), redirect admin commands to @ThaliAdminBot
-  const isAdminCmd = clean.startsWith('/admin') || clean.startsWith('/messoff') || clean.startsWith('/messon') || clean.startsWith('/broadcast') || clean.startsWith('/headcount') || clean.startsWith('/ledger') || clean.startsWith('/member') || clean.startsWith('/setmenu');
+  // 1. If on Main Student Bot (@ThaliMessBot)
+  if (!tokenOverride) {
+    const isAdminCmd = clean.startsWith('/admin') || clean.startsWith('/messoff') || clean.startsWith('/messon') || clean.startsWith('/broadcast') || clean.startsWith('/headcount') || clean.startsWith('/ledger') || clean.startsWith('/member') || clean.startsWith('/setmenu');
 
-  if (!tokenOverride && isAdminCmd) {
+    if (isAdminCmd) {
+      return sendMessage(
+        chatId,
+        `👑 *Thali.com Admin Console Notice*\n\nAdmin controls aur management actions dedicated bot par hain:\n👉 [@ThaliAdminBot](https://t.me/ThaliAdminBot)\n\nStudent QR pass aur daily menu ke liye neeche buttons use karein:`,
+        {
+          inline_keyboard: [
+            [{ text: '👑 Go to @ThaliAdminBot', url: 'https://t.me/ThaliAdminBot' }],
+            [{ text: '🍛 Today\'s Menu & RSVP', callback_data: 'action_menu' }]
+          ]
+        }
+      );
+    }
+
+    if (clean.startsWith('/start')) return handleStartMember(chatId, username, clean, tokenOverride);
+    if (clean.startsWith('/menu') || clean.startsWith('/rsvp')) return handleMenu(chatId, tokenOverride);
+    if (clean.startsWith('/pass')) return handlePass(chatId, tokenOverride);
+    if (clean.startsWith('/balance')) return handleBalance(chatId, tokenOverride);
+
+    // Fallback: If text looks like a member lookup (e.g. M-112 or phone)
+    const phoneDigits = clean.replace(/\D/g, '');
+    if (clean.toUpperCase().startsWith('M-') || clean.toUpperCase().startsWith('M') || phoneDigits.length >= 7) {
+      let query = supabase.from('profiles').select('*');
+      if (clean.toUpperCase().startsWith('M')) {
+        query = query.ilike('member_number', clean.toUpperCase());
+      } else {
+        query = query.ilike('phone', `%${phoneDigits.slice(-10)}%`);
+      }
+      const { data: profiles } = await query.limit(1);
+      if (profiles && profiles.length > 0) {
+        return askConfirmationToLink(chatId, profiles[0], tokenOverride);
+      }
+    }
+
     return sendMessage(
       chatId,
-      `👑 *Thali.com Admin Console Notice*\n\nAdmin controls aur management actions alag dedicated bot par shift ho gaye hain:\n👉 [@ThaliAdminBot](https://t.me/ThaliAdminBot)\n\nStudent QR pass aur daily menu ke liye neeche diye gaye buttons use karein:`,
-      {
-        inline_keyboard: [
-          [{ text: '👑 Go to @ThaliAdminBot', url: 'https://t.me/ThaliAdminBot' }],
-          [{ text: '🍛 Today\'s Menu & RSVP', callback_data: 'action_menu' }]
-        ]
-      }
+      `🤖 *Thali.com Assistant Commands:*\n• /menu - Today's menu & RSVP\n• /pass - Digital QR Pass\n• /balance - Meal balance`,
+      null,
+      tokenOverride
     );
   }
 
-  // Admin Commands (Only processed on dedicated Admin Bot or authorized session)
-  if (clean.startsWith('/admin_login')) {
-    const pin = clean.split(' ')[1]?.trim();
-    return handleAdminLogin(chatId, pin, tokenOverride);
-  }
-
-  if (clean.startsWith('/admin') || clean.startsWith('/panel')) {
-    if (await isAuthorizedAdmin(chatId)) {
-      return handleAdminPanel(chatId, tokenOverride);
+  // 2. If on Dedicated Admin Bot (@ThaliAdminBot)
+  // Check if currently authenticated
+  if (!isAuthorizedAdmin(chatId)) {
+    // Check if user entered a 4-digit PIN to authenticate
+    if (/^\d{4,6}$/.test(clean)) {
+      return verifyAdminPin(chatId, clean, tokenOverride);
     }
-    return sendMessage(chatId, `⛔ *Access Denied.* Yeh console sirf authorized mess owners ke liye hai.\nAap PIN se login karne ke liye \`/admin_login <pin>\` use kar sakte hain.`, null, tokenOverride);
+    return sendAdminAuthPrompt(chatId, tokenOverride);
   }
 
+  // Authenticated Admin handling interactive states
+  const state = getAdminState(chatId);
+
+  // Awaiting Custom Broadcast Text
+  if (state.awaiting === 'custom_broadcast_text') {
+    state.tempData.pendingBroadcast = clean;
+    state.awaiting = null;
+    const previewMsg = `📢 *Broadcast Announcement Preview*
+----------------------------------------
+${clean}
+----------------------------------------
+Kya aap yeh announcement sabhi registered students ko bhejna chahte hain?`;
+    return sendMessage(chatId, previewMsg, getBroadcastConfirmKeyboard(), tokenOverride);
+  }
+
+  // Awaiting Custom Mess OFF Reason
+  if (state.awaiting === 'messoff_custom_reason') {
+    const period = state.tempData.period;
+    state.awaiting = null;
+    return handleMessOffAskConfirm(chatId, period, clean, tokenOverride);
+  }
+
+  // Awaiting Member Lookup
+  if (state.awaiting === 'member_lookup_query') {
+    state.awaiting = null;
+    return handleMemberLookup(chatId, clean, tokenOverride);
+  }
+
+  // Awaiting Menu Update Items
+  if (state.awaiting === 'menu_update_items') {
+    const period = state.tempData.period;
+    state.awaiting = null;
+    return handleSetMenu(chatId, period, clean, tokenOverride);
+  }
+
+  // Direct Slash Commands on Admin Bot
+  if (clean.startsWith('/start') || clean.startsWith('/admin') || clean.startsWith('/panel')) {
+    return handleAdminPanel(chatId, tokenOverride);
+  }
+  if (clean.startsWith('/logout')) {
+    removeAdminChat(chatId);
+    clearAdminAwaiting(chatId);
+    return sendMessage(chatId, `🔒 Logged out successfully.`, null, tokenOverride);
+  }
   if (clean.startsWith('/messoff')) {
-    if (await isAuthorizedAdmin(chatId)) {
-      const parts = clean.split(' ');
-      if (parts.length > 2) {
-        const period = parts[1].toLowerCase();
-        const reason = parts.slice(2).join(' ');
-        return handleExecuteMessOff(chatId, period, reason, tokenOverride);
-      }
-      return handleMessOffPrompt(chatId, tokenOverride);
-    }
-    return sendMessage(chatId, `⛔ Access Denied.`, null, tokenOverride);
+    return handleMessOffPrompt(chatId, tokenOverride);
   }
-
   if (clean.startsWith('/messon')) {
-    if (await isAuthorizedAdmin(chatId)) {
-      const period = clean.split(' ')[1]?.toLowerCase() || 'all_day';
-      return handleExecuteMessOn(chatId, period, tokenOverride);
-    }
-    return sendMessage(chatId, `⛔ Access Denied.`, null, tokenOverride);
+    const today = getTodayDateString();
+    const closures = readMessClosures()[today] || {};
+    return sendMessage(chatId, `🟢 Select period to reopen:`, getReopenSelectKeyboard(closures), tokenOverride);
   }
-
   if (clean.startsWith('/broadcast')) {
-    if (await isAuthorizedAdmin(chatId)) {
-      const bcastMsg = clean.replace('/broadcast', '').trim();
-      if (!bcastMsg) {
-        return sendMessage(chatId, `Format: \`/broadcast Aaj evening special tea aur snacks rahenge!\``, null, tokenOverride);
-      }
-      const fullText = `📢 *OFFICIAL NOTICE FROM MESS MANAGEMENT*\n\n${bcastMsg}`;
-      const report = await broadcastToAllMembers(fullText);
-      return sendMessage(chatId, `✅ Broadcast sent to *${report.sent}/${report.total}* members!`, getAdminPanelKeyboard(), tokenOverride);
+    const textMsg = clean.replace('/broadcast', '').trim();
+    if (textMsg) {
+      state.tempData.pendingBroadcast = textMsg;
+      return sendMessage(chatId, `📢 *Preview:*\n${textMsg}\n\nBroadcast to all members?`, getBroadcastConfirmKeyboard(), tokenOverride);
     }
-    return sendMessage(chatId, `⛔ Access Denied.`, null, tokenOverride);
+    return sendMessage(chatId, `📢 Select announcement preset or custom:`, getBroadcastTemplatesKeyboard(), tokenOverride);
   }
-
   if (clean.startsWith('/member')) {
-    if (await isAuthorizedAdmin(chatId)) {
-      const q = clean.replace('/member', '').trim();
-      if (!q) return sendMessage(chatId, `Format: \`/member M-112\` ya mobile number`, null, tokenOverride);
-      return handleMemberLookup(chatId, q, tokenOverride);
-    }
+    const q = clean.replace('/member', '').trim();
+    if (q) return handleMemberLookup(chatId, q, tokenOverride);
+    state.awaiting = 'member_lookup_query';
+    return sendMessage(chatId, `🔍 Type Member ID (e.g. \`M-112\`) or Phone number:`, null, tokenOverride);
   }
-
-  if (clean.startsWith('/setmenu')) {
-    if (await isAuthorizedAdmin(chatId)) {
-      const parts = clean.split(' ');
-      const period = parts[1];
-      const menuText = parts.slice(2).join(' ');
-      if (!period || !menuText) {
-        return sendMessage(chatId, `Format: \`/setmenu lunch Paneer Butter Masala, Dal, Roti, Rice\``, null, tokenOverride);
-      }
-      return handleSetMenu(chatId, period, menuText, tokenOverride);
-    }
-    return sendMessage(chatId, `⛔ Access Denied.`, null, tokenOverride);
-  }
-
   if (clean.startsWith('/headcount')) {
-    if (await isAuthorizedAdmin(chatId)) {
-      return handleHeadcountReport(chatId, tokenOverride);
-    }
+    return handleHeadcountReport(chatId, tokenOverride);
   }
-
   if (clean.startsWith('/ledger')) {
-    if (await isAuthorizedAdmin(chatId)) {
-      return handleDailyLedger(chatId, tokenOverride);
-    }
+    return handleDailyLedger(chatId, tokenOverride);
   }
 
-  // Member Commands
-  if (clean.startsWith('/start')) {
-    return handleStart(chatId, username, clean, tokenOverride);
-  }
-  if (clean.startsWith('/menu') || clean.startsWith('/rsvp')) {
-    return handleMenu(chatId, tokenOverride);
-  }
-  if (clean.startsWith('/pass')) {
-    return handlePass(chatId, tokenOverride);
-  }
-  if (clean.startsWith('/balance')) {
-    return handleBalance(chatId, tokenOverride);
-  }
-
-  // Fallback: If text looks like a member lookup (e.g. M-112 or phone)
-  const phoneDigits = clean.replace(/\D/g, '');
-  if (clean.toUpperCase().startsWith('M-') || clean.toUpperCase().startsWith('M') || phoneDigits.length >= 7) {
-    let query = supabase.from('profiles').select('*');
-    if (clean.toUpperCase().startsWith('M')) {
-      query = query.ilike('member_number', clean.toUpperCase());
-    } else {
-      query = query.ilike('phone', `%${phoneDigits.slice(-10)}%`);
-    }
-
-    const { data: profiles } = await query.limit(1);
-    if (profiles && profiles.length > 0) {
-      return askConfirmationToLink(chatId, profiles[0], tokenOverride);
-    }
-  }
-
-  return sendMessage(
-    chatId,
-    `🤖 *Thali.com Assistant Commands:*\n• /menu - Today's menu & RSVP\n• /pass - Digital QR Pass\n• /balance - Meal balance\n• /admin - Admin Control Console`,
-    null,
-    tokenOverride
-  );
+  // Default: Return Admin Panel
+  return handleAdminPanel(chatId, tokenOverride);
 }
 
 // -------------------------------------------------------------
-// Polling Engines (Main Bot + Optional Dedicated Admin Bot)
+// Polling Engines
 // -------------------------------------------------------------
 
 let lastUpdateIdMain = 0;
@@ -1365,10 +1596,9 @@ async function pollAdminBot() {
           const username = msg.from?.username;
           const text = (msg.text || '').trim();
 
-          // In dedicated Admin Bot, automatically authorize on first start or login
-          if (text.startsWith('/start') || text.startsWith('/admin')) {
-            saveAdminChat(chatId, { name: msg.from?.first_name || 'Admin', role: 'owner_admin' });
-            await handleAdminPanel(chatId, ADMIN_BOT_TOKEN);
+          // If admin sent contact verification
+          if (msg.contact) {
+            await verifyAdminContact(chatId, msg.contact, ADMIN_BOT_TOKEN);
           } else {
             await handleTextMessage(chatId, username, text, ADMIN_BOT_TOKEN);
           }
@@ -1409,7 +1639,7 @@ async function start() {
       console.warn('⚠️ Dedicated Admin Bot Token configured but connection failed:', adminMe);
     }
   } else {
-    console.log('ℹ️ Note: TELEGRAM_ADMIN_BOT_TOKEN not set in .env. Admin commands are active via /admin on @' + (mainMe?.result?.username || 'ThaliMessBot'));
+    console.log('ℹ️ Note: TELEGRAM_ADMIN_BOT_TOKEN not set in .env.');
   }
 }
 
