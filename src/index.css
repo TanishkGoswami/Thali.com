@@ -1,34 +1,35 @@
 /* Thali.com — Stripe / Stripi Design System Tokens (DESIGN.md) */
 :root {
-  /* Brand & Signature Colors (Warm culinary orange/amber matching Thali.com logo) */
-  --color-primary: #ea4c25;            /* Signature Warm Saffron / Orange CTA */
-  --color-primary-deep: #d33c14;       /* Hover state */
-  --color-primary-press: #b02c0b;      /* Pressed state */
-  --color-primary-soft: #f96d48;       /* Light accent */
-  --color-primary-subdued: #fff2ee;    /* Subdued pale orange fill */
-  --color-primary-subdued-hover: #ffe4dc;
-  --color-primary-border: rgba(234, 76, 37, 0.25);
+  /* Brand & Signature Colors (DESIGN.md: Electric Indigo is the signature CTA) */
+  --color-primary: #533afd;            /* Signature Indigo CTA */
+  --color-primary-deep: #4434d4;       /* Deeper indigo in gradient mid-stops / hover */
+  --color-primary-press: #2e2b8c;      /* Pressed-state lift */
+  --color-primary-soft: #665efd;       /* Light accent / chart highlights */
+  --color-primary-subdued: #eef0fe;    /* Pale indigo fill */
+  --color-primary-bg-subdued-hover: #b9b9f9; /* Pale indigo hover tag */
+  --color-primary-border: rgba(83, 58, 253, 0.25);
   --color-on-primary: #ffffff;
 
-  /* Atmospheric Gradient Mesh Stops */
-  --color-ruby: #ea2261;
-  --color-magenta: #f96bee;
-  --color-lemon: #ff9a62;
-  --color-lavender: #fed7aa;
+  /* Atmospheric Gradient Mesh Stops (DESIGN.md) */
+  --color-ruby: #ea2261;               /* Ruby pink gradient accent */
+  --color-magenta: #f96bee;            /* Magenta stop */
+  --color-lemon: #9b6829;              /* Warm sherbet/lemon stop */
+  --color-orange-stop: #ff9a62;        /* Sherbet orange stop */
+  --color-lavender: #dcd6f7;           /* Soft lavender stop */
 
-  /* Dark App / Console Chrome */
-  --color-brand-dark-900: #0d253d;     /* Deep navy for dark cards / featured */
-  --color-brand-dark-card: #142a42;
+  /* Dark App / Console Chrome (DESIGN.md: Brand Dark 900) */
+  --color-brand-dark-900: #1c1e54;     /* Deep navy for dark cards / featured tiers */
+  --color-brand-dark-card: #0d253d;    /* Deep navy card surface */
 
   /* Surfaces */
   --color-canvas: #ffffff;             /* Primary page canvas */
-  --color-canvas-soft: #f8fafc;        /* Cool-tinted off-white feature surface */
-  --color-canvas-cream: #fff7ed;       /* Warm subtle cream interlude band */
-  --color-hairline: #e2e8f0;           /* 1px card/divider hairline */
-  --color-hairline-input: #cbd5e1;     /* Form input crisp border */
+  --color-canvas-soft: #f6f9fc;        /* Cool-tinted off-white feature surface */
+  --color-canvas-cream: #f5e9d4;       /* Warm subtle cream interlude band */
+  --color-hairline: #e3e8ee;           /* 1px card/divider hairline */
+  --color-hairline-input: #a8c3de;     /* Form input crisp border */
 
-  /* Text & Inks */
-  --color-ink: #0d253d;                /* Primary deep navy body text (never pure black) */
+  /* Text & Inks (DESIGN.md: Deep navy, never pure black) */
+  --color-ink: #0d253d;                /* Primary deep navy body text */
   --color-ink-secondary: #273951;      /* Secondary text on white */
   --color-ink-mute: #64748d;           /* Helper text, captions */
   --color-ink-mute-2: #61718a;         /* Nav and subtle labels */
@@ -86,19 +87,19 @@ html, body {
   min-height: 100vh;
 }
 
-/* Display Typography: Thin weight 300 with negative tracking */
+/* Display Typography: Thin weight 300 with negative tracking per DESIGN.md */
 h1 {
   font-family: var(--font-family);
-  font-size: clamp(32px, 4vw, 48px);
+  font-size: clamp(28px, 4.5vw, 48px);
   font-weight: 300;
   letter-spacing: -1.2px;
-  line-height: 1.08;
+  line-height: 1.05;
   color: var(--color-ink);
 }
 
 h2 {
   font-family: var(--font-family);
-  font-size: clamp(24px, 3vw, 32px);
+  font-size: clamp(20px, 3vw, 32px);
   font-weight: 300;
   letter-spacing: -0.64px;
   line-height: 1.15;
@@ -108,7 +109,7 @@ h2 {
 h3 {
   font-family: var(--font-family);
   font-size: 20px;
-  font-weight: 400;
+  font-weight: 300;
   letter-spacing: -0.26px;
   line-height: 1.25;
   color: var(--color-ink);
@@ -122,11 +123,11 @@ h4 {
   color: var(--color-ink);
 }
 
-/* Financial & Numeric Tabular Numbers utility */
+/* Financial & Numeric Tabular Numbers utility (DESIGN.md: tnum + tightening tracking) */
 .tnum, [data-tnum="true"] {
   font-feature-settings: "tnum" 1, "ss01" 1;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.36px;
+  letter-spacing: -0.42px;
 }
 
 /* Eyebrow label */
@@ -139,21 +140,23 @@ h4 {
   display: block;
 }
 
-/* Atmospheric Subtle Warm Gradient Mesh backdrop */
+/* Atmospheric Multi-stop Gradient Mesh Backdrop (DESIGN.md: cream / orange / lavender / indigo / ruby) */
 .gradient-mesh-hero {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 480px;
+  height: 520px;
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 65% 50% at 20% 0%, rgba(255, 237, 213, 0.45) 0%, transparent 60%),
-    radial-gradient(ellipse 55% 45% at 85% 5%, rgba(254, 215, 170, 0.3) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 40% at 50% -10%, rgba(255, 247, 237, 0.7) 0%, transparent 70%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, #ffffff 100%);
-  opacity: 0.85;
+    radial-gradient(ellipse 70% 55% at 10% -5%, rgba(245, 233, 212, 0.9) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 38% -10%, rgba(255, 154, 98, 0.5) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 55% at 65% -5%, rgba(220, 214, 247, 0.75) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 50% at 85% 10%, rgba(83, 58, 253, 0.32) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 45% at 55% 18%, rgba(234, 34, 97, 0.22) 0%, transparent 55%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, #ffffff 90%);
+  opacity: 0.95;
 }
 
 /* Fix Browser / Chrome Pale Yellow Autofill */
@@ -394,22 +397,68 @@ input:-webkit-autofill:active {
   display: none;
 }
 
+/* -------------------------------------------------------------
+   Responsive Grid Systems (DESIGN.md: Responsive Behavior)
+   ------------------------------------------------------------- */
+.hero-auth-grid {
+  display: grid;
+  grid-template-columns: 1fr 440px;
+  gap: 48px;
+  align-items: center;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+}
+
+.member-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.meals-skip-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.self-checkin-banner {
+  background: linear-gradient(135deg, #533afd 0%, #4434d4 100%);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  box-shadow: 0 4px 18px rgba(83, 58, 253, 0.28);
+}
+
+@media (max-width: 1024px) {
+  .hero-auth-grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+    padding: 32px 18px 60px;
+  }
+}
+
 @media (max-width: 768px) {
   /* Prevent iOS Safari auto-zoom on input focus by setting 16px font-size */
   .form-input, input, select, textarea {
     font-size: 16px !important;
-    min-height: 42px;
+    min-height: 44px;
   }
 
-  /* Touch-friendly buttons (WCAG AAA minimum touch targets per DESIGN.md) */
+  /* Touch-friendly buttons (DESIGN.md: WCAG AAA minimum touch targets >= 42-44px) */
   .btn {
-    min-height: 40px;
+    min-height: 42px;
     touch-action: manipulation;
   }
 
   .btn-pill {
-    min-height: 38px;
-    padding: 6px 14px;
+    min-height: 40px;
+    padding: 8px 16px;
   }
 
   /* Compact card padding on mobile */
@@ -420,19 +469,19 @@ input:-webkit-autofill:active {
 
   /* Responsive typography scaling */
   h1 {
-    font-size: 24px !important;
-    letter-spacing: -0.6px !important;
-    line-height: 1.15 !important;
+    font-size: clamp(24px, 5.5vw, 36px) !important;
+    letter-spacing: -0.8px !important;
+    line-height: 1.1 !important;
   }
 
   h2 {
-    font-size: 19px !important;
-    letter-spacing: -0.4px !important;
+    font-size: clamp(19px, 4vw, 26px) !important;
+    letter-spacing: -0.5px !important;
     line-height: 1.2 !important;
   }
 
   h3 {
-    font-size: 16px !important;
+    font-size: 17px !important;
     letter-spacing: -0.2px !important;
   }
 
@@ -443,8 +492,33 @@ input:-webkit-autofill:active {
 
   /* Atmosphere mesh height adjusts for small screens */
   .gradient-mesh-hero {
-    height: 220px;
-    filter: blur(18px);
+    height: 320px;
+    opacity: 0.9;
+  }
+
+  .hero-auth-grid {
+    gap: 24px;
+    padding: 20px 14px 48px;
+  }
+
+  .member-cards-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  .meals-skip-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  .self-checkin-banner {
+    padding: 16px 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .self-checkin-banner button {
+    width: 100% !important;
   }
 }
 
@@ -492,6 +566,9 @@ input:-webkit-autofill:active {
   }
   .user-name-truncate {
     max-width: 82px;
+  }
+  .nav-bot-label {
+    display: none;
   }
 }
 

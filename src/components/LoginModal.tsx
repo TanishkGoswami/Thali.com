@@ -186,7 +186,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = 'var(--color-primary)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(234, 76, 37, 0.1)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(83, 58, 253, 0.12)';
                 e.currentTarget.style.transform = 'translateY(-1px)';
               }}
               onMouseLeave={(e) => {
@@ -243,7 +243,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = 'var(--color-primary)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(234, 76, 37, 0.1)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(83, 58, 253, 0.12)';
                 e.currentTarget.style.transform = 'translateY(-1px)';
               }}
               onMouseLeave={(e) => {
@@ -300,7 +300,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = 'var(--color-primary)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(234, 76, 37, 0.1)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(83, 58, 253, 0.12)';
                 e.currentTarget.style.transform = 'translateY(-1px)';
               }}
               onMouseLeave={(e) => {
@@ -707,23 +707,18 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
   if (embedded) {
     return (
-      <div style={{
-        maxWidth: '1180px',
-        margin: '0 auto',
-        padding: '48px 20px 80px',
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-        gap: '48px',
-        alignItems: 'center'
-      }}>
+      <div className="hero-auth-grid">
         {/* Left Column: Authoritative Product Narrative */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
           <div>
+            <span className="eyebrow" style={{ marginBottom: '8px', color: 'var(--color-primary)' }}>
+              Next-Gen Dining Hall OS
+            </span>
             <h1 style={{
-              fontSize: 'clamp(32px, 4vw, 46px)',
-              fontWeight: 800,
-              lineHeight: 1.12,
-              letterSpacing: '-1.2px',
+              fontSize: 'clamp(28px, 4.5vw, 48px)',
+              fontWeight: 300,
+              lineHeight: 1.05,
+              letterSpacing: '-1.4px',
               color: 'var(--color-ink)',
               margin: 0
             }}>
@@ -733,8 +728,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
             <p style={{
               fontSize: '16px',
+              fontWeight: 300,
               color: 'var(--color-ink-mute)',
-              lineHeight: 1.6,
+              lineHeight: 1.55,
               marginTop: '16px',
               maxWidth: '520px'
             }}>
@@ -742,12 +738,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             </p>
           </div>
 
-          {/* 3 High-Impact Feature Bento Cards */}
+          {/* 3 High-Impact Feature Bento Cards (DESIGN.md: Feature cards + Cream band warm interlude) */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{
               display: 'flex',
               gap: '14px',
-              padding: '14px 16px',
+              padding: '16px 18px',
               backgroundColor: '#ffffff',
               border: '1px solid var(--color-hairline)',
               borderRadius: 'var(--radius-lg)',
@@ -767,7 +763,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 <QrCode size={20} />
               </div>
               <div>
-                <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-ink)', margin: 0 }}>
+                <h4 style={{ fontSize: '15px', fontWeight: 500, color: 'var(--color-ink)', margin: 0 }}>
                   1-Second QR Dining Pass
                 </h4>
                 <p style={{ fontSize: '13px', color: 'var(--color-ink-mute)', marginTop: '3px', lineHeight: 1.4, margin: 0 }}>
@@ -776,33 +772,34 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               </div>
             </div>
 
+            {/* Warm Cream Card (DESIGN.md: Canvas-cream warm interlude) */}
             <div style={{
               display: 'flex',
               gap: '14px',
-              padding: '14px 16px',
-              backgroundColor: '#ffffff',
-              border: '1px solid var(--color-hairline)',
-              borderRadius: 'var(--radius-lg)',
-              boxShadow: 'var(--shadow-level-1)'
+              padding: '16px 18px',
+              backgroundColor: 'var(--color-canvas-cream)',
+              border: '1px solid rgba(13, 37, 61, 0.08)',
+              borderRadius: 'var(--radius-lg)'
             }}>
               <div style={{
                 width: '40px',
                 height: '40px',
                 borderRadius: '10px',
-                backgroundColor: '#eff6ff',
-                color: '#2563eb',
+                backgroundColor: '#ffffff',
+                color: 'var(--color-warning)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                flexShrink: 0
+                flexShrink: 0,
+                boxShadow: '0 1px 3px rgba(0,0,0,0.06)'
               }}>
                 <ChefHat size={20} />
               </div>
               <div>
-                <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-ink)', margin: 0 }}>
+                <h4 style={{ fontSize: '15px', fontWeight: 500, color: 'var(--color-ink)', margin: 0 }}>
                   Kitchen Headcount & Leave RSVP
                 </h4>
-                <p style={{ fontSize: '13px', color: 'var(--color-ink-mute)', marginTop: '3px', lineHeight: 1.4, margin: 0 }}>
+                <p style={{ fontSize: '13px', color: 'var(--color-ink-secondary)', marginTop: '3px', lineHeight: 1.4, margin: 0 }}>
                   Students tap "Skip / Attend" on Telegram before daily cutoff. Kitchen cooks exact portions, saving ₹15k–₹30k in wasted groceries monthly.
                 </p>
               </div>
@@ -811,7 +808,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             <div style={{
               display: 'flex',
               gap: '14px',
-              padding: '14px 16px',
+              padding: '16px 18px',
               backgroundColor: '#ffffff',
               border: '1px solid var(--color-hairline)',
               borderRadius: 'var(--radius-lg)',
@@ -821,8 +818,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 width: '40px',
                 height: '40px',
                 borderRadius: '10px',
-                backgroundColor: '#f5f3ff',
-                color: '#7c3aed',
+                backgroundColor: 'var(--color-primary-subdued)',
+                color: 'var(--color-primary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -831,7 +828,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 <Shield size={20} />
               </div>
               <div>
-                <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-ink)', margin: 0 }}>
+                <h4 style={{ fontSize: '15px', fontWeight: 500, color: 'var(--color-ink)', margin: 0 }}>
                   Strict RBAC & Financial Ledger
                 </h4>
                 <p style={{ fontSize: '13px', color: 'var(--color-ink-mute)', marginTop: '3px', lineHeight: 1.4, margin: 0 }}>

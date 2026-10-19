@@ -477,18 +477,7 @@ export const MemberView: React.FC<MemberViewProps> = ({
       )}
 
       {/* Self Check-In CTA Bar (Model 2: Student scans mess counter QR) */}
-      <div style={{
-        background: 'linear-gradient(135deg, #533afd 0%, #4434d4 100%)',
-        borderRadius: 'var(--radius-lg)',
-        padding: '18px 20px',
-        color: '#ffffff',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '14px',
-        boxShadow: '0 4px 18px rgba(83, 58, 253, 0.28)'
-      }}>
+      <div className="self-checkin-banner">
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div style={{
             width: '42px',
@@ -531,18 +520,18 @@ export const MemberView: React.FC<MemberViewProps> = ({
         </button>
       </div>
 
-      {/* Grid: Digital Mess ID Card & Quota Balance */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+      {/* Grid: Digital Mess ID Card & Quota Balance (DESIGN.md: member-cards-grid) */}
+      <div className="member-cards-grid">
         
-        {/* Card 1: Clean Digital Mess Membership Card */}
+        {/* Card 1: Clean Digital Mess Membership Card (DESIGN.md: Brand Dark 900 #1c1e54) */}
         <div style={{
-          background: 'linear-gradient(135deg, #0b1f38 0%, #102a4c 55%, #0a1829 100%)',
-          borderRadius: '20px',
+          background: 'linear-gradient(135deg, #1c1e54 0%, #0d253d 100%)',
+          borderRadius: '16px',
           padding: '24px',
           color: '#ffffff',
           position: 'relative',
           overflow: 'hidden',
-          boxShadow: '0 16px 36px -10px rgba(7, 21, 38, 0.45)',
+          boxShadow: 'var(--shadow-level-2)',
           border: '1px solid rgba(255, 255, 255, 0.12)',
           display: 'flex',
           flexDirection: 'column',
@@ -557,7 +546,7 @@ export const MemberView: React.FC<MemberViewProps> = ({
             width: '180px',
             height: '180px',
             borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(59, 130, 246, 0.22) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(83, 58, 253, 0.28) 0%, transparent 70%)',
             pointerEvents: 'none'
           }} />
 
@@ -578,7 +567,7 @@ export const MemberView: React.FC<MemberViewProps> = ({
               />
               <div>
                 <div style={{ fontSize: '19px', fontWeight: 700, letterSpacing: '-0.3px', lineHeight: 1.15 }}>
-                  Thali<span style={{ color: '#60a5fa' }}>.com</span>
+                  Thali<span style={{ color: 'var(--color-primary-soft)' }}>.com</span>
                 </div>
                 <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.65)', marginTop: '3px', fontWeight: 500 }}>
                   {planConfig.name} Pass

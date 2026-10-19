@@ -219,15 +219,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
               </button>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <a
                   href="https://t.me/ThaliMessBot"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-secondary"
                   style={{
-                    gap: '6px',
-                    padding: '5px 12px',
+                    gap: '5px',
+                    padding: '5px 10px',
                     fontSize: '12px',
                     borderRadius: 'var(--radius-pill)',
                     textDecoration: 'none'
@@ -235,22 +235,21 @@ export const Navbar: React.FC<NavbarProps> = ({
                   title="Open Thali Mess Assistant on Telegram"
                 >
                   <Send size={13} color="#229ED9" />
-                  <span>@ThaliMessBot</span>
+                  <span className="nav-bot-label">@ThaliMessBot</span>
                 </a>
                 <button
                   type="button"
                   onClick={onOpenLogin}
-                  className="btn btn-outline"
+                  className="btn btn-primary"
                   style={{
                     gap: '5px',
                     padding: '5px 12px',
                     fontSize: '12px',
-                    borderRadius: 'var(--radius-pill)',
-                    color: 'var(--color-ink)'
+                    borderRadius: 'var(--radius-pill)'
                   }}
                 >
                   <LogIn size={13} />
-                  <span>Staff Login</span>
+                  <span>Sign In</span>
                 </button>
               </div>
             )}

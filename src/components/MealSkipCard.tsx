@@ -209,8 +209,8 @@ export const MealSkipCard: React.FC<MealSkipCardProps> = ({
         </div>
       )}
 
-      {/* 3 Meals Cards Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '12px' }}>
+      {/* 3 Meals Cards Grid (DESIGN.md: mobile responsive 1-col) */}
+      <div className="meals-skip-grid">
         {periods.map(({ period, title, icon }) => {
           const inPlan = isPeriodInPlan(period);
           const cutoff = MEAL_CUTOFF_CONFIG[period];
